@@ -1,0 +1,117 @@
+/**
+ * App Entry Point
+ * AuthProvider nằm TRONG RouterProvider thông qua Root layout
+ */
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './contexts/AuthContext';
+
+// Pages
+import WelcomePage from './pages/WelcomePage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import GoogleCallbackPage from './pages/GoogleCallbackPage';
+import AuthLayout from './components/layout/AuthLayout';
+
+// Root layout - cung cấp AuthProvider cho toàn bộ app
+function RootLayout() {
+  return (
+    <AuthProvider>
+      <Outlet />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            borderRadius: '0.5rem',
+            fontSize: '0.875rem',
+          },
+        }}
+      />
+    </AuthProvider>
+  );
+}
+
+// Placeholder component
+function PlaceholderPage({ title }) {
+  return (
+    <div className="animate-fade-in">
+      <h1 className="text-2xl font-bold mb-2">{title}</h1>
+      <p className="text-muted-foreground">Trang này sẽ được xây dựng ở các phase tiếp theo.</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-lg border bg-card p-6 card-hover">
+            <div className="h-4 w-24 skeleton mb-3" />
+            <div className="h-8 w-16 skeleton mb-2" />
+            <div className="h-3 w-32 skeleton" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const router = createBrowserRouter([
+  {
+    element: <RootLayout />,
+    children: [
+      // === Public ===
+      { path: '/', element: <WelcomePage /> },
+      { path: '/login', element: <LoginPage /> },
+      { path: '/register', element: <RegisterPage /> },
+      { path: '/auth/google/callback', element: <GoogleCallbackPage /> },
+
+      // === Admin (protected) ===
+      {
+        path: '/admin',
+        element: <AuthLayout allowedRoles={['admin']} role="admin" />,
+        children: [
+          { index: true, element: <PlaceholderPage title="Tổng quan" /> },
+          { path: 'users', element: <PlaceholderPage title="QL Người dùng" /> },
+          { path: 'courses', element: <PlaceholderPage title="QL Học phần" /> },
+          { path: 'curriculum-programs', element: <PlaceholderPage title="QL CTĐT" /> },
+          { path: 'skills', element: <PlaceholderPage title="QL Kỹ năng" /> },
+          { path: 'roadmaps', element: <PlaceholderPage title="QL Lộ trình mẫu" /> },
+          { path: 'resources', element: <PlaceholderPage title="QL Tài nguyên" /> },
+          { path: 'job-postings', element: <PlaceholderPage title="QL Tin tuyển dụng" /> },
+          { path: 'reports', element: <PlaceholderPage title="Thống kê" /> },
+        ],
+      },
+      // === Student (protected) ===
+      {
+        path: '/student',
+        element: <AuthLayout allowedRoles={['student']} role="student" />,
+        children: [
+          { index: true, element: <PlaceholderPage title="Tổng quan" /> },
+          { path: 'academic-profile', element: <PlaceholderPage title="Hồ sơ Học tập" /> },
+          { path: 'career-preferences', element: <PlaceholderPage title="Sở thích Nghề nghiệp" /> },
+          { path: 'roadmaps', element: <PlaceholderPage title="Danh sách Lộ trình" /> },
+          { path: 'my-roadmap', element: <PlaceholderPage title="Lộ trình của tôi" /> },
+          { path: 'progress', element: <PlaceholderPage title="Tiến độ học" /> },
+          { path: 'skill-map', element: <PlaceholderPage title="Skill Map" /> },
+          { path: 'jobs', element: <PlaceholderPage title="Danh sách Công việc" /> },
+          { path: 'cv', element: <PlaceholderPage title="CV" /> },
+          { path: 'applications', element: <PlaceholderPage title="Đơn ứng tuyển" /> },
+          { path: 'favorites', element: <PlaceholderPage title="Yêu thích" /> },
+        ],
+      },
+      // === Employer (protected) ===
+      {
+        path: '/employer',
+        element: <AuthLayout allowedRoles={['employer']} role="employer" />,
+        children: [
+          { index: true, element: <PlaceholderPage title="Tổng quan" /> },
+          { path: 'company', element: <PlaceholderPage title="Hồ sơ Công ty" /> },
+          { path: 'job-postings', element: <PlaceholderPage title="Tin tuyển dụng" /> },
+          { path: 'applicants', element: <PlaceholderPage title="Ứng viên" /> },
+        ],
+      },
+    ],
+  },
+]);
+
+function App() {
+  return <RouterProvider router={router} />;
+}
+
+export default App;
