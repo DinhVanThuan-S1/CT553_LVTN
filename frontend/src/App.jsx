@@ -1,38 +1,37 @@
 /**
  * App Entry Point
- * AuthProvider nằm TRONG RouterProvider thông qua Root layout
+ * AuthProvider + ToastProvider nằm TRONG RouterProvider thông qua Root layout
  */
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './components/ui/Toast';
 
-// Pages
+// Pages - Public
 import WelcomePage from './pages/WelcomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import GoogleCallbackPage from './pages/GoogleCallbackPage';
 import AuthLayout from './components/layout/AuthLayout';
 
-// Root layout - cung cấp AuthProvider cho toàn bộ app
+// Pages - Admin
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagement from './pages/admin/UserManagement';
+import CourseManagement from './pages/admin/CourseManagement';
+import CurriculumManagement from './pages/admin/CurriculumManagement';
+import SkillManagement from './pages/admin/SkillManagement';
+
+// Root layout - cung cấp AuthProvider + Toast cho toàn bộ app
 function RootLayout() {
   return (
     <AuthProvider>
-      <Outlet />
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            borderRadius: '0.5rem',
-            fontSize: '0.875rem',
-          },
-        }}
-      />
+      <ToastProvider>
+        <Outlet />
+      </ToastProvider>
     </AuthProvider>
   );
 }
 
-// Placeholder component
+// Placeholder component (cho các trang chưa xây dựng)
 function PlaceholderPage({ title }) {
   return (
     <div className="animate-fade-in">
@@ -66,11 +65,11 @@ const router = createBrowserRouter([
         path: '/admin',
         element: <AuthLayout allowedRoles={['admin']} role="admin" />,
         children: [
-          { index: true, element: <PlaceholderPage title="Tổng quan" /> },
-          { path: 'users', element: <PlaceholderPage title="QL Người dùng" /> },
-          { path: 'courses', element: <PlaceholderPage title="QL Học phần" /> },
-          { path: 'curriculum-programs', element: <PlaceholderPage title="QL CTĐT" /> },
-          { path: 'skills', element: <PlaceholderPage title="QL Kỹ năng" /> },
+          { index: true, element: <AdminDashboard /> },
+          { path: 'users', element: <UserManagement /> },
+          { path: 'courses', element: <CourseManagement /> },
+          { path: 'curriculum-programs', element: <CurriculumManagement /> },
+          { path: 'skills', element: <SkillManagement /> },
           { path: 'roadmaps', element: <PlaceholderPage title="QL Lộ trình mẫu" /> },
           { path: 'resources', element: <PlaceholderPage title="QL Tài nguyên" /> },
           { path: 'job-postings', element: <PlaceholderPage title="QL Tin tuyển dụng" /> },

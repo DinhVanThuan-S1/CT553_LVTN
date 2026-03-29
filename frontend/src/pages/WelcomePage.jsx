@@ -187,12 +187,12 @@ export default function WelcomePage() {
             <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight mb-5 leading-[1.1]">
               Cá nhân hóa{' '}
               <span className="bg-gradient-to-r from-primary via-teal-500 to-emerald-500 bg-clip-text text-transparent">
-                Lộ trình Học tập
+                Lộ trình học tập
               </span>
-              <br />& Định hướng Nghề nghiệp
+              <br />Định hướng nghề nghiệp
             </h1>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-              Hệ thống hỗ trợ sinh viên CNTT phân tích năng lực, gợi ý lộ trình học tập 
+              Hệ thống hỗ trợ sinh viên CNTT phân tích năng lực, gợi ý lộ trình học tập
               phù hợp & kết nối với cơ hội việc làm thực tế từ các nhà tuyển dụng.
             </p>
             <div className="flex items-center justify-center gap-3">
@@ -297,7 +297,7 @@ export default function WelcomePage() {
                     {roadmap.title}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{roadmap.description}</p>
-                  
+
                   {/* Skills tags */}
                   <div className="flex flex-wrap gap-1.5 mb-4">
                     {roadmap.skills.map((skill) => (
@@ -355,11 +355,10 @@ export default function WelcomePage() {
                   <p className="text-sm text-muted-foreground">{job.company}</p>
                 </div>
                 {job.matchPercent && (
-                  <div className={`flex-shrink-0 px-2 py-1 rounded-lg text-xs font-bold ${
-                    job.matchPercent >= 90 ? 'bg-emerald-500/10 text-emerald-600' :
+                  <div className={`flex-shrink-0 px-2 py-1 rounded-lg text-xs font-bold ${job.matchPercent >= 90 ? 'bg-emerald-500/10 text-emerald-600' :
                     job.matchPercent >= 80 ? 'bg-blue-500/10 text-blue-600' :
-                    'bg-amber-500/10 text-amber-600'
-                  }`}>
+                      'bg-amber-500/10 text-amber-600'
+                    }`}>
                     {job.matchPercent}% phù hợp
                   </div>
                 )}
@@ -402,7 +401,7 @@ export default function WelcomePage() {
             Sẵn sàng bắt đầu?
           </h2>
           <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-            Tạo tài khoản miễn phí, nhập hồ sơ học tập và để AI giúp bạn 
+            Tạo tài khoản miễn phí, nhập hồ sơ học tập và để AI giúp bạn
             tìm lộ trình phát triển sự nghiệp CNTT phù hợp nhất.
           </p>
           <div className="flex items-center justify-center gap-3">

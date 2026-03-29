@@ -7,7 +7,7 @@ const router = require('express').Router();
 const { protect, authorize } = require('../middleware/auth');
 
 // Controllers
-const userCtrl = require('../controllers/admin/user.controller');
+const userCtrl = require('../controllers/user.controller');
 
 // Tất cả admin routes đều yêu cầu auth + admin role
 router.use(protect, authorize('admin'));
