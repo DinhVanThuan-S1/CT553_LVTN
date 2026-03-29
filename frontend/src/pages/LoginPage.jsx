@@ -87,7 +87,7 @@ export default function LoginPage() {
             Chào mừng trở lại!
           </h1>
           <p className="text-lg text-white/80 max-w-md">
-            Đăng nhập để tiếp tục lộ trình học tập cá nhân hóa 
+            Đăng nhập để tiếp tục lộ trình học tập cá nhân hóa
             và khám phá cơ hội nghề nghiệp phù hợp.
           </p>
         </div>

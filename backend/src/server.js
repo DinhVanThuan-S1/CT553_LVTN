@@ -73,6 +73,8 @@ app.use('/api/courses', require('./routes/course.routes'));
 app.use('/api/skills', require('./routes/skill.routes'));
 app.use('/api/curriculum-programs', require('./routes/curriculum.routes'));
 app.use('/api/roadmaps', require('./routes/roadmap.routes'));
+app.use('/api/student', require('./routes/student.routes'));
+app.use('/api/jobs', require('./routes/job.routes'));
 
 // ===== ERROR HANDLING =====
 

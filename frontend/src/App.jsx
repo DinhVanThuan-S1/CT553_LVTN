@@ -20,6 +20,13 @@ import CourseManagement from './pages/admin/CourseManagement';
 import CurriculumManagement from './pages/admin/CurriculumManagement';
 import SkillManagement from './pages/admin/SkillManagement';
 
+// Pages - Student
+import StudentDashboard from './pages/student/StudentDashboard';
+import AcademicProfilePage from './pages/student/AcademicProfilePage';
+import CareerPreferencePage from './pages/student/CareerPreferencePage';
+import RoadmapListPage from './pages/student/RoadmapListPage';
+import JobListPage from './pages/student/JobListPage';
+
 // Root layout - cung cấp AuthProvider + Toast cho toàn bộ app
 function RootLayout() {
   return (
@@ -81,14 +88,14 @@ const router = createBrowserRouter([
         path: '/student',
         element: <AuthLayout allowedRoles={['student']} role="student" />,
         children: [
-          { index: true, element: <PlaceholderPage title="Tổng quan" /> },
-          { path: 'academic-profile', element: <PlaceholderPage title="Hồ sơ Học tập" /> },
-          { path: 'career-preferences', element: <PlaceholderPage title="Sở thích Nghề nghiệp" /> },
-          { path: 'roadmaps', element: <PlaceholderPage title="Danh sách Lộ trình" /> },
+          { index: true, element: <StudentDashboard /> },
+          { path: 'academic-profile', element: <AcademicProfilePage /> },
+          { path: 'career-preferences', element: <CareerPreferencePage /> },
+          { path: 'roadmaps', element: <RoadmapListPage /> },
           { path: 'my-roadmap', element: <PlaceholderPage title="Lộ trình của tôi" /> },
           { path: 'progress', element: <PlaceholderPage title="Tiến độ học" /> },
           { path: 'skill-map', element: <PlaceholderPage title="Skill Map" /> },
-          { path: 'jobs', element: <PlaceholderPage title="Danh sách Công việc" /> },
+          { path: 'jobs', element: <JobListPage /> },
           { path: 'cv', element: <PlaceholderPage title="CV" /> },
           { path: 'applications', element: <PlaceholderPage title="Đơn ứng tuyển" /> },
           { path: 'favorites', element: <PlaceholderPage title="Yêu thích" /> },

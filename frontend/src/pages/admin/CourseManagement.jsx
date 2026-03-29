@@ -133,7 +133,7 @@ export default function CourseManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">QL Học phần</h1>
+          <h1 className="text-2xl font-bold">Quản Lý Học Phần</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Tổng {pagination.total} học phần trong hệ thống
           </p>
@@ -175,7 +175,7 @@ export default function CourseManagement() {
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground w-20">Mã HP</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Tên học phần</th>
                 <th className="text-center px-4 py-3 font-medium text-muted-foreground w-16">TC</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground w-24">Loại</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground w-36">Loại</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground w-32">Tiên quyết</th>
                 <th className="text-right px-4 py-3 font-medium text-muted-foreground w-24">Thao tác</th>
               </tr>
