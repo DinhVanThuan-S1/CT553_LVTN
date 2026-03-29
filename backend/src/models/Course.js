@@ -25,12 +25,35 @@ const courseSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Số tín chỉ là bắt buộc'],
     min: [1, 'Tín chỉ phải >= 1'],
+    max: [30, 'Tín chỉ phải <= 30'],
   },
-  // Loại học phần
+  // Loại học phần (bắt buộc/tự chọn)
   courseType: {
     type: String,
-    enum: ['required', 'elective', 'thesis', 'internship', 'general'],
+    enum: ['required', 'elective', 'thesis', 'internship'],
     default: 'required',
+  },
+  // Phân loại (đại cương/cơ sở ngành/chuyên ngành)
+  courseCategory: {
+    type: String,
+    enum: ['general', 'foundation', 'specialized'],
+    default: 'general',
+  },
+  // Điều kiện đăng ký (VD: "Tích lũy >= 125 TC")
+  condition: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  // Không tính vào GPA tích lũy
+  excludeFromCumulativeGPA: {
+    type: Boolean,
+    default: false,
+  },
+  // Không tính vào GPA học kỳ
+  excludeFromSemesterGPA: {
+    type: Boolean,
+    default: false,
   },
   // Học phần tiên quyết (mã HP)
   prerequisites: [{

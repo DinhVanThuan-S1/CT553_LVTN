@@ -33,14 +33,24 @@ function parsePrerequisites(str) {
 }
 
 /**
- * Xác định loại học phần
+ * Xác định loại học phần (bắt buộc/tự chọn)
  */
 function determineCourseType(code, required, elective) {
   if (code.includes('553') || code.includes('505')) return 'thesis';
   if (code.includes('458')) return 'internship';
-  if (!code.startsWith('CT')) return 'general';
   if (elective && !required) return 'elective';
   return 'required';
+}
+
+/**
+ * Xác định phân loại (đại cương/cơ sở ngành/chuyên ngành)
+ */
+function determineCourseCategory(code) {
+  if (!code.startsWith('CT')) return 'general'; // Đại cương
+  // Cơ sở ngành: các HP nền tảng
+  const foundationCodes = ['CT101', 'CT112', 'CT172', 'CT173', 'CT174', 'CT175', 'CT176', 'CT177', 'CT178', 'CT182', 'CT188', 'CT113', 'CT100'];
+  if (foundationCodes.includes(code.replace(/E$/, ''))) return 'foundation';
+  return 'specialized'; // Chuyên ngành
 }
 
 async function seedCourses() {
@@ -60,12 +70,24 @@ async function seedCourses() {
 
     for (const courseData of coursesData) {
       const credits = typeof courseData.credits === 'number' ? courseData.credits : parseInt(courseData.credits) || 2;
-      
+      const cleanCode = courseData.code.replace(/E$/, '');
+
+      // Phát hiện điều kiện tín chỉ trong prerequisite
+      let condition = '';
+      if (courseData.prerequisite) {
+        const tcMatch = courseData.prerequisite.match(/>?=?\s*(\d+)\s*TC/i);
+        if (tcMatch) {
+          condition = `Tích lũy >= ${tcMatch[1]} TC`;
+        }
+      }
+
       const course = await Course.create({
-        code: courseData.code.replace(/E$/, ''), // Chuẩn hóa mã (bỏ E cuối)
-        name: courseData.name.replace(/\s*\(\*\)\s*$/, ''), // Bỏ dấu (*)
+        code: cleanCode,
+        name: courseData.name.replace(/\s*\(\*\)\s*$/, ''),
         credits: credits,
         courseType: determineCourseType(courseData.code, courseData.required, courseData.elective),
+        courseCategory: determineCourseCategory(courseData.code),
+        condition: condition,
         prerequisites: parsePrerequisites(courseData.prerequisite),
         corequisites: parsePrerequisites(courseData.corequisite),
         description: courseData.description,

@@ -5,7 +5,7 @@
 const Course = require('../models/Course');
 
 class CourseService {
-  async getCourses({ page = 1, limit = 20, search, courseType, sort = 'code' }) {
+  async getCourses({ page = 1, limit = 20, search, courseType, courseCategory, sort = 'code' }) {
     const filter = {};
     if (search) {
       filter.$or = [
@@ -14,6 +14,7 @@ class CourseService {
       ];
     }
     if (courseType) filter.courseType = courseType;
+    if (courseCategory) filter.courseCategory = courseCategory;
 
     const total = await Course.countDocuments(filter);
     const courses = await Course.find(filter)

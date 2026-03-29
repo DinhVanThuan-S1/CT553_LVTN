@@ -118,7 +118,7 @@ export default function AcademicProfilePage() {
   if (loading) {
     return (
       <div className="animate-fade-in space-y-6">
-        <h1 className="text-2xl font-bold">Hồ sơ Học tập</h1>
+        <h1 className="text-2xl font-bold">Hồ Sơ Học Tập</h1>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => <div key={i} className="h-16 skeleton rounded-lg" />)}
         </div>
@@ -133,8 +133,8 @@ export default function AcademicProfilePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Hồ sơ Học tập</h1>
-          <p className="text-muted-foreground text-sm mt-1">Chọn CTĐT và nhập điểm các học phần</p>
+          <h1 className="text-2xl font-bold">Hồ Sơ Học Tập</h1>
+          <p className="text-muted-foreground text-sm mt-1">Chọn CTĐT mẫu và nhập điểm các học phần</p>
         </div>
         {Object.keys(gradeChanges).length > 0 && (
           <Button onClick={handleSaveGrades} disabled={saving} className="gap-2">
