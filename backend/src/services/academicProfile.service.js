@@ -1,10 +1,16 @@
 /**
  * AcademicProfile Service
- * Hồ sơ học tập: chọn CTĐT, nhập điểm, tự tạo KHHT
+ * Hồ sơ học tập: chọn CTĐT, nhập điểm, GPA theo HK
  */
 const AcademicProfile = require('../models/AcademicProfile');
 const CurriculumProgram = require('../models/CurriculumProgram');
 const Semester = require('../models/Semester');
+
+const POPULATE_FIELDS = [
+  { path: 'curriculumProgram', select: 'code name totalCredits' },
+  { path: 'courseGrades.course', select: 'code name credits courseType courseCategory excludeFromCumulativeGPA excludeFromSemesterGPA' },
+  { path: 'courseGrades.semester', select: 'name order' },
+];
 
 class AcademicProfileService {
   /**
@@ -12,9 +18,7 @@ class AcademicProfileService {
    */
   async getProfile(studentId) {
     let profile = await AcademicProfile.findOne({ student: studentId })
-      .populate('curriculumProgram', 'code name totalCredits')
-      .populate('courseGrades.course', 'code name credits courseType')
-      .populate('courseGrades.semester', 'name order');
+      .populate(POPULATE_FIELDS);
 
     if (!profile) {
       profile = await AcademicProfile.create({ student: studentId });
@@ -32,7 +36,7 @@ class AcademicProfileService {
 
     // Lấy semesters + courses
     const semesters = await Semester.find({ curriculumProgram: programId })
-      .populate('courses.course', 'code name credits courseType')
+      .populate('courses.course', 'code name credits courseType courseCategory')
       .sort('order');
 
     // Tạo courseGrades từ tất cả HP trong CTĐT
@@ -43,7 +47,9 @@ class AcademicProfileService {
           courseGrades.push({
             course: item.course._id,
             semester: sem._id,
+            isRequired: item.isRequired !== false,
             grade: '',
+            numericGrade: null,
             gradePoint: 0,
           });
         }
@@ -54,40 +60,43 @@ class AcademicProfileService {
       { student: studentId },
       { curriculumProgram: programId, courseGrades },
       { new: true, upsert: true }
-    ).populate('curriculumProgram', 'code name totalCredits')
-      .populate('courseGrades.course', 'code name credits courseType')
-      .populate('courseGrades.semester', 'name order');
+    ).populate(POPULATE_FIELDS);
 
     return profile;
   }
 
   /**
    * Cập nhật điểm các HP
-   * grades: [{ courseGradeId, grade }]
+   * grades: [{ courseGradeId, numericGrade?, grade? }]
    */
   async updateGrades(studentId, grades) {
     const profile = await AcademicProfile.findOne({ student: studentId });
     if (!profile) throw { status: 404, message: 'Chưa có hồ sơ học tập' };
 
-    for (const { courseGradeId, grade } of grades) {
-      const cg = profile.courseGrades.id(courseGradeId);
-      if (cg) {
-        cg.grade = grade;
+    for (const item of grades) {
+      const cg = profile.courseGrades.id(item.courseGradeId);
+      if (!cg) continue;
+
+      if (item.numericGrade !== undefined) {
+        // Nhập điểm số → auto convert
+        if (item.numericGrade === null || item.numericGrade === '') {
+          cg.numericGrade = null;
+          cg.grade = '';
+          cg.gradePoint = 0;
+        } else {
+          cg.numericGrade = parseFloat(item.numericGrade);
+          // grade + gradePoint sẽ được tính trong pre-save hook
+        }
+      } else if (item.grade !== undefined) {
+        // Nhập trực tiếp điểm chữ
+        cg.grade = item.grade;
+        cg.numericGrade = null;
       }
     }
 
-    // Tính completedCredits
-    await profile.populate('courseGrades.course', 'credits');
-    const completed = profile.courseGrades.filter((cg) => cg.grade && cg.grade !== 'F');
-    profile.completedCredits = completed.reduce((sum, cg) => sum + (cg.course?.credits || 0), 0);
+    await profile.save(); // trigger pre-save hook → tính GPA
 
-    await profile.save();
-
-    return profile.populate([
-      { path: 'curriculumProgram', select: 'code name totalCredits' },
-      { path: 'courseGrades.course', select: 'code name credits courseType' },
-      { path: 'courseGrades.semester', select: 'name order' },
-    ]);
+    return profile.populate(POPULATE_FIELDS);
   }
 
   /**
