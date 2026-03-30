@@ -11,6 +11,9 @@ const prefCtrl = require('../controllers/careerPreference.controller');
 const prCtrl = require('../controllers/personalRoadmap.controller');
 const favCtrl = require('../controllers/favorite.controller');
 
+const cvCtrl = require('../controllers/cv.controller');
+const appCtrl = require('../controllers/application.controller');
+
 router.use(protect, authorize('student'));
 
 // === Hồ sơ học tập ===
@@ -30,6 +33,20 @@ router.get('/my-roadmaps', prCtrl.getMyRoadmaps);
 router.get('/my-roadmaps/:id', prCtrl.getRoadmapDetail);
 router.post('/my-roadmaps/enroll', prCtrl.enrollRoadmap);
 router.patch('/my-roadmaps/:id/sessions/:sessionId/complete', prCtrl.completeSession);
+
+// === CV ===
+router.get('/cvs', cvCtrl.getMyCVs);
+router.get('/cvs/:id', cvCtrl.getCVById);
+router.post('/cvs', cvCtrl.createCV);
+router.put('/cvs/:id', cvCtrl.updateCV);
+router.delete('/cvs/:id', cvCtrl.deleteCV);
+router.patch('/cvs/:id/default', cvCtrl.setDefault);
+
+// === Đơn ứng tuyển ===
+router.get('/applications', appCtrl.getMyApplications);
+router.get('/applications/:id', appCtrl.getApplicationDetail);
+router.post('/applications', appCtrl.apply);
+router.patch('/applications/:id/withdraw', appCtrl.withdraw);
 
 // === Yêu thích ===
 router.get('/favorites', favCtrl.getFavorites);

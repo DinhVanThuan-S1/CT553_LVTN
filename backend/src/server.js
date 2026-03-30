@@ -75,6 +75,7 @@ app.use('/api/curriculum-programs', require('./routes/curriculum.routes'));
 app.use('/api/roadmaps', require('./routes/roadmap.routes'));
 app.use('/api/student', require('./routes/student.routes'));
 app.use('/api/jobs', require('./routes/job.routes'));
+app.use('/api/employer', require('./routes/employer.routes'));
 
 // ===== ERROR HANDLING =====
 

@@ -33,6 +33,15 @@ import MyRoadmapPage from './pages/student/MyRoadmapPage';
 import ProgressPage from './pages/student/ProgressPage';
 import SkillMapPage from './pages/student/SkillMapPage';
 import JobListPage from './pages/student/JobListPage';
+import CVPage from './pages/student/CVPage';
+import ApplicationsPage from './pages/student/ApplicationsPage';
+import FavoritesPage from './pages/student/FavoritesPage';
+
+// Pages - Employer
+import EmployerDashboard from './pages/employer/EmployerDashboard';
+import CompanyProfilePage from './pages/employer/CompanyProfilePage';
+import EmployerJobPostingsPage from './pages/employer/EmployerJobPostingsPage';
+import ApplicantsPage from './pages/employer/ApplicantsPage';
 
 // Root layout - cung cấp AuthProvider + Toast cho toàn bộ app
 function RootLayout() {
@@ -105,9 +114,9 @@ const router = createBrowserRouter([
           { path: 'progress', element: <ProgressPage /> },
           { path: 'skill-map', element: <SkillMapPage /> },
           { path: 'jobs', element: <JobListPage /> },
-          { path: 'cv', element: <PlaceholderPage title="CV" /> },
-          { path: 'applications', element: <PlaceholderPage title="Đơn ứng tuyển" /> },
-          { path: 'favorites', element: <PlaceholderPage title="Yêu thích" /> },
+          { path: 'cv', element: <CVPage /> },
+          { path: 'applications', element: <ApplicationsPage /> },
+          { path: 'favorites', element: <FavoritesPage /> },
         ],
       },
       // === Employer (protected) ===
@@ -115,10 +124,10 @@ const router = createBrowserRouter([
         path: '/employer',
         element: <AuthLayout allowedRoles={['employer']} role="employer" />,
         children: [
-          { index: true, element: <PlaceholderPage title="Tổng quan" /> },
-          { path: 'company', element: <PlaceholderPage title="Hồ sơ Công ty" /> },
-          { path: 'job-postings', element: <PlaceholderPage title="Tin tuyển dụng" /> },
-          { path: 'applicants', element: <PlaceholderPage title="Ứng viên" /> },
+          { index: true, element: <EmployerDashboard /> },
+          { path: 'company', element: <CompanyProfilePage /> },
+          { path: 'job-postings', element: <EmployerJobPostingsPage /> },
+          { path: 'applicants', element: <ApplicantsPage /> },
         ],
       },
     ],
