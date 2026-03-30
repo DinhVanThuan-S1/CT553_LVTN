@@ -41,6 +41,11 @@ const courseGradeSchema = new mongoose.Schema({
     max: 4,
     default: 0,
   },
+  // Nhóm tự chọn (VD: LANG_2 = ngoại ngữ HK2, SPEC_5 = chuyên ngành HK5)
+  electiveGroup: {
+    type: String,
+    default: null,
+  },
 }, { _id: true });
 
 const academicProfileSchema = new mongoose.Schema({

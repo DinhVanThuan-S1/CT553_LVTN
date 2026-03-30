@@ -17,6 +17,8 @@ router.use(protect, authorize('student'));
 router.get('/academic-profile', profileCtrl.getProfile);
 router.post('/academic-profile/select-program', profileCtrl.selectProgram);
 router.put('/academic-profile/grades', profileCtrl.updateGrades);
+router.put('/academic-profile/move-course', profileCtrl.moveCourse);
+router.delete('/academic-profile/course/:courseGradeId', profileCtrl.removeCourse);
 router.patch('/academic-profile/semester', profileCtrl.updateSemester);
 
 // === Sở thích nghề nghiệp ===

@@ -34,12 +34,39 @@ function parsePrerequisites(str) {
 
 /**
  * Xác định loại học phần (bắt buộc/tự chọn)
+ * - elective có giá trị → tự chọn
+ * - required là mã nhóm (AV, PV, CN1) → tự chọn
+ * - Code prefix: FL0xx (Pháp văn), TC (Thể chất) → tự chọn
+ * - Code XH0xx + tên chứa "Anh văn" → tự chọn
  */
-function determineCourseType(code, required, elective) {
+function determineCourseType(code, required, elective, name) {
   if (code.includes('553') || code.includes('505')) return 'thesis';
   if (code.includes('458')) return 'internship';
-  if (elective && !required) return 'elective';
+  if (elective && elective !== '') return 'elective';
+  if (required && typeof required === 'string' && /^[A-Z]{2,}/.test(required)) return 'elective';
+  // Pháp văn (FL0xx) luôn là tự chọn (thay thế cho Anh văn)
+  if (/^FL\d/.test(code)) return 'elective';
+  // Anh văn (XH0xx + tên chứa "Anh văn") là tự chọn
+  if (/^XH\d/.test(code) && name && /anh v[aă]n/i.test(name)) return 'elective';
+  // Thể chất (TC) là tự chọn
+  if (/^TC\d/.test(code)) return 'elective';
   return 'required';
+}
+
+/**
+ * Xác định nhóm tự chọn
+ * AV/PV cùng HK → LANG, CN1/CN2 → SPEC, GDTC → PE
+ */
+function getElectiveGroup(code, required, elective, name) {
+  const req = (required || '').toUpperCase();
+  // Nhóm ngoại ngữ: AV + PV là thay thế nhau
+  if (req === 'AV' || req === 'PV') return 'LANG';
+  if (elective && typeof elective === 'string' && /AV.*PV|PV.*AV/i.test(elective)) return 'LANG';
+  if (/^FL\d/.test(code)) return 'LANG';
+  if (/^XH\d/.test(code) && name && /anh v[aă]n/i.test(name)) return 'LANG';
+  // Nhóm chuyên ngành
+  if (/^CN\d/.test(req)) return 'SPEC';
+  return null;
 }
 
 /**
@@ -85,7 +112,7 @@ async function seedCourses() {
         code: cleanCode,
         name: courseData.name.replace(/\s*\(\*\)\s*$/, ''),
         credits: credits,
-        courseType: determineCourseType(courseData.code, courseData.required, courseData.elective),
+        courseType: determineCourseType(courseData.code, courseData.required, courseData.elective, courseData.name),
         courseCategory: determineCourseCategory(courseData.code),
         condition: condition,
         prerequisites: parsePrerequisites(courseData.prerequisite),
@@ -119,32 +146,52 @@ async function seedCourses() {
 
     for (let i = 0; i < curriculumPlan.length; i++) {
       const semData = curriculumPlan[i];
-      
-      // Map mã HP sang ObjectId
+      const semOrder = i + 1;
       const semesterCourses = [];
-      for (const courseCode of semData.courses) {
-        const courseId = courseMap.get(courseCode) || courseMap.get(courseCode.replace(/E$/, ''));
+
+      // Helper: tìm courseId từ code
+      function findCourseId(code) {
+        return courseMap.get(code) || courseMap.get(code.replace(/E$/, ''));
+      }
+
+      // 1. HP bắt buộc
+      for (const code of semData.courses || []) {
+        const courseId = findCourseId(code);
         if (courseId) {
-          // Xác định bắt buộc hay tự chọn dựa trên data gốc
-          const originalCourse = coursesData.find(c => c.code === courseCode);
-          const isRequired = originalCourse ? !!originalCourse.required : true;
-          
-          semesterCourses.push({
-            course: courseId,
-            isRequired: isRequired,
-          });
+          semesterCourses.push({ course: courseId, isRequired: true, electiveGroup: null });
+        }
+      }
+
+      // 2. HP tự chọn đơn lẻ (không thuộc nhóm)
+      for (const code of semData.electives || []) {
+        const courseId = findCourseId(code);
+        if (courseId) {
+          semesterCourses.push({ course: courseId, isRequired: false, electiveGroup: null });
+        }
+      }
+
+      // 3. HP tự chọn theo nhóm (VD: AV/PV)
+      for (const group of semData.electiveGroups || []) {
+        const groupKey = `${group.group}_${semOrder}`;
+        for (const code of group.courses || []) {
+          const courseId = findCourseId(code);
+          if (courseId) {
+            semesterCourses.push({ course: courseId, isRequired: false, electiveGroup: groupKey });
+          }
         }
       }
 
       const semester = await Semester.create({
         name: semData.name,
-        order: i + 1,
+        order: semOrder,
         curriculumProgram: ctdt._id,
         courses: semesterCourses,
       });
 
       semesterIds.push(semester._id);
-      console.log(`  ✅ ${semData.name}: ${semesterCourses.length} courses`);
+      const reqCount = semesterCourses.filter(c => c.isRequired).length;
+      const elecCount = semesterCourses.filter(c => !c.isRequired).length;
+      console.log(`  ✅ ${semData.name}: ${reqCount} BB + ${elecCount} TC = ${semesterCourses.length} courses`);
     }
 
     // Cập nhật CTĐT với danh sách học kỳ

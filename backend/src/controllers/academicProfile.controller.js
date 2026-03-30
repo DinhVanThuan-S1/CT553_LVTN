@@ -39,3 +39,21 @@ exports.updateSemester = async (req, res) => {
     res.status(error.status || 500).json({ success: false, message: error.message });
   }
 };
+
+exports.moveCourse = async (req, res) => {
+  try {
+    const data = await profileService.moveCourse(req.user._id, req.body.courseGradeId, req.body.targetSemesterId);
+    res.json({ success: true, data, message: 'Đã di chuyển học phần' });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
+
+exports.removeCourse = async (req, res) => {
+  try {
+    const data = await profileService.removeCourse(req.user._id, req.params.courseGradeId);
+    res.json({ success: true, data, message: 'Đã xóa học phần' });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
