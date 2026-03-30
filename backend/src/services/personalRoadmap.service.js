@@ -12,6 +12,7 @@ class PersonalRoadmapService {
   async getMyRoadmaps(studentId) {
     return PersonalRoadmap.find({ student: studentId })
       .populate('roadmap', 'title careerPath thumbnail difficulty estimatedMonths')
+      .populate('sessions.skill', 'name icon category')
       .sort('-createdAt');
   }
 
