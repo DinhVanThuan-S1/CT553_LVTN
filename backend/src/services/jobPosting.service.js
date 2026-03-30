@@ -3,6 +3,7 @@
  * Công việc: dành cho public listing + admin approval
  */
 const JobPosting = require('../models/JobPosting');
+require('../models/Company'); // Ensure Company schema is registered for populate
 
 class JobPostingService {
   /**

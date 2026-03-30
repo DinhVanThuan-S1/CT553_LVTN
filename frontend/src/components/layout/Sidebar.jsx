@@ -65,6 +65,7 @@ const menuConfig = {
     { label: 'QL Lộ trình mẫu', path: '/admin/roadmaps', icon: Route },
     { label: 'QL Tài nguyên', path: '/admin/resources', icon: FolderOpen },
     { type: 'divider', label: 'Tuyển dụng' },
+    { label: 'QL Công việc mẫu', path: '/admin/job-templates', icon: Briefcase },
     { label: 'QL Tin tuyển dụng', path: '/admin/job-postings', icon: ClipboardList },
     { type: 'divider', label: 'Báo cáo' },
     { label: 'Thống kê', path: '/admin/reports', icon: BarChart3 },

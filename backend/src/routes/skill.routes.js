@@ -11,7 +11,7 @@ const skillCtrl = require('../controllers/skill.controller');
 router.get('/all', skillCtrl.getAllSkills);
 
 // Admin CRUD
-router.get('/', protect, authorize('admin'), skillCtrl.getSkills);
+router.get('/', protect, authorize('admin', 'student'), skillCtrl.getSkills);
 router.get('/:id', skillCtrl.getSkill);
 router.post('/', protect, authorize('admin'), skillCtrl.createSkill);
 router.put('/:id', protect, authorize('admin'), skillCtrl.updateSkill);

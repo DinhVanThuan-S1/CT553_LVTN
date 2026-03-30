@@ -19,12 +19,19 @@ import UserManagement from './pages/admin/UserManagement';
 import CourseManagement from './pages/admin/CourseManagement';
 import CurriculumManagement from './pages/admin/CurriculumManagement';
 import SkillManagement from './pages/admin/SkillManagement';
+import RoadmapManagement from './pages/admin/RoadmapManagement';
+import JobPostingManagement from './pages/admin/JobPostingManagement';
+import JobTemplateManagement from './pages/admin/JobTemplateManagement';
 
 // Pages - Student
 import StudentDashboard from './pages/student/StudentDashboard';
 import AcademicProfilePage from './pages/student/AcademicProfilePage';
 import CareerPreferencePage from './pages/student/CareerPreferencePage';
 import RoadmapListPage from './pages/student/RoadmapListPage';
+import RoadmapDetailPage from './pages/student/RoadmapDetailPage';
+import MyRoadmapPage from './pages/student/MyRoadmapPage';
+import ProgressPage from './pages/student/ProgressPage';
+import SkillMapPage from './pages/student/SkillMapPage';
 import JobListPage from './pages/student/JobListPage';
 
 // Root layout - cung cấp AuthProvider + Toast cho toàn bộ app
@@ -77,9 +84,10 @@ const router = createBrowserRouter([
           { path: 'courses', element: <CourseManagement /> },
           { path: 'curriculum-programs', element: <CurriculumManagement /> },
           { path: 'skills', element: <SkillManagement /> },
-          { path: 'roadmaps', element: <PlaceholderPage title="QL Lộ trình mẫu" /> },
+          { path: 'roadmaps', element: <RoadmapManagement /> },
+          { path: 'job-templates', element: <JobTemplateManagement /> },
+          { path: 'job-postings', element: <JobPostingManagement /> },
           { path: 'resources', element: <PlaceholderPage title="QL Tài nguyên" /> },
-          { path: 'job-postings', element: <PlaceholderPage title="QL Tin tuyển dụng" /> },
           { path: 'reports', element: <PlaceholderPage title="Thống kê" /> },
         ],
       },
@@ -92,9 +100,10 @@ const router = createBrowserRouter([
           { path: 'academic-profile', element: <AcademicProfilePage /> },
           { path: 'career-preferences', element: <CareerPreferencePage /> },
           { path: 'roadmaps', element: <RoadmapListPage /> },
-          { path: 'my-roadmap', element: <PlaceholderPage title="Lộ trình của tôi" /> },
-          { path: 'progress', element: <PlaceholderPage title="Tiến độ học" /> },
-          { path: 'skill-map', element: <PlaceholderPage title="Skill Map" /> },
+          { path: 'roadmaps/:id', element: <RoadmapDetailPage /> },
+          { path: 'my-roadmap', element: <MyRoadmapPage /> },
+          { path: 'progress', element: <ProgressPage /> },
+          { path: 'skill-map', element: <SkillMapPage /> },
           { path: 'jobs', element: <JobListPage /> },
           { path: 'cv', element: <PlaceholderPage title="CV" /> },
           { path: 'applications', element: <PlaceholderPage title="Đơn ứng tuyển" /> },

@@ -9,6 +9,7 @@ const { protect, authorize } = require('../middleware/auth');
 // Controllers
 const userCtrl = require('../controllers/user.controller');
 const jobCtrl = require('../controllers/jobPosting.controller');
+const jobTplCtrl = require('../controllers/jobTemplate.controller');
 
 // Tất cả admin routes đều yêu cầu auth + admin role
 router.use(protect, authorize('admin'));
@@ -23,4 +24,12 @@ router.patch('/users/:id/toggle-status', userCtrl.toggleUserStatus);
 router.get('/job-postings', jobCtrl.getAdminJobs);
 router.patch('/job-postings/:id/approve', jobCtrl.approveJob);
 
+// === QL Công việc mẫu (JobTemplate) ===
+router.get('/job-templates', jobTplCtrl.getTemplates);
+router.get('/job-templates/:id', jobTplCtrl.getTemplate);
+router.post('/job-templates', jobTplCtrl.createTemplate);
+router.put('/job-templates/:id', jobTplCtrl.updateTemplate);
+router.delete('/job-templates/:id', jobTplCtrl.deleteTemplate);
+
 module.exports = router;
+
