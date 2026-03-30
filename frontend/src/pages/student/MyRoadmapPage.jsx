@@ -262,14 +262,15 @@ export default function MyRoadmapPage() {
                   .filter((s) => s.status === 'upcoming')
                   .slice(0, 10)
                   .map((session) => (
-                    <div key={session._id} className="flex items-center gap-3 rounded-lg border p-2.5">
+                    <div key={session._id} className="flex items-center gap-3 rounded-lg border p-2.5 hover:bg-muted/20 transition-colors">
                       <Circle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <div className="flex-1 min-w-0">
+                      <Link to={`/student/my-roadmap/${detailPR._id}/session/${session._id}`}
+                        className="flex-1 min-w-0 hover:text-primary transition-colors cursor-pointer">
                         <span className="text-sm font-medium">{session.skill?.name || 'Kỹ năng'}</span>
                         <span className="text-xs text-muted-foreground ml-2">
                           {new Date(session.date).toLocaleDateString('vi-VN')} • {session.startTime}-{session.endTime}
                         </span>
-                      </div>
+                      </Link>
                       <Button size="sm" variant="outline" className="text-xs gap-1 shrink-0"
                         disabled={completing === session._id}
                         onClick={() => completeSession(detailPR._id, session._id)}>

@@ -36,6 +36,8 @@ import JobListPage from './pages/student/JobListPage';
 import CVPage from './pages/student/CVPage';
 import ApplicationsPage from './pages/student/ApplicationsPage';
 import FavoritesPage from './pages/student/FavoritesPage';
+import LearningSessionPage from './pages/student/LearningSessionPage';
+import SkillTestPage from './pages/student/SkillTestPage';
 
 // Pages - Employer
 import EmployerDashboard from './pages/employer/EmployerDashboard';
@@ -111,6 +113,8 @@ const router = createBrowserRouter([
           { path: 'roadmaps', element: <RoadmapListPage /> },
           { path: 'roadmaps/:id', element: <RoadmapDetailPage /> },
           { path: 'my-roadmap', element: <MyRoadmapPage /> },
+          { path: 'my-roadmap/:prId/session/:sessionId', element: <LearningSessionPage /> },
+          { path: 'my-roadmap/:prId/test/:skillId', element: <SkillTestPage /> },
           { path: 'progress', element: <ProgressPage /> },
           { path: 'skill-map', element: <SkillMapPage /> },
           { path: 'jobs', element: <JobListPage /> },

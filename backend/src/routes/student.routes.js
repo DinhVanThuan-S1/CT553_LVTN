@@ -13,6 +13,7 @@ const favCtrl = require('../controllers/favorite.controller');
 
 const cvCtrl = require('../controllers/cv.controller');
 const appCtrl = require('../controllers/application.controller');
+const learnCtrl = require('../controllers/learning.controller');
 
 router.use(protect, authorize('student'));
 
@@ -33,6 +34,15 @@ router.get('/my-roadmaps', prCtrl.getMyRoadmaps);
 router.get('/my-roadmaps/:id', prCtrl.getRoadmapDetail);
 router.post('/my-roadmaps/enroll', prCtrl.enrollRoadmap);
 router.patch('/my-roadmaps/:id/sessions/:sessionId/complete', prCtrl.completeSession);
+
+// === Buổi học & Bài test ===
+router.get('/my-roadmaps/:prId/sessions/:sessionId', learnCtrl.getSessionDetail);
+router.patch('/my-roadmaps/:prId/sessions/:sessionId/notes', learnCtrl.updateSessionNotes);
+router.get('/my-roadmaps/:prId/skills/:skillId/test', learnCtrl.getSkillTest);
+router.post('/my-roadmaps/:prId/skills/:skillId/test', learnCtrl.submitSkillTest);
+
+// === Đánh giá lộ trình ===
+router.post('/roadmaps/:roadmapId/reviews', learnCtrl.createReview);
 
 // === CV ===
 router.get('/cvs', cvCtrl.getMyCVs);

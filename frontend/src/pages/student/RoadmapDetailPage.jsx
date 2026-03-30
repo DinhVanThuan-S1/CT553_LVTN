@@ -12,7 +12,7 @@ import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components
 import { useToast } from '../../components/ui/Toast';
 import {
   ArrowLeft, Route, Clock, Users, Star, Target, CheckCircle2,
-  BookOpen, Loader2, Calendar,
+  BookOpen, Loader2, Calendar, MessageSquare, Send, StarIcon,
 } from 'lucide-react';
 
 const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
@@ -32,9 +32,16 @@ export default function RoadmapDetailPage() {
   const [enrolling, setEnrolling] = useState(false);
   const [duration, setDuration] = useState(6);
   const [freeSlots, setFreeSlots] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [myReview, setMyReview] = useState(null);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [hoverStar, setHoverStar] = useState(0);
 
   useEffect(() => {
     loadRoadmap();
+    loadReviews();
   }, [id]);
 
   async function loadRoadmap() {
@@ -46,6 +53,36 @@ export default function RoadmapDetailPage() {
       toast.error('Không thể tải lộ trình');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadReviews() {
+    try {
+      const { data } = await api.get(`/roadmaps/${id}/reviews`);
+      setReviews(data.data);
+      if (data.myReview) {
+        setMyReview(data.myReview);
+        setReviewRating(data.myReview.rating);
+        setReviewComment(data.myReview.comment);
+      }
+    } catch {
+      // ok — reviews optional
+    }
+  }
+
+  async function submitReview(e) {
+    e.preventDefault();
+    if (reviewRating === 0) { toast.error('Vui lòng chọn số sao'); return; }
+    setSubmittingReview(true);
+    try {
+      await api.post(`/student/roadmaps/${id}/reviews`, { rating: reviewRating, comment: reviewComment });
+      toast.success('Cảm ơn đánh giá của bạn!');
+      loadReviews();
+      loadRoadmap();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Có lỗi');
+    } finally {
+      setSubmittingReview(false);
     }
   }
 
@@ -213,6 +250,89 @@ export default function RoadmapDetailPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="rounded-xl border bg-card p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-primary" />
+            Đánh giá ({reviews.length})
+          </h3>
+          {roadmap.averageRating > 0 && (
+            <div className="flex items-center gap-1">
+              <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+              <span className="font-bold">{roadmap.averageRating}</span>
+              <span className="text-xs text-muted-foreground">/ 5</span>
+            </div>
+          )}
+        </div>
+
+        {/* Write review */}
+        <form onSubmit={submitReview} className="rounded-lg border p-4 bg-muted/10">
+          <h4 className="text-sm font-medium mb-2">
+            {myReview ? 'Cập nhật đánh giá' : 'Viết đánh giá'}
+          </h4>
+          <div className="flex items-center gap-1 mb-3">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button key={star} type="button"
+                onMouseEnter={() => setHoverStar(star)}
+                onMouseLeave={() => setHoverStar(0)}
+                onClick={() => setReviewRating(star)}
+                className="p-0.5 transition-transform hover:scale-110">
+                <Star className={`w-6 h-6 ${
+                  (hoverStar || reviewRating) >= star
+                    ? 'text-amber-500 fill-amber-500'
+                    : 'text-muted-foreground/30'
+                }`} />
+              </button>
+            ))}
+            {reviewRating > 0 && (
+              <span className="text-sm font-medium ml-2">{reviewRating}/5</span>
+            )}
+          </div>
+          <textarea
+            className="w-full p-2.5 rounded-lg border bg-background text-sm resize-none focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"
+            placeholder="Chia sẻ trải nghiệm của bạn về lộ trình này..."
+            value={reviewComment}
+            onChange={(e) => setReviewComment(e.target.value)}
+            rows={2}
+          />
+          <Button type="submit" size="sm" className="mt-2 gap-1.5"
+            disabled={submittingReview || reviewRating === 0}>
+            {submittingReview ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+            {myReview ? 'Cập nhật' : 'Gửi đánh giá'}
+          </Button>
+        </form>
+
+        {/* Reviews list */}
+        {reviews.length > 0 && (
+          <div className="space-y-3">
+            {reviews.map((r) => (
+              <div key={r._id} className="rounded-lg border p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                    {r.student?.fullName?.charAt(0) || 'U'}
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">{r.student?.fullName || 'Ẩn danh'}</span>
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star key={s} className={`w-3 h-3 ${
+                          r.rating >= s ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground/20'
+                        }`} />
+                      ))}
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">
+                    {new Date(r.createdAt).toLocaleDateString('vi-VN')}
+                  </span>
+                </div>
+                {r.comment && <p className="text-sm text-muted-foreground ml-9">{r.comment}</p>}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Enroll Dialog */}
