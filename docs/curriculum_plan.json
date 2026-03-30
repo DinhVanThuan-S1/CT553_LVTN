@@ -34,8 +34,8 @@
   },
   {
     "name": "Học kỳ 6",
-    "courses": ["ML021", "TN010", "CT176", "CT113"],
-    "electives": ["KL001E"]
+    "courses": ["ML021", "TN010", "CT176", "CT113", "KL001E"],
+    "electives": []
   },
   {
     "name": "Học kỳ 7",

@@ -199,6 +199,25 @@ async function seedCourses() {
       semesters: semesterIds,
     });
 
+    // === 4. Đồng bộ courseType từ curriculum plan về Course model ===
+    console.log('\n🔄 Syncing courseType to Course model...');
+    const allSemesters = await Semester.find({ curriculumProgram: ctdt._id });
+    const electiveCourseIds = new Set();
+    for (const sem of allSemesters) {
+      for (const item of sem.courses) {
+        if (!item.isRequired) {
+          electiveCourseIds.add(item.course.toString());
+        }
+      }
+    }
+    if (electiveCourseIds.size > 0) {
+      const result = await Course.updateMany(
+        { _id: { $in: [...electiveCourseIds] }, courseType: { $nin: ['thesis', 'internship'] } },
+        { $set: { courseType: 'elective' } }
+      );
+      console.log(`  ✅ Updated ${result.modifiedCount} courses to 'elective'`);
+    }
+
     console.log('\n🎉 Seed completed successfully!');
     console.log(`  📚 Courses: ${coursesData.length}`);
     console.log(`  📅 Semesters: ${semesterIds.length}`);
