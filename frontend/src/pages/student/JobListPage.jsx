@@ -1,6 +1,6 @@
 /**
  * JobListPage - Danh sách công việc
- * Browse jobs, search, filter
+ * Browse jobs, search, filter, apply
  */
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../lib/api';
@@ -12,7 +12,8 @@ import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components
 import { useToast } from '../../components/ui/Toast';
 import {
   Search, Briefcase, MapPin, DollarSign, Clock, Eye, Heart,
-  ChevronLeft, ChevronRight, Building2, Target,
+  ChevronLeft, ChevronRight, Building2, Target, Send, FileText,
+  Loader2, CheckCircle2, Star,
 } from 'lucide-react';
 
 const jobTypeLabels = {
@@ -30,6 +31,13 @@ export default function JobListPage() {
   const [selectedJob, setSelectedJob] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [favorites, setFavorites] = useState({});
+
+  // Apply flow
+  const [showApply, setShowApply] = useState(false);
+  const [cvs, setCvs] = useState([]);
+  const [selectedCvId, setSelectedCvId] = useState('');
+  const [applying, setApplying] = useState(false);
+  const [cvsLoading, setCvsLoading] = useState(false);
 
   const loadJobs = useCallback(async () => {
     setLoading(true);
@@ -68,6 +76,40 @@ export default function JobListPage() {
       toast.success(data.message);
     } catch {
       toast.error('Có lỗi');
+    }
+  }
+
+  async function openApplyDialog() {
+    setCvsLoading(true);
+    setShowApply(true);
+    try {
+      const { data } = await api.get('/student/cvs');
+      setCvs(data.data || []);
+      const defaultCv = (data.data || []).find((c) => c.isDefault);
+      setSelectedCvId(defaultCv?._id || (data.data?.[0]?._id || ''));
+    } catch {
+      toast.error('Không thể tải CV');
+      setShowApply(false);
+    } finally {
+      setCvsLoading(false);
+    }
+  }
+
+  async function handleApply() {
+    if (!selectedCvId) { toast.error('Vui lòng chọn CV'); return; }
+    setApplying(true);
+    try {
+      await api.post('/student/applications', {
+        jobPostingId: selectedJob._id,
+        cvId: selectedCvId,
+      });
+      toast.success('Ứng tuyển thành công!');
+      setShowApply(false);
+      setShowDetail(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Có lỗi khi ứng tuyển');
+    } finally {
+      setApplying(false);
     }
   }
 
@@ -204,17 +246,39 @@ export default function JobListPage() {
           Chi tiết Công việc
         </DialogHeader>
         {selectedJob && (
-          <DialogBody className="space-y-4">
-            <div>
-              <h3 className="text-xl font-semibold">{selectedJob.title}</h3>
-              <p className="text-muted-foreground mt-1">{selectedJob.company?.name}</p>
+          <DialogBody className="space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Building2 className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold">{selectedJob.title}</h3>
+                <p className="text-muted-foreground">{selectedJob.company?.name}</p>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">{jobTypeLabels[selectedJob.jobType]}</Badge>
-              <Badge variant="default">{selectedJob.careerPath}</Badge>
+              {selectedJob.careerPath && <Badge variant="default">{selectedJob.careerPath}</Badge>}
               <Badge variant="outline">{formatSalary(selectedJob.salaryRange)}</Badge>
+              {selectedJob.locationText && (
+                <Badge variant="outline" className="gap-1">
+                  <MapPin className="w-3 h-3" /> {selectedJob.locationText}
+                </Badge>
+              )}
+              {selectedJob.experienceYears > 0 && (
+                <Badge variant="outline">{selectedJob.experienceYears} năm KN</Badge>
+              )}
+              {selectedJob.vacancies > 0 && (
+                <Badge variant="outline">{selectedJob.vacancies} vị trí</Badge>
+              )}
             </div>
+
+            {selectedJob.deadline && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" /> Hạn nộp: {new Date(selectedJob.deadline).toLocaleDateString('vi-VN')}
+              </p>
+            )}
 
             {selectedJob.description && (
               <div>
@@ -249,13 +313,93 @@ export default function JobListPage() {
                 </div>
               </div>
             )}
+
+            {/* Company info */}
+            {selectedJob.company && (
+              <div className="rounded-lg border bg-muted/20 p-3">
+                <h4 className="font-medium text-sm mb-1">Về công ty</h4>
+                <p className="text-xs text-muted-foreground">
+                  {selectedJob.company.industry && `Ngành: ${selectedJob.company.industry} • `}
+                  {selectedJob.company.size && `Quy mô: ${selectedJob.company.size} NV`}
+                </p>
+                {selectedJob.company.description && (
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-3">
+                    {selectedJob.company.description}
+                  </p>
+                )}
+              </div>
+            )}
           </DialogBody>
         )}
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Đóng</Button>
-          <Button size="sm" className="gap-2">Ứng tuyển</Button>
+          <Button size="sm" className="gap-2" onClick={openApplyDialog}>
+            <Send className="w-4 h-4" /> Ứng tuyển
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* Apply Dialog */}
+      <Dialog open={showApply} onClose={() => setShowApply(false)} className="max-w-md">
+        <DialogHeader onClose={() => setShowApply(false)}>
+          Ứng tuyển: {selectedJob?.title}
+        </DialogHeader>
+        <DialogBody className="space-y-4">
+          {cvsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+            </div>
+          ) : cvs.length === 0 ? (
+            <div className="text-center py-6">
+              <FileText className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground mb-3">Bạn chưa có CV nào</p>
+              <p className="text-xs text-muted-foreground">
+                Truy cập mục <strong>CV</strong> để tạo CV trước khi ứng tuyển
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">Chọn CV để gửi kèm đơn ứng tuyển:</p>
+              <div className="space-y-2">
+                {cvs.map((cv) => (
+                  <label key={cv._id}
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedCvId === cv._id
+                        ? 'border-primary bg-primary/[0.03]'
+                        : 'border-transparent bg-muted/30 hover:bg-muted/50'
+                      }`}>
+                    <input type="radio" name="cv" value={cv._id}
+                      checked={selectedCvId === cv._id}
+                      onChange={() => setSelectedCvId(cv._id)}
+                      className="accent-primary" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <FileText className="w-4 h-4 text-primary" />
+                        <span className="font-medium text-sm">{cv.title}</span>
+                        {cv.isDefault && <Badge variant="success" className="text-[9px]">Mặc định</Badge>}
+                      </div>
+                      {cv.headline && <p className="text-xs text-muted-foreground mt-0.5">{cv.headline}</p>}
+                      <p className="text-xs text-muted-foreground">
+                        {(cv.skills || []).length} kỹ năng • {(cv.experiences || []).length} kinh nghiệm
+                      </p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={() => setShowApply(false)}>Hủy</Button>
+          {cvs.length > 0 && (
+            <Button size="sm" disabled={applying || !selectedCvId} className="gap-1.5"
+              onClick={handleApply}>
+              {applying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {applying ? 'Đang gửi...' : 'Gửi đơn ứng tuyển'}
+            </Button>
+          )}
         </DialogFooter>
       </Dialog>
     </div>
   );
 }
+
