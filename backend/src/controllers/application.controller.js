@@ -5,6 +5,22 @@
 const appService = require('../services/application.service');
 const JobPosting = require('../models/JobPosting');
 const { createAndEmitNotification } = require('./notification.controller');
+const jobSuggestionService = require('../services/jobSuggestion.service');
+
+/**
+ * GET /api/student/job-suggestions
+ * Gợi ý công việc phù hợp cho sinh viên
+ */
+exports.getJobSuggestions = async (req, res) => {
+  try {
+    const suggestions = await jobSuggestionService.suggestJobs(req.user._id);
+    res.json({ success: true, data: suggestions });
+  } catch (error) {
+    console.error('getJobSuggestions error:', error);
+    res.status(500).json({ success: false, message: 'Lỗi server khi gợi ý công việc' });
+  }
+};
+
 
 exports.getMyApplications = async (req, res) => {
   try {

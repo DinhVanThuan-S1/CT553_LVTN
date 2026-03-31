@@ -61,6 +61,9 @@ router.get('/applications/:id', appCtrl.getApplicationDetail);
 router.post('/applications', appCtrl.apply);
 router.patch('/applications/:id/withdraw', appCtrl.withdraw);
 
+// === Gợi ý việc làm (AI Matching) ===
+router.get('/job-suggestions', appCtrl.getJobSuggestions);
+
 // === Yêu thích ===
 router.get('/favorites', favCtrl.getFavorites);
 router.post('/favorites/toggle', favCtrl.toggleFavorite);

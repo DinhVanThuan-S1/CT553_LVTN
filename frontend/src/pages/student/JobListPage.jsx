@@ -10,10 +10,11 @@ import { Badge } from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Select';
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
+import JobSuggestionModal from '../../components/student/JobSuggestionModal';
 import {
   Search, Briefcase, MapPin, DollarSign, Clock, Eye, Heart,
   ChevronLeft, ChevronRight, Building2, Target, Send, FileText,
-  Loader2, CheckCircle2, Star,
+  Loader2, CheckCircle2, Star, Sparkles,
 } from 'lucide-react';
 
 const jobTypeLabels = {
@@ -31,6 +32,7 @@ export default function JobListPage() {
   const [selectedJob, setSelectedJob] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [favorites, setFavorites] = useState({});
+  const [showSuggestion, setShowSuggestion] = useState(false);
 
   // Apply flow
   const [showApply, setShowApply] = useState(false);
@@ -121,11 +123,17 @@ export default function JobListPage() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Danh sách Công việc</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {pagination.total} công việc đang tuyển
-        </p>
+      <JobSuggestionModal isOpen={showSuggestion} onClose={() => setShowSuggestion(false)} />
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Danh sách Công việc</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {pagination.total} công việc đang tuyển
+          </p>
+        </div>
+        <Button className="gap-2 bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shadow-md shadow-primary/20" onClick={() => setShowSuggestion(true)}>
+          <Sparkles className="w-4 h-4" /> Gợi ý việc làm (AI)
+        </Button>
       </div>
 
       {/* Filters */}
