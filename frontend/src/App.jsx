@@ -23,6 +23,11 @@ import RoadmapManagement from './pages/admin/RoadmapManagement';
 import JobPostingManagement from './pages/admin/JobPostingManagement';
 import JobTemplateManagement from './pages/admin/JobTemplateManagement';
 import AdminReportsPage from './pages/admin/AdminReportsPage';
+import AdminResourcesPage from './pages/admin/AdminResourcesPage';
+
+// Pages - Shared
+import ProfilePage from './pages/ProfilePage';
+import SettingsPage from './pages/SettingsPage';
 
 // Pages - Student
 import StudentDashboard from './pages/student/StudentDashboard';
@@ -100,8 +105,10 @@ const router = createBrowserRouter([
           { path: 'roadmaps', element: <RoadmapManagement /> },
           { path: 'job-templates', element: <JobTemplateManagement /> },
           { path: 'job-postings', element: <JobPostingManagement /> },
-          { path: 'resources', element: <PlaceholderPage title="QL Tài nguyên" /> },
+          { path: 'resources', element: <AdminResourcesPage /> },
           { path: 'reports', element: <AdminReportsPage /> },
+          { path: 'profile', element: <ProfilePage /> },
+          { path: 'settings', element: <SettingsPage /> },
         ],
       },
       // === Student (protected) ===
@@ -124,6 +131,8 @@ const router = createBrowserRouter([
           { path: 'applications', element: <ApplicationsPage /> },
           { path: 'favorites', element: <FavoritesPage /> },
           { path: 'chat', element: <ChatPage /> },
+          { path: 'profile', element: <ProfilePage /> },
+          { path: 'settings', element: <SettingsPage /> },
         ],
       },
       // === Employer (protected) ===
@@ -136,6 +145,8 @@ const router = createBrowserRouter([
           { path: 'job-postings', element: <EmployerJobPostingsPage /> },
           { path: 'applicants', element: <ApplicantsPage /> },
           { path: 'chat', element: <ChatPage /> },
+          { path: 'profile', element: <ProfilePage /> },
+          { path: 'settings', element: <SettingsPage /> },
         ],
       },
     ],

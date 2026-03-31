@@ -187,13 +187,13 @@ export default function Header({ user, onLogout, sidebarCollapsed }) {
                 <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
               </div>
               <button
-                onClick={() => { navigate('/profile'); setShowUserMenu(false); }}
+                onClick={() => { navigate(`/${user?.role}/profile`); setShowUserMenu(false); }}
                 className="flex items-center gap-2.5 w-full px-3 py-2 text-sm hover:bg-muted/60 transition-colors"
               >
                 <User className="w-4 h-4 text-muted-foreground" /> Thông tin cá nhân
               </button>
               <button
-                onClick={() => { navigate('/settings'); setShowUserMenu(false); }}
+                onClick={() => { navigate(`/${user?.role}/settings`); setShowUserMenu(false); }}
                 className="flex items-center gap-2.5 w-full px-3 py-2 text-sm hover:bg-muted/60 transition-colors"
               >
                 <Settings className="w-4 h-4 text-muted-foreground" /> Cài đặt
