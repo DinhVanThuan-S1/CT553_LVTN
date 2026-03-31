@@ -22,6 +22,7 @@ import SkillManagement from './pages/admin/SkillManagement';
 import RoadmapManagement from './pages/admin/RoadmapManagement';
 import JobPostingManagement from './pages/admin/JobPostingManagement';
 import JobTemplateManagement from './pages/admin/JobTemplateManagement';
+import AdminReportsPage from './pages/admin/AdminReportsPage';
 
 // Pages - Student
 import StudentDashboard from './pages/student/StudentDashboard';
@@ -100,7 +101,7 @@ const router = createBrowserRouter([
           { path: 'job-templates', element: <JobTemplateManagement /> },
           { path: 'job-postings', element: <JobPostingManagement /> },
           { path: 'resources', element: <PlaceholderPage title="QL Tài nguyên" /> },
-          { path: 'reports', element: <PlaceholderPage title="Thống kê" /> },
+          { path: 'reports', element: <AdminReportsPage /> },
         ],
       },
       // === Student (protected) ===

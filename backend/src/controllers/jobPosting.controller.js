@@ -1,7 +1,9 @@
 /**
  * JobPosting Controller
+ * CRUD tin tuyển dụng + notification triggers khi duyệt/từ chối
  */
 const jobService = require('../services/jobPosting.service');
+const { createAndEmitNotification } = require('./notification.controller');
 
 // Public
 exports.getPublicJobs = async (req, res) => {
@@ -40,6 +42,33 @@ exports.approveJob = async (req, res) => {
       success: true, data,
       message: approved ? 'Đã duyệt tin tuyển dụng' : 'Đã từ chối tin tuyển dụng',
     });
+
+    // Notify employer về kết quả duyệt
+    try {
+      if (approved) {
+        await createAndEmitNotification({
+          recipient: data.employer,
+          type: 'job_approved',
+          title: 'Tin tuyển dụng đã được duyệt',
+          content: `Tin "${data.title}" đã được admin duyệt và đang hiển thị cho ứng viên.`,
+          link: `/employer/job-postings`,
+          refModel: 'JobPosting',
+          refId: data._id,
+        });
+      } else {
+        await createAndEmitNotification({
+          recipient: data.employer,
+          type: 'job_rejected',
+          title: 'Tin tuyển dụng bị từ chối',
+          content: `Tin "${data.title}" đã bị từ chối.${rejectionReason ? ` Lý do: ${rejectionReason}` : ''}`,
+          link: `/employer/job-postings`,
+          refModel: 'JobPosting',
+          refId: data._id,
+        });
+      }
+    } catch (notifErr) {
+      console.error('Notification error (approveJob):', notifErr);
+    }
   } catch (error) {
     res.status(error.status || 500).json({ success: false, message: error.message });
   }

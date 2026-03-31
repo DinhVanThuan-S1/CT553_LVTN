@@ -10,6 +10,7 @@ const { protect, authorize } = require('../middleware/auth');
 const userCtrl = require('../controllers/user.controller');
 const jobCtrl = require('../controllers/jobPosting.controller');
 const jobTplCtrl = require('../controllers/jobTemplate.controller');
+const reportCtrl = require('../controllers/report.controller');
 
 // Tất cả admin routes đều yêu cầu auth + admin role
 router.use(protect, authorize('admin'));
@@ -30,6 +31,15 @@ router.get('/job-templates/:id', jobTplCtrl.getTemplate);
 router.post('/job-templates', jobTplCtrl.createTemplate);
 router.put('/job-templates/:id', jobTplCtrl.updateTemplate);
 router.delete('/job-templates/:id', jobTplCtrl.deleteTemplate);
+
+// === Báo cáo & Thống kê ===
+router.get('/reports/overview', reportCtrl.getOverview);
+router.get('/reports/registrations', reportCtrl.getRegistrations);
+router.get('/reports/career-paths', reportCtrl.getPopularCareerPaths);
+router.get('/reports/roadmap-completion', reportCtrl.getRoadmapCompletion);
+router.get('/reports/top-skills', reportCtrl.getTopSkills);
+router.get('/reports/applications', reportCtrl.getApplicationStats);
+router.get('/reports/job-postings', reportCtrl.getJobPostingStats);
 
 module.exports = router;
 

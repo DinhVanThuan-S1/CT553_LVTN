@@ -3,13 +3,14 @@
  * Cập nhật theo supplementary-requirements:
  * - Student/Employer: Tin nhắn + Thông báo + Avatar (Info, Settings, Logout)
  * - Admin: Thông báo + Avatar (Info, Settings, Logout) (KHÔNG có Tin nhắn)
+ * - Tích hợp NotificationDropdown real-time
  */
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/Button';
+import NotificationDropdown from './NotificationDropdown';
 import {
-  Bell,
   Search,
   LogOut,
   User,
@@ -19,16 +20,44 @@ import {
   MessageSquare,
   X,
 } from 'lucide-react';
+import { connectSocket, disconnectSocket } from '../../lib/socket';
+import api from '../../lib/api';
 
 export default function Header({ user, onLogout, sidebarCollapsed }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const navigate = useNavigate();
   const menuRef = useRef(null);
 
   const isAdmin = user?.role === 'admin';
+
+  // Connect Socket.IO khi user đã authenticated
+  useEffect(() => {
+    if (user) {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        connectSocket(token);
+      }
+    }
+    return () => disconnectSocket();
+  }, [user]);
+
+  // Fetch unread message count (cho student/employer)
+  useEffect(() => {
+    if (!user || isAdmin) return;
+    const fetchUnread = async () => {
+      try {
+        const { data } = await api.get('/chat/unread-count');
+        if (data.success) setUnreadMessages(data.data.count);
+      } catch { /* silently */ }
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, [user, isAdmin]);
 
   // Đóng menu khi click ngoài
   useEffect(() => {
@@ -118,19 +147,16 @@ export default function Header({ user, onLogout, sidebarCollapsed }) {
             onClick={() => navigate(`/${user?.role}/chat`)}
           >
             <MessageSquare className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-2 ring-background" />
+            {unreadMessages > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-primary rounded-full px-1 ring-2 ring-background">
+                {unreadMessages > 99 ? '99+' : unreadMessages}
+              </span>
+            )}
           </Button>
         )}
 
-        {/* Thông báo */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 rounded-lg relative"
-        >
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full ring-2 ring-background" />
-        </Button>
+        {/* Thông báo — dùng NotificationDropdown component */}
+        <NotificationDropdown />
 
         {/* User Avatar + Dropdown */}
         <div className="relative ml-1" ref={menuRef}>
