@@ -35,6 +35,9 @@ router.get('/my-roadmaps/:id', prCtrl.getRoadmapDetail);
 router.post('/my-roadmaps/enroll', prCtrl.enrollRoadmap);
 router.patch('/my-roadmaps/:id/sessions/:sessionId/complete', prCtrl.completeSession);
 
+// === Gợi ý lộ trình (AI Matching) ===
+router.get('/roadmap-suggestions', prCtrl.getSuggestions);
+
 // === Buổi học & Bài test ===
 router.get('/my-roadmaps/:prId/sessions/:sessionId', learnCtrl.getSessionDetail);
 router.patch('/my-roadmaps/:prId/sessions/:sessionId/notes', learnCtrl.updateSessionNotes);

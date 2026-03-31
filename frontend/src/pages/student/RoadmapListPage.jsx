@@ -10,6 +10,7 @@ import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Select';
 import { useToast } from '../../components/ui/Toast';
+import RoadmapSuggestionModal from '../../components/student/RoadmapSuggestionModal';
 import {
   Search, Route, Clock, Users, Star, ChevronRight,
   Sparkles, Heart, Target,
@@ -25,6 +26,7 @@ export default function RoadmapListPage() {
   const [search, setSearch] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [favorites, setFavorites] = useState({});
+  const [showSuggestion, setShowSuggestion] = useState(false);
 
   const loadRoadmaps = useCallback(async () => {
     setLoading(true);
@@ -57,12 +59,13 @@ export default function RoadmapListPage() {
 
   return (
     <div className="animate-fade-in space-y-6">
+      <RoadmapSuggestionModal isOpen={showSuggestion} onClose={() => setShowSuggestion(false)} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Danh sách Lộ trình</h1>
           <p className="text-muted-foreground text-sm mt-1">Khám phá các lộ trình học tập phù hợp</p>
         </div>
-        <Button variant="outline" className="gap-2">
+        <Button className="gap-2 bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shadow-md shadow-primary/20" onClick={() => setShowSuggestion(true)}>
           <Sparkles className="w-4 h-4" /> Gợi ý lộ trình (AI)
         </Button>
       </div>

@@ -2,6 +2,7 @@
  * PersonalRoadmap Controller
  */
 const prService = require('../services/personalRoadmap.service');
+const suggestionService = require('../services/roadmapSuggestion.service');
 
 exports.getMyRoadmaps = async (req, res) => {
   try {
@@ -36,5 +37,19 @@ exports.completeSession = async (req, res) => {
     res.json({ success: true, data, message: 'Đã hoàn thành buổi học' });
   } catch (error) {
     res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET /api/student/roadmap-suggestions
+ * Gợi ý lộ trình phù hợp dựa trên hồ sơ học tập + sở thích nghề nghiệp
+ */
+exports.getSuggestions = async (req, res) => {
+  try {
+    const suggestions = await suggestionService.suggestRoadmaps(req.user._id);
+    res.json({ success: true, data: suggestions });
+  } catch (error) {
+    console.error('getSuggestions error:', error);
+    res.status(500).json({ success: false, message: 'Lỗi server khi gợi ý lộ trình' });
   }
 };
