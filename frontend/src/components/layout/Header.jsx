@@ -115,7 +115,7 @@ export default function Header({ user, onLogout, sidebarCollapsed }) {
             variant="ghost"
             size="icon"
             className="h-9 w-9 rounded-lg relative"
-            onClick={() => navigate('/chat')}
+            onClick={() => navigate(`/${user?.role}/chat`)}
           >
             <MessageSquare className="w-4 h-4" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-2 ring-background" />

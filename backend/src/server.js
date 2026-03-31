@@ -66,6 +66,10 @@ app.get('/api/health', (req, res) => {
 const passport = require('./config/passport');
 app.use(passport.initialize());
 
+// ===== SOCKET.IO =====
+const { initSocket } = require('./config/socket');
+initSocket(httpServer);
+
 // ===== ROUTES =====
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
@@ -76,6 +80,7 @@ app.use('/api/roadmaps', require('./routes/roadmap.routes'));
 app.use('/api/student', require('./routes/student.routes'));
 app.use('/api/jobs', require('./routes/job.routes'));
 app.use('/api/employer', require('./routes/employer.routes'));
+app.use('/api/chat', require('./routes/chat.routes'));
 
 // ===== ERROR HANDLING =====
 
@@ -110,6 +115,7 @@ const startServer = async () => {
   httpServer.listen(env.PORT, () => {
     console.log(`🚀 EduPath API Server running on port ${env.PORT} [${env.NODE_ENV}]`);
     console.log(`📡 Health check: http://localhost:${env.PORT}/api/health`);
+    console.log(`🔌 Socket.IO ready`);
   });
 };
 

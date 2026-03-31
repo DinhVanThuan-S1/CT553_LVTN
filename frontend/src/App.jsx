@@ -38,6 +38,7 @@ import ApplicationsPage from './pages/student/ApplicationsPage';
 import FavoritesPage from './pages/student/FavoritesPage';
 import LearningSessionPage from './pages/student/LearningSessionPage';
 import SkillTestPage from './pages/student/SkillTestPage';
+import ChatPage from './pages/ChatPage';
 
 // Pages - Employer
 import EmployerDashboard from './pages/employer/EmployerDashboard';
@@ -121,6 +122,7 @@ const router = createBrowserRouter([
           { path: 'cv', element: <CVPage /> },
           { path: 'applications', element: <ApplicationsPage /> },
           { path: 'favorites', element: <FavoritesPage /> },
+          { path: 'chat', element: <ChatPage /> },
         ],
       },
       // === Employer (protected) ===
@@ -132,6 +134,7 @@ const router = createBrowserRouter([
           { path: 'company', element: <CompanyProfilePage /> },
           { path: 'job-postings', element: <EmployerJobPostingsPage /> },
           { path: 'applicants', element: <ApplicantsPage /> },
+          { path: 'chat', element: <ChatPage /> },
         ],
       },
     ],

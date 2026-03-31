@@ -28,6 +28,7 @@ import {
   CheckCircle2,
   Map,
   Star,
+  MessageSquare,
 } from 'lucide-react';
 
 const menuConfig = {
@@ -46,6 +47,8 @@ const menuConfig = {
     { label: 'CV', path: '/student/cv', icon: FileText },
     { label: 'Đơn ứng tuyển', path: '/student/applications', icon: ClipboardList },
     { label: 'Yêu thích', path: '/student/favorites', icon: Heart },
+    { type: 'divider', label: 'Liên lạc' },
+    { label: 'Tin nhắn', path: '/student/chat', icon: MessageSquare },
   ],
   employer: [
     { label: 'Tổng quan', path: '/employer', icon: LayoutDashboard },
@@ -53,6 +56,8 @@ const menuConfig = {
     { label: 'Hồ sơ công ty', path: '/employer/company', icon: Building2 },
     { label: 'Tin tuyển dụng', path: '/employer/job-postings', icon: Briefcase },
     { label: 'Ứng viên', path: '/employer/applicants', icon: Users },
+    { type: 'divider', label: 'Liên lạc' },
+    { label: 'Tin nhắn', path: '/employer/chat', icon: MessageSquare },
   ],
   admin: [
     { label: 'Tổng quan', path: '/admin', icon: LayoutDashboard },
