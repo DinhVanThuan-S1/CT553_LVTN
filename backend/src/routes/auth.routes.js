@@ -17,6 +17,7 @@ const {
   changePassword,
   updateProfile,
   googleCallback,
+  completeGoogleRegister,
 } = require('../controllers/auth.controller');
 
 // === Validation rules ===
@@ -53,6 +54,8 @@ router.get('/google/callback',
   passport.authenticate('google', { session: false, failureRedirect: '/login?error=google_failed' }),
   googleCallback
 );
+// Hoàn tất đăng ký Google khi user mới chọn role
+router.post('/google/complete', completeGoogleRegister);
 
 // Protected
 router.post('/logout', protect, logout);

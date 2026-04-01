@@ -338,10 +338,28 @@ const updateProfile = async (req, res) => {
 /**
  * Google OAuth callback handler
  * Được gọi sau khi Passport xác thực Google
+ * 
+ * - User đã có tài khoản: trả token, redirect /auth/google/callback?accessToken=...
+ * - User mới (chưa có tài khoản): redirect /auth/google/callback?isNewUser=true&...
+ *   → Frontend sẽ hiện modal chọn role
  */
 const googleCallback = async (req, res) => {
   try {
     const user = req.user;
+
+    // Trường hợp user mới chưa có tài khoản — cần chọn role
+    if (user.isNewUser) {
+      const params = new URLSearchParams({
+        isNewUser: 'true',
+        googleId: user.googleId,
+        email: user.email,
+        fullName: user.fullName,
+        avatar: user.avatar || '',
+      });
+      return res.redirect(`${env.CLIENT_URL}/auth/google/callback?${params.toString()}`);
+    }
+
+    // User đã có tài khoản — đăng nhập bình thường
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
@@ -359,11 +377,61 @@ const googleCallback = async (req, res) => {
     res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
     res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
 
-    // Redirect về frontend với token
     res.redirect(`${env.CLIENT_URL}/auth/google/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`);
   } catch (error) {
     console.error('Google callback error:', error);
     res.redirect(`${env.CLIENT_URL}/login?error=google_auth_failed`);
+  }
+};
+
+/**
+ * @route   POST /api/auth/google/complete
+ * @desc    Hoàn tất đăng ký Google với role user chọn
+ * @access  Public
+ */
+const completeGoogleRegister = async (req, res) => {
+  try {
+    const { googleId, email, fullName, avatar, role } = req.body;
+
+    // Validate role
+    const allowedRoles = ['student', 'employer'];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vai trò không hợp lệ',
+      });
+    }
+
+    // Kiểm tra lại email chưa tồn tại (double-check)
+    const existing = await User.findOne({ email });
+    if (existing) {
+      // Email đã tồn tại — liên kết Google và đăng nhập luôn
+      existing.googleId = googleId;
+      existing.avatar = avatar || existing.avatar;
+      existing.isVerified = true;
+      await existing.save({ validateBeforeSave: false });
+      return sendTokenResponse(existing, 200, res);
+    }
+
+    // Tạo tài khoản mới với role user đã chọn
+    const user = await User.create({
+      email,
+      fullName,
+      googleId,
+      avatar: avatar || '',
+      role,
+      authProvider: 'google',
+      isVerified: true,
+      isActive: true,
+    });
+
+    await sendTokenResponse(user, 201, res);
+  } catch (error) {
+    console.error('Complete Google register error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Đăng ký thất bại',
+    });
   }
 };
 
@@ -376,4 +444,5 @@ module.exports = {
   changePassword,
   updateProfile,
   googleCallback,
+  completeGoogleRegister,
 };
