@@ -35,7 +35,7 @@ class SkillService {
       .populate({
         path: 'linkedResources',
         match: { isActive: { $ne: false } },
-        select: 'title type category difficulty estimatedMinutes url isFeatured',
+        select: 'title type category difficulty estimatedMinutes url isFeatured testQuestions description',
       });
     if (!skill) throw { status: 404, message: 'Không tìm thấy kỹ năng' };
     return skill;

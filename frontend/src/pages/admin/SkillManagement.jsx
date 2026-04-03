@@ -378,7 +378,7 @@ export default function SkillManagement() {
                   {/* Content Resources */}
                   <div>
                     <h4 className="font-medium text-sm flex items-center gap-2 mb-2">
-                      <BookOpen className="w-4 h-4" /> Tài nguyên nội dung ({contents.length})
+                      <BookOpen className="w-4 h-4" /> Nội dung ({contents.length})
                     </h4>
                     {contents.length > 0 ? (
                       <div className="space-y-2">
@@ -404,7 +404,7 @@ export default function SkillManagement() {
                   {/* Exercises */}
                   <div>
                     <h4 className="font-medium text-sm flex items-center gap-2 mb-2">
-                      <Dumbbell className="w-4 h-4" /> Bài tập ({exercises.length})
+                      <Dumbbell className="w-4 h-4" /> Bài Tập ({exercises.length})
                     </h4>
                     {exercises.length > 0 ? (
                       <div className="space-y-2">
@@ -424,7 +424,7 @@ export default function SkillManagement() {
                   {/* Test Resources */}
                   <div>
                     <h4 className="font-medium text-sm flex items-center gap-2 mb-2">
-                      <HelpCircle className="w-4 h-4" /> Bài test ({tests.length})
+                      <HelpCircle className="w-4 h-4" /> Bài Test ({tests.length})
                     </h4>
                     {tests.length > 0 ? (
                       <div className="space-y-2">
