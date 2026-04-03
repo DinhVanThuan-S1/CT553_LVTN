@@ -1,6 +1,6 @@
 /**
  * LearningSessionPage - Chi tiết buổi học
- * Hiển thị nội dung kỹ năng, tài nguyên, bài tập, nút hoàn thành
+ * Hiển thị nội dung kỹ năng, tài nguyên (từ Resource collection), bài tập, nút hoàn thành
  */
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -13,11 +13,17 @@ import {
   CheckCircle2, Loader2, Clock, Pencil, Save,
   Video, Globe, BookMarked, Wrench, GraduationCap,
   ClipboardCheck, ChevronDown, ChevronUp, Award,
+  Dumbbell, HelpCircle,
 } from 'lucide-react';
 
 const resourceIcons = {
   video: Video, article: FileText, documentation: Globe,
   course: GraduationCap, book: BookMarked, tool: Wrench,
+};
+
+const DIFFICULTY_LABELS = {
+  beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao',
+  easy: 'Dễ', medium: 'Trung bình', hard: 'Khó',
 };
 
 export default function LearningSessionPage() {
@@ -145,7 +151,7 @@ export default function LearningSessionPage() {
         </div>
       )}
 
-      {/* Learning Resources */}
+      {/* Learning Resources (type=content) */}
       {skill.resources?.length > 0 && (
         <div className="rounded-xl border bg-card p-5">
           <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -153,10 +159,9 @@ export default function LearningSessionPage() {
           </h3>
           <div className="space-y-2">
             {skill.resources.map((res) => {
-              const IconComp = resourceIcons[res.type] || FileText;
+              const IconComp = resourceIcons[res.category] || FileText;
               return (
-                <a key={res._id} href={res.url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors group">
+                <div key={res._id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors group">
                   <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <IconComp className="w-4 h-4 text-primary" />
                   </div>
@@ -169,26 +174,34 @@ export default function LearningSessionPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {res.duration && (
-                      <Badge variant="secondary" className="text-[10px]">{res.duration}</Badge>
+                    {res.estimatedMinutes && (
+                      <Badge variant="secondary" className="text-[10px]">{res.estimatedMinutes}ph</Badge>
                     )}
-                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                    {res.difficulty && (
+                      <Badge variant="outline" className="text-[10px]">{DIFFICULTY_LABELS[res.difficulty] || res.difficulty}</Badge>
+                    )}
+                    {res.url && (
+                      <a href={res.url} target="_blank" rel="noopener noreferrer"
+                        className="p-1 rounded hover:bg-muted transition-colors">
+                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                      </a>
+                    )}
                   </div>
-                </a>
+                </div>
               );
             })}
           </div>
         </div>
       )}
 
-      {/* Exercises */}
+      {/* Exercises (type=exercise) */}
       {skill.exercises?.length > 0 && (
         <div className="rounded-xl border bg-card p-5">
           <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <Wrench className="w-4 h-4 text-primary" /> Bài tập thực hành ({skill.exercises.length})
+            <Dumbbell className="w-4 h-4 text-primary" /> Bài tập thực hành ({skill.exercises.length})
           </h3>
           <div className="space-y-2">
-            {skill.exercises.map((ex,idx) => (
+            {skill.exercises.map((ex, idx) => (
               <div key={ex._id} className="rounded-lg border overflow-hidden">
                 <button className="w-full flex items-center gap-3 p-3 hover:bg-muted/20 transition-colors text-left"
                   onClick={() => setExpandedExercise(expandedExercise === idx ? null : idx)}>
@@ -198,25 +211,52 @@ export default function LearningSessionPage() {
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-medium">{ex.title}</span>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <Badge variant="secondary" className="text-[10px]">{ex.difficulty}</Badge>
-                      {ex.estimatedTime && <span className="text-[10px] text-muted-foreground">{ex.estimatedTime}</span>}
+                      <Badge variant="secondary" className="text-[10px]">
+                        {DIFFICULTY_LABELS[ex.difficulty] || ex.difficulty}
+                      </Badge>
+                      {ex.estimatedMinutes && (
+                        <span className="text-[10px] text-muted-foreground">{ex.estimatedMinutes}ph</span>
+                      )}
                     </div>
                   </div>
                   {expandedExercise === idx ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
                 {expandedExercise === idx && (
                   <div className="px-3 pb-3 border-t bg-muted/10">
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">{ex.description}</p>
-                    {ex.instructions && (
-                      <div className="mt-2 p-2 rounded bg-muted/30 text-xs text-muted-foreground">
-                        <strong>Hướng dẫn:</strong> {ex.instructions}
+                    {ex.description && (
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">{ex.description}</p>
+                    )}
+                    {ex.content && (
+                      <div className="mt-2 p-2 rounded bg-muted/30 text-xs text-muted-foreground whitespace-pre-wrap">
+                        <strong>Hướng dẫn:</strong> {ex.content}
                       </div>
+                    )}
+                    {ex.url && (
+                      <a href={ex.url} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2">
+                        <ExternalLink className="w-3 h-3" /> Xem bài tập
+                      </a>
                     )}
                   </div>
                 )}
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Test Resources info */}
+      {skill.testResources?.length > 0 && (
+        <div className="rounded-xl border bg-card p-5">
+          <h3 className="font-semibold mb-2 flex items-center gap-2">
+            <HelpCircle className="w-4 h-4 text-primary" /> Bài test có sẵn
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Có {skill.testResources.length} bài test cho kỹ năng này.
+            {progress.percentage === 100
+              ? ' Bạn đã hoàn thành tất cả buổi học — có thể làm bài test!'
+              : ' Hoàn thành tất cả buổi học để mở khóa bài test.'}
+          </p>
         </div>
       )}
 

@@ -4,10 +4,11 @@
  */
 const PersonalRoadmap = require('../models/PersonalRoadmap');
 const Skill = require('../models/Skill');
+const Resource = require('../models/Resource');
 const RoadmapReview = require('../models/RoadmapReview');
 
 /**
- * Lấy chi tiết buổi học (nội dung kỹ năng + resources + exercises)
+ * Lấy chi tiết buổi học — lấy resources từ Resource collection
  * GET /api/student/my-roadmaps/:prId/sessions/:sessionId
  */
 exports.getSessionDetail = async (req, res) => {
@@ -21,11 +22,22 @@ exports.getSessionDetail = async (req, res) => {
     const session = pr.sessions.id(req.params.sessionId);
     if (!session) return res.status(404).json({ message: 'Không tìm thấy buổi học' });
 
-    // Lấy chi tiết kỹ năng (resources, exercises, testQuestions)
-    const skill = await Skill.findById(session.skill);
+    // Lấy skill + populate linkedResources từ Resource collection
+    const skill = await Skill.findById(session.skill)
+      .populate({
+        path: 'linkedResources',
+        match: { isActive: { $ne: false } },
+        select: 'title description type category url content difficulty estimatedMinutes testQuestions tags',
+      });
     if (!skill) return res.status(404).json({ message: 'Không tìm thấy kỹ năng' });
 
-    // Đếm tổng sessions cho skill này + completed
+    // Phân loại resources theo type
+    const allResources = skill.linkedResources || [];
+    const contentResources = allResources.filter(r => r.type === 'content');
+    const exerciseResources = allResources.filter(r => r.type === 'exercise');
+    const testResources = allResources.filter(r => r.type === 'test');
+
+    // Đếm sessions cho skill
     const skillSessions = pr.sessions.filter(
       (s) => String(s.skill) === String(skill._id)
     );
@@ -50,9 +62,9 @@ exports.getSessionDetail = async (req, res) => {
           category: skill.category,
           description: skill.description,
           estimatedHours: skill.estimatedHours,
-          resources: skill.resources,
-          exercises: skill.exercises,
-          testQuestions: skill.testQuestions,
+          resources: contentResources,
+          exercises: exerciseResources,
+          testResources: testResources,
         },
         progress: {
           completed: completedCount,
@@ -93,7 +105,7 @@ exports.updateSessionNotes = async (req, res) => {
 };
 
 /**
- * Nộp bài test kỹ năng
+ * Nộp bài test kỹ năng — lấy questions từ Resource collection
  * POST /api/student/my-roadmaps/:prId/skills/:skillId/test
  * Body: { answers: [{ questionId, selectedOption }] }
  */
@@ -113,20 +125,42 @@ exports.submitSkillTest = async (req, res) => {
     const skill = await Skill.findById(req.params.skillId);
     if (!skill) return res.status(404).json({ message: 'Không tìm thấy kỹ năng' });
 
-    if (!skill.testQuestions || skill.testQuestions.length === 0) {
+    // Lấy testQuestions từ Resource collection
+    const testResources = await Resource.find({
+      _id: { $in: skill.linkedResources || [] },
+      type: 'test',
+      isActive: { $ne: false },
+    });
+
+    // Gom tất cả câu hỏi — dùng composite key vì option không có _id
+    const allQuestions = [];
+    testResources.forEach(r => {
+      (r.testQuestions || []).forEach((q, qi) => {
+        allQuestions.push({
+          _id: `${r._id}_${qi}`,
+          question: q.question,
+          explanation: q.explanation,
+          options: q.options,          // giữ nguyên để có isCorrect
+          correctOptionIndex: q.options.findIndex(o => o.isCorrect),
+        });
+      });
+    });
+
+    if (allQuestions.length === 0) {
       return res.status(400).json({ message: 'Kỹ năng chưa có câu hỏi test' });
     }
 
-    // Chấm điểm
+    // Chấm điểm — selectedOption là optionIndex (string)
     let correct = 0;
     const results = answers.map((ans) => {
-      const question = skill.testQuestions.id(ans.questionId);
+      const question = allQuestions.find(q => q._id === String(ans.questionId));
       if (!question) return { questionId: ans.questionId, correct: false };
 
-      const correctOption = question.options.find((opt) => opt.isCorrect);
-      const isCorrect = correctOption && String(correctOption._id) === String(ans.selectedOption);
+      const selectedIdx = Number(ans.selectedOption);
+      const isCorrect = question.correctOptionIndex >= 0 && selectedIdx === question.correctOptionIndex;
       if (isCorrect) correct++;
 
+      const correctOption = question.options[question.correctOptionIndex];
       return {
         questionId: ans.questionId,
         question: question.question,
@@ -137,11 +171,11 @@ exports.submitSkillTest = async (req, res) => {
       };
     });
 
-    const total = skill.testQuestions.length;
+    const total = allQuestions.length;
     const score = Math.round((correct / total) * 100);
-    const passed = score >= 60; // Đạt nếu >= 60%
+    const passed = score >= 60;
 
-    // Nếu đạt → đánh dấu tất cả sessions còn upcoming của skill này = completed
+    // Nếu đạt → hoàn thành sessions còn upcoming
     if (passed) {
       let anyUpdated = false;
       pr.sessions.forEach((s) => {
@@ -180,7 +214,7 @@ exports.submitSkillTest = async (req, res) => {
 };
 
 /**
- * Lấy câu hỏi test cho skill (không kèm đáp án đúng)
+ * Lấy câu hỏi test cho skill — từ Resource collection
  * GET /api/student/my-roadmaps/:prId/skills/:skillId/test
  */
 exports.getSkillTest = async (req, res) => {
@@ -188,20 +222,31 @@ exports.getSkillTest = async (req, res) => {
     const skill = await Skill.findById(req.params.skillId);
     if (!skill) return res.status(404).json({ message: 'Không tìm thấy kỹ năng' });
 
-    if (!skill.testQuestions || skill.testQuestions.length === 0) {
+    // Lấy testQuestions từ Resource collection
+    const testResources = await Resource.find({
+      _id: { $in: skill.linkedResources || [] },
+      type: 'test',
+      isActive: { $ne: false },
+    });
+
+    const questions = [];
+    testResources.forEach(r => {
+      (r.testQuestions || []).forEach((q, qi) => {
+        questions.push({
+          _id: `${r._id}_${qi}`,   // composite ID vì testQuestion có _id nhưng option không có
+          question: q.question,
+          difficulty: q.difficulty,
+          options: q.options.map((opt, oi) => ({
+            optionIndex: oi,          // dùng index thay vì _id (options schema có _id:false)
+            text: opt.text,
+          })),
+        });
+      });
+    });
+
+    if (questions.length === 0) {
       return res.status(404).json({ message: 'Chưa có bài test cho kỹ năng này' });
     }
-
-    // Trả về câu hỏi KHÔNG kèm isCorrect
-    const questions = skill.testQuestions.map((q) => ({
-      _id: q._id,
-      question: q.question,
-      difficulty: q.difficulty,
-      options: q.options.map((opt) => ({
-        _id: opt._id,
-        text: opt.text,
-      })),
-    }));
 
     res.json({
       data: {
@@ -216,6 +261,7 @@ exports.getSkillTest = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server' });
   }
 };
+
 
 /**
  * Đánh giá lộ trình (sao + nhận xét)

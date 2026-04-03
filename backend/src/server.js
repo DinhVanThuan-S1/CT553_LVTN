@@ -73,6 +73,7 @@ initSocket(httpServer);
 // ===== ROUTES =====
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
+app.use('/api/admin/resources', require('./routes/resource.routes'));
 app.use('/api/courses', require('./routes/course.routes'));
 app.use('/api/skills', require('./routes/skill.routes'));
 app.use('/api/curriculum-programs', require('./routes/curriculum.routes'));

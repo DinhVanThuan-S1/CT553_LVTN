@@ -45,12 +45,12 @@ export default function SkillTestPage() {
   }
 
   function selectAnswer(questionId, optionId) {
-    setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
+    setAnswers((prev) => ({ ...prev, [String(questionId)]: String(optionId) }));
   }
 
   async function handleSubmit() {
     if (!testData) return;
-    const unanswered = testData.questions.filter((q) => !answers[q._id]);
+    const unanswered = testData.questions.filter((q) => !answers[String(q._id)]);
     if (unanswered.length > 0) {
       toast.error(`Còn ${unanswered.length} câu chưa trả lời`);
       return;
@@ -58,8 +58,8 @@ export default function SkillTestPage() {
     setSubmitting(true);
     try {
       const payload = testData.questions.map((q) => ({
-        questionId: q._id,
-        selectedOption: answers[q._id],
+        questionId: String(q._id),
+        selectedOption: answers[String(q._id)],
       }));
       const { data } = await api.post(
         `/student/my-roadmaps/${prId}/skills/${skillId}/test`,
@@ -195,16 +195,18 @@ export default function SkillTestPage() {
         <h3 className="text-lg font-semibold mb-5">{question.question}</h3>
 
         <div className="space-y-2.5">
-          {question.options.map((opt) => {
-            const selected = answers[question._id] === opt._id;
+          {question.options.map((opt, oi) => {
+            const optId = String(opt.optionIndex ?? oi);  // dùng optionIndex từ backend
+            const qId = String(question._id);
+            const selected = answers[qId] === optId;
             return (
-              <button key={opt._id}
+              <button key={optId}
                 className={`w-full text-left p-3.5 rounded-lg border transition-all ${
                   selected
                     ? 'border-primary bg-primary/[0.05] ring-1 ring-primary/30'
                     : 'border-transparent bg-muted/30 hover:bg-muted/50'
                 }`}
-                onClick={() => selectAnswer(question._id, opt._id)}>
+                onClick={() => selectAnswer(qId, optId)}>
                 <div className="flex items-center gap-3">
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
                     selected ? 'border-primary' : 'border-muted-foreground/30'
@@ -227,9 +229,9 @@ export default function SkillTestPage() {
         </Button>
 
         <div className="flex items-center gap-1.5">
-          {questions.map((_, i) => (
+          {questions.map((q, i) => (
             <button key={i} className={`w-2.5 h-2.5 rounded-full transition-colors ${
-              i === currentQ ? 'bg-primary' : answers[questions[i]._id] ? 'bg-primary/40' : 'bg-muted'
+              i === currentQ ? 'bg-primary' : answers[String(q._id)] ? 'bg-primary/40' : 'bg-muted'
             }`} onClick={() => setCurrentQ(i)} />
           ))}
         </div>
