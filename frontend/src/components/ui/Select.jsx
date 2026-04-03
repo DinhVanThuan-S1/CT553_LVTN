@@ -1,5 +1,7 @@
 /**
  * Select Component (shadcn-style)
+ * Mũi tên native được ẩn bởi global CSS (index.css).
+ * Chỉ hiện 1 mũi tên tùy chỉnh (ChevronDown).
  */
 import { forwardRef } from 'react';
 import { cn } from '../../lib/utils';
@@ -14,7 +16,6 @@ const Select = forwardRef(({ className, children, ...props }, ref) => {
           'w-full h-9 px-3 pr-8 rounded-lg border border-input bg-background text-sm',
           'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
           'disabled:cursor-not-allowed disabled:opacity-50',
-          'appearance-none',
           className
         )}
         {...props}

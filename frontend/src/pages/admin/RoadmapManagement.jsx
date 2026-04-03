@@ -11,6 +11,7 @@ import { Select } from '../../components/ui/Select';
 import { Textarea } from '../../components/ui/Textarea';
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import {
   Search, Plus, Pencil, Trash2, Eye, Route,
   ChevronLeft, ChevronRight, Clock, Users, Star,
@@ -40,6 +41,7 @@ export default function RoadmapManagement() {
   const [showDetail, setShowDetail] = useState(false);
   const [detailRoadmap, setDetailRoadmap] = useState(null);
   const [allSkills, setAllSkills] = useState([]);
+  const [confirmState, setConfirmState] = useState(null);
 
   const loadRoadmaps = useCallback(async () => {
     setLoading(true);
@@ -135,15 +137,17 @@ export default function RoadmapManagement() {
     }
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Bạn có chắc muốn xóa lộ trình này?')) return;
-    try {
-      await api.delete(`/roadmaps/${id}`);
-      toast.success('Đã xóa lộ trình');
-      loadRoadmaps();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Có lỗi');
-    }
+  function handleDelete(rm) {
+    setConfirmState({
+      title: 'Xóa lộ trình',
+      message: `Bạn có chắc muốn xóa lộ trình “${rm.title}”?`,
+      confirmLabel: 'Xóa',
+      onConfirm: async () => {
+        await api.delete(`/roadmaps/${rm._id}`);
+        toast.success('Đã xóa lộ trình');
+        loadRoadmaps();
+      },
+    });
   }
 
   // Skill management in form
@@ -291,7 +295,7 @@ export default function RoadmapManagement() {
                           className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleDelete(rm._id)}
+                        <button onClick={() => handleDelete(rm)}
                           className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors">
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -486,6 +490,7 @@ export default function RoadmapManagement() {
           </DialogFooter>
         </form>
       </Dialog>
+      <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
     </div>
   );
 }

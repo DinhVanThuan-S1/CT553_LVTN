@@ -11,6 +11,7 @@ import { Select } from '../../components/ui/Select';
 import { Textarea } from '../../components/ui/Textarea';
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import {
   Search, Plus, Pencil, Trash2, Eye, Briefcase,
   ChevronLeft, ChevronRight, Banknote, X,
@@ -37,6 +38,7 @@ export default function JobTemplateManagement() {
   const [showDetail, setShowDetail] = useState(false);
   const [detailTemplate, setDetailTemplate] = useState(null);
   const [allSkills, setAllSkills] = useState([]);
+  const [confirmState, setConfirmState] = useState(null);
 
   const loadTemplates = useCallback(async () => {
     setLoading(true);
@@ -128,15 +130,17 @@ export default function JobTemplateManagement() {
     }
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Bạn có chắc muốn xóa mẫu công việc này?')) return;
-    try {
-      await api.delete(`/admin/job-templates/${id}`);
-      toast.success('Đã xóa');
-      loadTemplates();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Có lỗi');
-    }
+  function handleDelete(tpl) {
+    setConfirmState({
+      title: 'Xóa mẫu công việc',
+      message: `Bạn có chắc muốn xóa mẫu “${tpl.title}”?`,
+      confirmLabel: 'Xóa',
+      onConfirm: async () => {
+        await api.delete(`/admin/job-templates/${tpl._id}`);
+        toast.success('Đã xóa');
+        loadTemplates();
+      },
+    });
   }
 
   function addSkillToForm(skillId) {
@@ -237,7 +241,7 @@ export default function JobTemplateManagement() {
                           className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleDelete(tpl._id)}
+                        <button onClick={() => handleDelete(tpl)}
                           className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors">
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -388,6 +392,7 @@ export default function JobTemplateManagement() {
           </DialogFooter>
         </form>
       </Dialog>
+      <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
     </div>
   );
 }

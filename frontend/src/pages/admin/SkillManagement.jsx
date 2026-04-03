@@ -11,6 +11,7 @@ import { Select } from '../../components/ui/Select';
 import { Textarea } from '../../components/ui/Textarea';
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import {
   Search, Plus, Pencil, Trash2, Target, Eye,
   ChevronLeft, ChevronRight, BookOpen, Dumbbell, HelpCircle, Clock,
@@ -61,6 +62,7 @@ export default function SkillManagement() {
   const [saving, setSaving] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [detailSkill, setDetailSkill] = useState(null);
+  const [confirmState, setConfirmState] = useState(null);
 
   const loadSkills = useCallback(async () => {
     setLoading(true);
@@ -129,15 +131,17 @@ export default function SkillManagement() {
     }
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Bạn có chắc muốn xóa kỹ năng này?')) return;
-    try {
-      await api.delete(`/skills/${id}`);
-      toast.success('Đã xóa kỹ năng');
-      loadSkills();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra');
-    }
+  function handleDelete(skill) {
+    setConfirmState({
+      title: 'Xóa kỹ năng',
+      message: `Bạn có chắc muốn xóa kỹ năng “${skill.name}”?`,
+      confirmLabel: 'Xóa',
+      onConfirm: async () => {
+        await api.delete(`/skills/${skill._id}`);
+        toast.success('Đã xóa kỹ năng');
+        loadSkills();
+      },
+    });
   }
 
   return (
@@ -242,7 +246,7 @@ export default function SkillManagement() {
                           className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleDelete(skill._id)}
+                        <button onClick={() => handleDelete(skill)}
                           className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors">
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -436,6 +440,7 @@ export default function SkillManagement() {
           </DialogFooter>
         </form>
       </Dialog>
+      <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
     </div>
   );
 }

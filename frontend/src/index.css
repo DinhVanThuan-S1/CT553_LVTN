@@ -122,6 +122,17 @@
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground/40;
   }
+
+  /* ── Ẩn mũi tên mặc định của browser trên tất cả <select> ── */
+  select {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    background-image: none !important;
+  }
+  select::-ms-expand {
+    display: none !important;
+  }
 }
 
 @layer components {
