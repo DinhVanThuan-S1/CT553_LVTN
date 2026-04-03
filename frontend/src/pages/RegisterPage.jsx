@@ -31,9 +31,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Yêu cầu mật khẩu
 const PASSWORD_RULES = [
-  { test: (p) => p.length >= 8, label: 'Ít nhất 8 ký tự' },
-  { test: (p) => /[A-Z]/.test(p), label: 'Có chữ hoa (A-Z)' },
-  { test: (p) => /[0-9]/.test(p), label: 'Có chữ số (0-9)' },
+  { test: (p) => p.length >= 6, label: 'Ít nhất 6 ký tự' },
 ];
 
 export default function RegisterPage() {
@@ -87,9 +85,7 @@ export default function RegisterPage() {
         return '';
       case 'password':
         if (!value) return 'Mật khẩu không được để trống';
-        if (value.length < 8) return 'Mật khẩu phải có ít nhất 8 ký tự';
-        if (!/[A-Z]/.test(value)) return 'Mật khẩu phải có ít nhất 1 chữ hoa';
-        if (!/[0-9]/.test(value)) return 'Mật khẩu phải có ít nhất 1 chữ số';
+        if (value.length < 6) return 'Mật khẩu phải có ít nhất 6 ký tự';
         return '';
       case 'confirmPassword':
         if (!value) return 'Vui lòng xác nhận mật khẩu';

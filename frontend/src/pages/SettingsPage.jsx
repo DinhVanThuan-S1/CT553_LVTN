@@ -37,6 +37,31 @@ function Toggle({ checked, onChange, id }) {
   );
 }
 
+// ─── Password input field — define OUTSIDE SettingsPage to prevent remount on re-render ───
+function PasswordInput({ label, placeholder, value, onChange, show, onToggleShow }) {
+  return (
+    <div>
+      <label className="text-xs font-medium text-muted-foreground block mb-1.5">{label}</label>
+      <div className="relative">
+        <Input
+          type={show ? 'text' : 'password'}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="pr-9"
+        />
+        <button
+          type="button"
+          onClick={onToggleShow}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Section wrapper ───
 function Section({ icon: Icon, title, description, children }) {
   return (
@@ -145,31 +170,6 @@ export default function SettingsPage() {
     }
   };
 
-  const PasswordInput = ({ field, placeholder, label }) => (
-    <div>
-      <label className="text-xs font-medium text-muted-foreground block mb-1.5">{label}</label>
-      <div className="relative">
-        <Input
-          type={showPw[field] ? 'text' : 'password'}
-          value={pwForm[field === 'current' ? 'currentPassword' : field === 'new' ? 'newPassword' : 'confirmPassword']}
-          onChange={e => setPwForm(f => ({
-            ...f,
-            [field === 'current' ? 'currentPassword' : field === 'new' ? 'newPassword' : 'confirmPassword']: e.target.value,
-          }))}
-          placeholder={placeholder}
-          className="pr-9"
-        />
-        <button
-          type="button"
-          onClick={() => setShowPw(s => ({ ...s, [field]: !s[field] }))}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {showPw[field] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-        </button>
-      </div>
-    </div>
-  );
-
   const isGoogleUser = user?.authProvider === 'google';
 
   return (
@@ -193,10 +193,31 @@ export default function SettingsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            <PasswordInput field="current" placeholder="••••••••" label="Mật khẩu hiện tại" />
+            <PasswordInput
+              label="Mật khẩu hiện tại"
+              placeholder="••••••••"
+              value={pwForm.currentPassword}
+              onChange={v => setPwForm(f => ({ ...f, currentPassword: v }))}
+              show={showPw.current}
+              onToggleShow={() => setShowPw(s => ({ ...s, current: !s.current }))}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <PasswordInput field="new" placeholder="Tối thiểu 6 ký tự" label="Mật khẩu mới" />
-              <PasswordInput field="confirm" placeholder="Nhập lại mật khẩu mới" label="Xác nhận mật khẩu" />
+              <PasswordInput
+                label="Mật khẩu mới"
+                placeholder="Tối thiểu 6 ký tự"
+                value={pwForm.newPassword}
+                onChange={v => setPwForm(f => ({ ...f, newPassword: v }))}
+                show={showPw.new}
+                onToggleShow={() => setShowPw(s => ({ ...s, new: !s.new }))}
+              />
+              <PasswordInput
+                label="Xác nhận mật khẩu"
+                placeholder="Nhập lại mật khẩu mới"
+                value={pwForm.confirmPassword}
+                onChange={v => setPwForm(f => ({ ...f, confirmPassword: v }))}
+                show={showPw.confirm}
+                onToggleShow={() => setShowPw(s => ({ ...s, confirm: !s.confirm }))}
+              />
             </div>
             {/* Strength indicator */}
             {pwForm.newPassword.length > 0 && (
@@ -319,40 +340,20 @@ export default function SettingsPage() {
   );
 }
 
-// Kiểm tra độ mạnh mật khẩu
+// Kiểm tra độ mạnh mật khẩu — chỉ yêu cầu tối thiểu 6 ký tự
 function PasswordStrength({ password }) {
-  const checks = [
-    { label: 'Ít nhất 6 ký tự', pass: password.length >= 6 },
-    { label: 'Có chữ hoa', pass: /[A-Z]/.test(password) },
-    { label: 'Có số', pass: /[0-9]/.test(password) },
-    { label: 'Có ký tự đặc biệt', pass: /[^a-zA-Z0-9]/.test(password) },
-  ];
-  const passed = checks.filter(c => c.pass).length;
-  const colors = ['bg-destructive', 'bg-orange-500', 'bg-amber-500', 'bg-green-500'];
-  const labels = ['Rất yếu', 'Yếu', 'Trung bình', 'Mạnh'];
+  const passed = password.length >= 6 ? 1 : 0;
+  const barColor = passed ? 'bg-green-500' : 'bg-destructive';
+  const label = passed ? 'Đủ yêu cầu' : 'Chưa đủ 6 ký tự';
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <div className="flex gap-1">
-        {[0, 1, 2, 3].map(i => (
-          <div
-            key={i}
-            className={`h-1 flex-1 rounded-full transition-colors ${i < passed ? colors[passed - 1] : 'bg-muted'}`}
-          />
-        ))}
+        <div className={`h-1 flex-1 rounded-full transition-colors ${barColor}`} />
       </div>
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">{labels[passed - 1] || 'Rất yếu'}</p>
-        <div className="flex gap-3">
-          {checks.map(c => (
-            <span key={c.label} className={`text-[10px] flex items-center gap-1
-              ${c.pass ? 'text-green-600' : 'text-muted-foreground'}`}
-            >
-              <CheckCircle2 className="w-3 h-3" /> {c.label}
-            </span>
-          ))}
-        </div>
-      </div>
+      <p className={`text-xs ${passed ? 'text-green-600' : 'text-destructive'}`}>
+        {passed ? '✓' : '✗'} {label}
+      </p>
     </div>
   );
 }
