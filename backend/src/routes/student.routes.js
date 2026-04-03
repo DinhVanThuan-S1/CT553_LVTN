@@ -20,6 +20,10 @@ router.use(protect, authorize('student'));
 // === Hồ sơ học tập ===
 router.get('/academic-profile', profileCtrl.getProfile);
 router.post('/academic-profile/select-program', profileCtrl.selectProgram);
+router.post('/academic-profile/create-custom-program', profileCtrl.createCustomProgram);
+router.post('/academic-profile/reset-program', profileCtrl.resetProgram);
+router.post('/academic-profile/add-semester', profileCtrl.addSemester);
+router.post('/academic-profile/add-course', profileCtrl.addCourse);
 router.put('/academic-profile/grades', profileCtrl.updateGrades);
 router.put('/academic-profile/move-course', profileCtrl.moveCourse);
 router.delete('/academic-profile/course/:courseGradeId', profileCtrl.removeCourse);

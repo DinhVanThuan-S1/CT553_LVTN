@@ -22,6 +22,42 @@ exports.selectProgram = async (req, res) => {
   }
 };
 
+exports.createCustomProgram = async (req, res) => {
+  try {
+    const data = await profileService.createCustomProgram(req.user._id, req.body.name);
+    res.json({ success: true, data, message: 'Đã tạo và chọn CTĐT riêng' });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
+
+exports.resetProgram = async (req, res) => {
+  try {
+    const data = await profileService.resetProgram(req.user._id);
+    res.json({ success: true, data, message: 'Đã reset CTĐT' });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
+
+exports.addSemester = async (req, res) => {
+  try {
+    const data = await profileService.addSemester(req.user._id, req.body);
+    res.json({ success: true, data, message: 'Đã thêm học kỳ' });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
+
+exports.addCourse = async (req, res) => {
+  try {
+    const data = await profileService.addCourse(req.user._id, req.body);
+    res.json({ success: true, data, message: 'Đã thêm học phần' });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
+
 exports.updateGrades = async (req, res) => {
   try {
     const data = await profileService.updateGrades(req.user._id, req.body.grades);

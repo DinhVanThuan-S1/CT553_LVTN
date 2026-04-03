@@ -25,7 +25,18 @@ class AcademicProfileService {
       profile = await AcademicProfile.create({ student: studentId });
     }
 
-    return profile;
+    const result = profile.toObject ? profile.toObject() : { ...profile };
+
+    // Đính kèm danh sách HK từ CTĐT (để frontend hiển thị HK trống)
+    if (result.curriculumProgram) {
+      const programId = result.curriculumProgram._id || result.curriculumProgram;
+      const semesters = await Semester.find({ curriculumProgram: programId })
+        .select('_id name order')
+        .sort('order');
+      result.programSemesters = semesters;
+    }
+
+    return result;
   }
 
   /**
@@ -66,6 +77,140 @@ class AcademicProfileService {
     ).populate(POPULATE_FIELDS);
 
     return profile;
+  }
+
+  /**
+   * Tạo CTĐT tùy chỉnh cho sinh viên
+   */
+  async createCustomProgram(studentId, name) {
+    if (!name || !name.trim()) throw { status: 400, message: 'Tên CTĐT là bắt buộc' };
+
+    const code = 'CUSTOM_' + Date.now().toString(36).toUpperCase();
+    const program = await CurriculumProgram.create({
+      code,
+      name: name.trim(),
+      department: 'Tùy chỉnh',
+      description: 'Chương trình đào tạo tùy chỉnh bởi sinh viên',
+      totalCredits: 0,
+    });
+
+    // Chọn CTĐT vừa tạo cho sinh viên (không có HP mẫu → courseGrades rỗng)
+    const profile = await AcademicProfile.findOneAndUpdate(
+      { student: studentId },
+      { curriculumProgram: program._id, courseGrades: [] },
+      { new: true, upsert: true }
+    ).populate(POPULATE_FIELDS);
+
+    return profile;
+  }
+
+  /**
+   * Reset CTĐT — xóa program + tất cả courseGrades → quay về màn chọn
+   */
+  async resetProgram(studentId) {
+    const profile = await AcademicProfile.findOneAndUpdate(
+      { student: studentId },
+      {
+        $unset: { curriculumProgram: 1 },
+        $set: { courseGrades: [], gpa: 0, completedCredits: 0 },
+      },
+      { new: true }
+    ).populate(POPULATE_FIELDS);
+
+    if (!profile) throw { status: 404, message: 'Chưa có hồ sơ học tập' };
+    return profile;
+  }
+
+  /**
+   * Thêm học kỳ vào CTĐT của sinh viên
+   * body: { name: "Học kỳ 1", order: 1 }
+   */
+  async addSemester(studentId, { name, order }) {
+    const profile = await AcademicProfile.findOne({ student: studentId });
+    if (!profile || !profile.curriculumProgram) {
+      throw { status: 400, message: 'Chưa chọn CTĐT' };
+    }
+
+    if (!name) throw { status: 400, message: 'Tên học kỳ là bắt buộc' };
+
+    // Tìm order tiếp theo nếu không truyền
+    if (!order) {
+      const maxSem = await Semester.findOne({ curriculumProgram: profile.curriculumProgram })
+        .sort('-order').select('order');
+      order = (maxSem?.order || 0) + 1;
+    }
+
+    const semester = await Semester.create({
+      name: name.trim(),
+      order,
+      courses: [],
+      requiredCredits: 0,
+      electiveCredits: 0,
+      curriculumProgram: profile.curriculumProgram,
+    });
+
+    // Cập nhật CTĐT
+    await CurriculumProgram.findByIdAndUpdate(profile.curriculumProgram, {
+      $push: { semesters: semester._id },
+    });
+
+    // Reload profile
+    return this.getProfile(studentId);
+  }
+
+  /**
+   * Thêm HP vào profile theo semester
+   * body: { courseId, semesterId, isRequired? }
+   */
+  async addCourse(studentId, { courseId, semesterId, isRequired = true }) {
+    if (!courseId || !semesterId) throw { status: 400, message: 'Thiếu courseId hoặc semesterId' };
+
+    const profile = await AcademicProfile.findOne({ student: studentId });
+    if (!profile) throw { status: 404, message: 'Chưa có hồ sơ học tập' };
+
+    // Kiểm tra course tồn tại
+    const course = await Course.findById(courseId);
+    if (!course) throw { status: 404, message: 'Không tìm thấy học phần' };
+
+    // Kiểm tra semester tồn tại
+    const semester = await Semester.findById(semesterId);
+    if (!semester) throw { status: 404, message: 'Không tìm thấy học kỳ' };
+
+    // Kiểm tra trùng lặp
+    const exists = profile.courseGrades.some(
+      cg => cg.course?.toString() === courseId && cg.semester?.toString() === semesterId
+    );
+    if (exists) throw { status: 400, message: 'Học phần đã có trong học kỳ này' };
+
+    // Thêm vào courseGrades
+    profile.courseGrades.push({
+      course: courseId,
+      semester: semesterId,
+      isRequired: isRequired !== false,
+      grade: '',
+      numericGrade: null,
+      gradePoint: 0,
+    });
+    await profile.save();
+
+    // Cũng thêm vào Semester.courses
+    const semCourseExists = semester.courses.some(
+      c => c.course?.toString() === courseId
+    );
+    if (!semCourseExists) {
+      semester.courses.push({ course: courseId, isRequired: isRequired !== false });
+      const credits = course.credits || 0;
+      if (isRequired !== false) semester.requiredCredits += credits;
+      else semester.electiveCredits += credits;
+      await semester.save();
+    }
+
+    // Update totalCredits
+    await CurriculumProgram.findByIdAndUpdate(profile.curriculumProgram, {
+      $inc: { totalCredits: course.credits || 0 },
+    });
+
+    return this.getProfile(studentId);
   }
 
   /**
