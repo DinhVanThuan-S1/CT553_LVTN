@@ -59,12 +59,13 @@ class CourseService {
 
       const course = await Course.findByIdAndUpdate(id, data, { new: true, runValidators: true });
 
-      // Sync isRequired khi courseType thay đổi
-      const oldIsRequired = oldCourse.courseType === 'required';
-      const newIsRequired = course.courseType === 'required';
+      const oldIsRequired = ['required', 'internship', 'thesis'].includes(oldCourse.courseType);
+      const newIsRequired = ['required', 'internship', 'thesis'].includes(course.courseType);
+      const typeChanged = oldIsRequired !== newIsRequired;
+      const creditsChanged = oldCourse.credits !== course.credits;
 
-      if (oldIsRequired !== newIsRequired) {
-        // Sync Semester.courses[].isRequired
+      // 1. Sync Semester.courses[].isRequired khi courseType thay đổi
+      if (typeChanged) {
         await Semester.updateMany(
           { 'courses.course': id },
           { $set: { 'courses.$[elem].isRequired': newIsRequired } },
@@ -77,6 +78,26 @@ class CourseService {
           { $set: { 'courseGrades.$[elem].isRequired': newIsRequired } },
           { arrayFilters: [{ 'elem.course': id }] }
         );
+      }
+
+      // 2. Recalculate Semester.requiredCredits / electiveCredits khi credits hoặc courseType thay đổi
+      if (typeChanged || creditsChanged) {
+        const affectedSemesters = await Semester.find({ 'courses.course': id })
+          .populate('courses.course', 'credits courseType');
+
+        for (const sem of affectedSemesters) {
+          let reqCredits = 0;
+          let electCredits = 0;
+          for (const item of sem.courses) {
+            const credits = item.course?.credits || 0;
+            if (item.isRequired !== false) reqCredits += credits;
+            else electCredits += credits;
+          }
+          await Semester.findByIdAndUpdate(sem._id, {
+            requiredCredits: reqCredits,
+            electiveCredits: electCredits,
+          });
+        }
       }
 
       return course;

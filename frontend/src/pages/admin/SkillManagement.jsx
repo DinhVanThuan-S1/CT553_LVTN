@@ -145,7 +145,7 @@ export default function SkillManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">QL Kỹ năng</h1>
+          <h1 className="text-2xl font-bold">Quản Lý Kỹ Năng</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Tổng {pagination.total} kỹ năng • Resources, bài tập, bài test
           </p>

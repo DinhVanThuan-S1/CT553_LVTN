@@ -109,9 +109,9 @@ export default function JobPostingManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">QL Tin tuyển dụng</h1>
+          <h1 className="text-2xl font-bold">Quản Lý Tin Tuyển Dụng</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Tổng {pagination.total} tin • duyệt / từ chối tin NTD gửi
+            Tổng {pagination.total} tin • Duyệt / Từ chối tin NTD gửi
           </p>
         </div>
         {pendingCount > 0 && (
@@ -177,9 +177,8 @@ export default function JobPostingManagement() {
               ) : (
                 jobs.map((job) => (
                   <tr key={job._id}
-                    className={`border-b hover:bg-muted/20 transition-colors ${
-                      job.status === 'pending' ? 'bg-amber-500/[0.03]' : ''
-                    }`}>
+                    className={`border-b hover:bg-muted/20 transition-colors ${job.status === 'pending' ? 'bg-amber-500/[0.03]' : ''
+                      }`}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <Briefcase className="w-4 h-4 text-primary shrink-0" />

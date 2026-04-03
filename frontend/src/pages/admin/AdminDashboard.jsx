@@ -45,7 +45,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="animate-fade-in space-y-6">
-        <h1 className="text-2xl font-bold">Tổng quan</h1>
+        <h1 className="text-2xl font-bold">Tổng Quan</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="rounded-xl border bg-card p-5">
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
   return (
     <div className="animate-fade-in space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Tổng quan</h1>
+        <h1 className="text-2xl font-bold">Tổng Quan</h1>
         <p className="text-muted-foreground text-sm mt-1">Dashboard quản trị hệ thống EduPath</p>
       </div>
 

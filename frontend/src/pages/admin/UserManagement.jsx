@@ -73,7 +73,7 @@ export default function UserManagement() {
     <div className="animate-fade-in space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">QL Người dùng</h1>
+        <h1 className="text-2xl font-bold">Quản Lý Người Dùng</h1>
         <p className="text-muted-foreground text-sm mt-1">Quản lý sinh viên và nhà tuyển dụng</p>
       </div>
 
@@ -209,11 +209,10 @@ export default function UserManagement() {
                         </button>
                         <button
                           onClick={() => handleToggleStatus(user)}
-                          className={`p-1.5 rounded-md transition-colors ${
-                            user.isActive
+                          className={`p-1.5 rounded-md transition-colors ${user.isActive
                               ? 'hover:bg-red-500/10 text-muted-foreground hover:text-red-600'
                               : 'hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-600'
-                          }`}
+                            }`}
                           title={user.isActive ? 'Khóa tài khoản' : 'Mở khóa'}
                         >
                           {user.isActive ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}

@@ -64,7 +64,7 @@ export default function RoadmapManagement() {
     try {
       const { data } = await api.get('/skills', { params: { limit: 200 } });
       setAllSkills(data.data);
-    } catch {}
+    } catch { }
   }
 
   async function openDetail(roadmap) {
@@ -189,7 +189,7 @@ export default function RoadmapManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">QL Lộ trình mẫu</h1>
+          <h1 className="text-2xl font-bold">Quản Lý Lộ Trình Mẫu</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Tổng {pagination.total} lộ trình • Kéo thả sắp xếp kỹ năng
           </p>

@@ -60,7 +60,7 @@ export default function JobTemplateManagement() {
     try {
       const { data } = await api.get('/skills', { params: { limit: 200 } });
       setAllSkills(data.data);
-    } catch {}
+    } catch { }
   }
 
   async function openDetail(tpl) {
@@ -160,9 +160,9 @@ export default function JobTemplateManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">QL Công việc mẫu</h1>
+          <h1 className="text-2xl font-bold">Quản Lý Công Việc Mẫu</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Tổng {pagination.total} mẫu • phục vụ gợi ý & so khớp kỹ năng
+            Tổng {pagination.total} mẫu • Phục vụ gợi ý & so khớp kỹ năng
           </p>
         </div>
         <Button onClick={openCreate} className="gap-2">

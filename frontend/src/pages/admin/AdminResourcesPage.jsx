@@ -150,7 +150,7 @@ export default function AdminResourcesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Quản lý Tài nguyên</h1>
+          <h1 className="text-2xl font-bold">Quản Lý Tài Nguyên</h1>
           <p className="text-muted-foreground text-sm mt-1">Tài nguyên học tập bổ trợ cho sinh viên</p>
         </div>
         <Button className="gap-2" onClick={openCreate}>

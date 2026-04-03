@@ -144,7 +144,7 @@ export default function AdminReportsPage() {
     return (
       <div className="animate-fade-in">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Thống kê & Báo cáo</h1>
+          <h1 className="text-2xl font-bold">Thống Kê & Báo Cáo</h1>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -172,7 +172,7 @@ export default function AdminReportsPage() {
       {/* Title */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Thống kê & Báo cáo</h1>
+          <h1 className="text-2xl font-bold">Thống Kê & Báo Cáo</h1>
           <p className="text-sm text-muted-foreground mt-1">Tổng quan dữ liệu hệ thống EduPath</p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchAll} className="gap-2">
