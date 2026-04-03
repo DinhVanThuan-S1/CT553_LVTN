@@ -195,7 +195,7 @@ export default function RoadmapManagement() {
         <div>
           <h1 className="text-2xl font-bold">Quản Lý Lộ Trình Mẫu</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Tổng {pagination.total} lộ trình • Kéo thả sắp xếp kỹ năng
+            Tổng {pagination.total} lộ trình
           </p>
         </div>
         <Button onClick={openCreate} className="gap-2">
@@ -232,14 +232,14 @@ export default function RoadmapManagement() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Lộ trình</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Hướng nghề nghiệp</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Mức độ</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Kỹ năng</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Thời gian</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Đánh giá</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Đăng ký</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Thao tác</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Lộ Trình</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Hướng Nghề Nghiệp</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Mức Độ</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Kỹ Năng</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Thời Gian</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Đánh Giá</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Đăng Ký</th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Thao Tác</th>
               </tr>
             </thead>
             <tbody>

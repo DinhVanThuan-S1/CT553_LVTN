@@ -143,12 +143,12 @@ export default function UserManagement() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Người dùng</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Người Dùng</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Email</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Vai trò</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Trạng thái</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Ngày tạo</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Thao tác</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Vai Trò</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Trạng Thái</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Ngày Tạo</th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Thao Tác</th>
               </tr>
             </thead>
             <tbody>
@@ -210,8 +210,8 @@ export default function UserManagement() {
                         <button
                           onClick={() => handleToggleStatus(user)}
                           className={`p-1.5 rounded-md transition-colors ${user.isActive
-                              ? 'hover:bg-red-500/10 text-muted-foreground hover:text-red-600'
-                              : 'hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-600'
+                            ? 'hover:bg-red-500/10 text-muted-foreground hover:text-red-600'
+                            : 'hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-600'
                             }`}
                           title={user.isActive ? 'Khóa tài khoản' : 'Mở khóa'}
                         >

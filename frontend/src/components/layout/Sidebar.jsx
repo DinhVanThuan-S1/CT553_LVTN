@@ -47,8 +47,6 @@ const menuConfig = {
     { label: 'CVs', path: '/student/cv', icon: FileText },
     { label: 'Đơn Ứng Tuyển', path: '/student/applications', icon: ClipboardList },
     { label: 'Yêu Thích', path: '/student/favorites', icon: Heart },
-    { type: 'divider', label: 'Liên Lạc' },
-    { label: 'Tin Nhắn', path: '/student/chat', icon: MessageSquare },
   ],
   employer: [
     { label: 'Tổng Quan', path: '/employer', icon: LayoutDashboard },
@@ -56,12 +54,11 @@ const menuConfig = {
     { label: 'Hồ Sơ Công Ty', path: '/employer/company', icon: Building2 },
     { label: 'Tin Tuyển Dụng', path: '/employer/job-postings', icon: Briefcase },
     { label: 'Ứng Viên', path: '/employer/applicants', icon: Users },
-    { type: 'divider', label: 'Liên Lạc' },
-    { label: 'Tin Nhắn', path: '/employer/chat', icon: MessageSquare },
   ],
   admin: [
-    { label: 'Tổng Quan', path: '/admin', icon: LayoutDashboard },
     { type: 'divider', label: 'Hệ Thống' },
+    { label: 'Tổng Quan', path: '/admin', icon: LayoutDashboard },
+    { label: 'Thống Kê', path: '/admin/reports', icon: BarChart3 },
     { label: 'Người Dùng', path: '/admin/users', icon: Users },
     { type: 'divider', label: 'Đào tạo' },
     { label: 'Học Phần', path: '/admin/courses', icon: BookOpen },
@@ -72,8 +69,7 @@ const menuConfig = {
     { type: 'divider', label: 'Tuyển dụng' },
     { label: 'Tin Tuyển Dụng', path: '/admin/job-postings', icon: ClipboardList },
     { label: 'Công Việc Mẫu', path: '/admin/job-templates', icon: Briefcase },
-    { type: 'divider', label: 'Báo cáo' },
-    { label: 'Thống Kê', path: '/admin/reports', icon: BarChart3 },
+
   ],
 };
 

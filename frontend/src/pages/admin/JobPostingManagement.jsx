@@ -111,7 +111,7 @@ export default function JobPostingManagement() {
         <div>
           <h1 className="text-2xl font-bold">Quản Lý Tin Tuyển Dụng</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Tổng {pagination.total} tin • Duyệt / Từ chối tin NTD gửi
+            Tổng {pagination.total} tin : Duyệt / Từ chối tin NTD gửi
           </p>
         </div>
         {pendingCount > 0 && (
@@ -150,13 +150,13 @@ export default function JobPostingManagement() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Vị trí</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Công ty</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Vị Trí</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Công Ty</th>
                 <th className="text-center px-4 py-3 font-medium text-muted-foreground">Loại</th>
                 <th className="text-center px-4 py-3 font-medium text-muted-foreground">Lương</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Trạng thái</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Ngày tạo</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Thao tác</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Trạng Thái</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Ngày Tạo</th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Thao Tác</th>
               </tr>
             </thead>
             <tbody>

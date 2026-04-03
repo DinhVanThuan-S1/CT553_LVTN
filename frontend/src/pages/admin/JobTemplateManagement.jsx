@@ -166,7 +166,7 @@ export default function JobTemplateManagement() {
         <div>
           <h1 className="text-2xl font-bold">Quản Lý Công Việc Mẫu</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Tổng {pagination.total} mẫu • Phục vụ gợi ý & so khớp kỹ năng
+            Tổng {pagination.total} mẫu : Phục vụ gợi ý & so khớp kỹ năng
           </p>
         </div>
         <Button onClick={openCreate} className="gap-2">
@@ -193,11 +193,11 @@ export default function JobTemplateManagement() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Công việc</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Hướng nghề nghiệp</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Kỹ năng</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Mức lương</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Thao tác</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Công Việc</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Hướng Nghề Nghiệp</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Kỹ Năng</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Mức Lương</th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Thao Tác</th>
               </tr>
             </thead>
             <tbody>

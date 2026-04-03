@@ -206,7 +206,7 @@ export default function SkillManagement() {
         <div>
           <h1 className="text-2xl font-bold">Quản Lý Kỹ Năng</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Tổng {pagination.total} kỹ năng • Resources / Bài Tập / Bài Test
+            Tổng {pagination.total} kỹ năng
           </p>
         </div>
         <Button onClick={openCreate} className="gap-2">
@@ -246,7 +246,7 @@ export default function SkillManagement() {
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Kỹ Năng</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Nhóm</th>
                 <th className="text-center px-4 py-3 font-medium text-muted-foreground">Giờ Học</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Resources</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Nội Dung</th>
                 <th className="text-center px-4 py-3 font-medium text-muted-foreground">Bài Tập</th>
                 <th className="text-center px-4 py-3 font-medium text-muted-foreground">Câu Hỏi</th>
                 <th className="text-right px-4 py-3 font-medium text-muted-foreground">Thao Tác</th>

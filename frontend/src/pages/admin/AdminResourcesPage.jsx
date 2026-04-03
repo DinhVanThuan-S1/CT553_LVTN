@@ -22,18 +22,18 @@ import {
 
 // ─── Config ──────────────────────────────────────────────
 const TYPE_CONFIG = {
-  content:  { label: 'Nội dung',  icon: FileText,   color: 'default'   },
-  exercise: { label: 'Bài tập',   icon: Dumbbell,   color: 'warning'   },
-  test:     { label: 'Bài test',  icon: HelpCircle, color: 'danger'    },
+  content: { label: 'Nội Dung', icon: FileText, color: 'default' },
+  exercise: { label: 'Bài Tập', icon: Dumbbell, color: 'warning' },
+  test: { label: 'Bài Test', icon: HelpCircle, color: 'danger' },
 };
 
 const CATEGORY_CONFIG = {
-  video:         { label: 'Video',     icon: Video,      color: 'danger'    },
-  article:       { label: 'Bài viết',  icon: BookOpen,   color: 'default'   },
-  course:        { label: 'Khóa học',  icon: BookMarked, color: 'success'   },
-  tool:          { label: 'Công cụ',   icon: Wrench,     color: 'warning'   },
-  documentation: { label: 'Tài liệu', icon: Globe,      color: 'secondary' },
-  book:          { label: 'Sách',      icon: BookOpen,   color: 'secondary' },
+  video: { label: 'Video', icon: Video, color: 'danger' },
+  article: { label: 'Bài viết', icon: BookOpen, color: 'default' },
+  course: { label: 'Khóa học', icon: BookMarked, color: 'success' },
+  tool: { label: 'Công cụ', icon: Wrench, color: 'warning' },
+  documentation: { label: 'Tài liệu', icon: Globe, color: 'secondary' },
+  book: { label: 'Sách', icon: BookOpen, color: 'secondary' },
 };
 
 const DIFFICULTY_LABELS = {
@@ -212,7 +212,7 @@ export default function AdminResourcesPage() {
         <div>
           <h1 className="text-2xl font-bold">Quản Lý Tài Nguyên</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Tổng {stats.total} tài nguyên • Nội dung, bài tập và bài test kỹ năng
+            Tổng {stats.total} tài nguyên
           </p>
         </div>
         <Button className="gap-2" onClick={openCreate}>
@@ -224,9 +224,9 @@ export default function AdminResourcesPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Tổng', value: stats.total, icon: BookOpen, color: 'text-primary' },
-          { label: 'Nội dung', value: totalForType('content'), icon: FileText, color: 'text-sky-500' },
-          { label: 'Bài tập', value: totalForType('exercise'), icon: Dumbbell, color: 'text-amber-500' },
-          { label: 'Bài test', value: totalForType('test'), icon: HelpCircle, color: 'text-red-500' },
+          { label: 'Nội Dung', value: totalForType('content'), icon: FileText, color: 'text-sky-500' },
+          { label: 'Bài Tập', value: totalForType('exercise'), icon: Dumbbell, color: 'text-amber-500' },
+          { label: 'Bài Test', value: totalForType('test'), icon: HelpCircle, color: 'text-red-500' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="rounded-xl border bg-card p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -240,13 +240,12 @@ export default function AdminResourcesPage() {
 
       {/* Type filter tabs */}
       <div className="flex gap-2 flex-wrap">
-        {[{ key: '', label: 'Tất cả' }, ...Object.entries(TYPE_CONFIG).map(([k, v]) => ({ key: k, label: v.label }))].map(({ key, label }) => (
+        {[{ key: '', label: 'Tất Cả' }, ...Object.entries(TYPE_CONFIG).map(([k, v]) => ({ key: k, label: v.label }))].map(({ key, label }) => (
           <button
             key={key}
             onClick={() => { setFilterType(key); setPagination(p => ({ ...p, page: 1 })); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              filterType === key ? 'bg-primary text-primary-foreground' : 'bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground'
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filterType === key ? 'bg-primary text-primary-foreground' : 'bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground'
+              }`}
           >
             {label}
           </button>
@@ -459,9 +458,8 @@ export default function AdminResourcesPage() {
                                 options: qs[qi].options.map((o, j) => ({ ...o, isCorrect: j === oi })),
                               };
                               return { ...f, testQuestions: qs };
-                            })} className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center text-[10px] ${
-                              opt.isCorrect ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-border hover:border-primary'
-                            }`}>
+                            })} className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center text-[10px] ${opt.isCorrect ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-border hover:border-primary'
+                              }`}>
                               {opt.isCorrect && '✓'}
                             </button>
                             <Input value={opt.text} placeholder={`Lựa chọn ${oi + 1}`}
@@ -523,9 +521,8 @@ export default function AdminResourcesPage() {
                       key={skill._id}
                       type="button"
                       onClick={() => toggleSkill(skill._id)}
-                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors text-left ${
-                        selected ? 'bg-primary/10 text-primary' : 'hover:bg-muted/60'
-                      }`}
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors text-left ${selected ? 'bg-primary/10 text-primary' : 'hover:bg-muted/60'
+                        }`}
                     >
                       <span className="w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 text-xs">
                         {selected ? '✓' : ''}
