@@ -1,7 +1,8 @@
 /**
  * Course Model
- * Học phần (82 HP từ CTĐT K50)
- * Bao gồm mã HP, tên HP, số tín chỉ, tiên quyết, song hành, mô tả
+ * Học phần (253 HP từ CTĐT K50)
+ * Mỗi HP chuyên ngành lưu riêng theo từng ngành (cùng mã có thể bắt buộc ở ngành này, tự chọn ở ngành khác)
+ * Bao gồm mã HP, tên HP, số tín chỉ, chuyên ngành, tiên quyết, song hành, mô tả
  */
 const mongoose = require('mongoose');
 
@@ -10,7 +11,6 @@ const courseSchema = new mongoose.Schema({
   code: {
     type: String,
     required: [true, 'Mã học phần là bắt buộc'],
-    unique: true,
     trim: true,
     uppercase: true,
   },
@@ -38,6 +38,34 @@ const courseSchema = new mongoose.Schema({
     type: String,
     enum: ['general', 'foundation', 'specialized'],
     default: 'general',
+  },
+  // Chuyên ngành (mỗi entry thuộc đúng 1 ngành)
+  major: {
+    type: String,
+    enum: [
+      'KyThuatPhanMem',
+      'AnToanThongTin',
+      'CongNgheThongTin',
+      'HeThongThongTin',
+      'KhoaHocMayTinh',
+      'MangMayTinhVaTruyenThongDuLieu',
+      'chung', // học phần đại cương / cơ sở ngành chung cho tất cả
+    ],
+    default: 'chung',
+    trim: true,
+  },
+  // Khối kiến thức
+  knowledgeBlock: {
+    type: String,
+    enum: [
+      'general_education',      // Đại cương
+      'foundation',             // Cơ sở ngành
+      'specialized_required',   // Chuyên ngành bắt buộc
+      'specialized_elective',   // Chuyên ngành tự chọn
+      'thesis',                 // Luận văn / Tiểu luận
+      'internship',             // Thực tập
+    ],
+    default: 'general_education',
   },
   // Điều kiện đăng ký (VD: "Tích lũy >= 125 TC")
   condition: {
@@ -97,6 +125,8 @@ const courseSchema = new mongoose.Schema({
   timestamps: true,
 });
 
+// Compound index: cùng mã + cùng ngành = unique
+courseSchema.index({ code: 1, major: 1 }, { unique: true });
 // Text index cho tìm kiếm
 courseSchema.index({ code: 'text', name: 'text' });
 

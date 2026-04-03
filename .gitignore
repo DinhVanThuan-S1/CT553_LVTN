@@ -30,3 +30,6 @@ dist-ssr
 # Uploads
 server/uploads/*
 !server/uploads/.gitkeep
+
+~$*.xlsx
+*.json
