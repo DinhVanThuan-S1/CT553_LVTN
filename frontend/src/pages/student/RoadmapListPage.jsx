@@ -45,6 +45,19 @@ export default function RoadmapListPage() {
 
   useEffect(() => { loadRoadmaps(); }, [loadRoadmaps]);
 
+  // Load trạng thái yêu thích hiện tại
+  useEffect(() => {
+    api.get('/student/favorites', { params: { type: 'roadmap' } })
+      .then(({ data }) => {
+        const map = {};
+        (data.data || []).forEach(f => {
+          if (f.roadmap?._id) map[f.roadmap._id] = true;
+        });
+        setFavorites(map);
+      })
+      .catch(() => {});
+  }, []);
+
   async function toggleFavorite(roadmapId) {
     try {
       const { data } = await api.post('/student/favorites/toggle', {

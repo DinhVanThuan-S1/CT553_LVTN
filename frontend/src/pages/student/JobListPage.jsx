@@ -59,6 +59,19 @@ export default function JobListPage() {
 
   useEffect(() => { loadJobs(); }, [loadJobs]);
 
+  // Load trạng thái yêu thích hiện tại
+  useEffect(() => {
+    api.get('/student/favorites', { params: { type: 'job' } })
+      .then(({ data }) => {
+        const map = {};
+        (data.data || []).forEach(f => {
+          if (f.jobPosting?._id) map[f.jobPosting._id] = true;
+        });
+        setFavorites(map);
+      })
+      .catch(() => {});
+  }, []);
+
   async function viewDetail(job) {
     try {
       const { data } = await api.get(`/jobs/${job._id}`);

@@ -29,8 +29,14 @@ const favoriteSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Mỗi SV chỉ yêu thích 1 lần cho mỗi item
-favoriteSchema.index({ student: 1, type: 1, jobPosting: 1 }, { unique: true, sparse: true });
-favoriteSchema.index({ student: 1, type: 1, roadmap: 1 }, { unique: true, sparse: true });
+// Dùng partialFilterExpression để chỉ index khi field tồn tại (tránh lỗi null duplicate)
+favoriteSchema.index(
+  { student: 1, jobPosting: 1 },
+  { unique: true, partialFilterExpression: { jobPosting: { $exists: true } } }
+);
+favoriteSchema.index(
+  { student: 1, roadmap: 1 },
+  { unique: true, partialFilterExpression: { roadmap: { $exists: true } } }
+);
 
 module.exports = mongoose.model('Favorite', favoriteSchema);
