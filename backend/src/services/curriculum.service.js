@@ -11,7 +11,7 @@ const Semester = require('../models/Semester');
 
 class CurriculumService {
   async getPrograms({ page = 1, limit = 20, search }) {
-    const filter = {};
+    const filter = { isActive: { $ne: false } };
     if (search) {
       filter.$or = [
         { code: { $regex: search, $options: 'i' } },

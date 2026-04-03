@@ -8,7 +8,7 @@ const AcademicProfile = require('../models/AcademicProfile');
 
 class CourseService {
   async getCourses({ page = 1, limit = 20, search, courseType, courseCategory, sort = 'code' }) {
-    const filter = {};
+    const filter = { isActive: { $ne: false } };
     if (search) {
       filter.$or = [
         { code: { $regex: search, $options: 'i' } },
@@ -59,8 +59,8 @@ class CourseService {
 
       const course = await Course.findByIdAndUpdate(id, data, { new: true, runValidators: true });
 
-      const oldIsRequired = ['required', 'internship', 'thesis'].includes(oldCourse.courseType);
-      const newIsRequired = ['required', 'internship', 'thesis'].includes(course.courseType);
+      const oldIsRequired = oldCourse.courseType === 'required';
+      const newIsRequired = course.courseType === 'required';
       const typeChanged = oldIsRequired !== newIsRequired;
       const creditsChanged = oldCourse.credits !== course.credits;
 

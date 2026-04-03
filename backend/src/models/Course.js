@@ -30,7 +30,7 @@ const courseSchema = new mongoose.Schema({
   // Loại học phần (bắt buộc/tự chọn)
   courseType: {
     type: String,
-    enum: ['required', 'elective', 'thesis', 'internship'],
+    enum: ['required', 'elective'],
     default: 'required',
   },
   // Phân loại (đại cương/cơ sở ngành/chuyên ngành)

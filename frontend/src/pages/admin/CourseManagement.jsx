@@ -20,14 +20,10 @@ import {
 const courseTypeLabels = {
   required: 'Bắt buộc',
   elective: 'Tự chọn',
-  thesis: 'Luận văn',
-  internship: 'Thực tập',
 };
 const courseTypeBadge = {
   required: 'default',
   elective: 'warning',
-  thesis: 'success',
-  internship: 'secondary',
 };
 
 const courseCategoryLabels = {
@@ -61,9 +57,10 @@ export default function CourseManagement() {
   const [formData, setFormData] = useState(initialForm);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
-  // Detail dialog
   const [showDetail, setShowDetail] = useState(false);
   const [detailCourse, setDetailCourse] = useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadCourses = useCallback(async () => {
     setLoading(true);
@@ -142,14 +139,18 @@ export default function CourseManagement() {
     }
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Bạn có chắc muốn xóa học phần này?')) return;
+  async function handleDelete() {
+    if (!deleteConfirmId) return;
+    setDeleting(true);
     try {
-      await api.delete(`/courses/${id}`);
+      await api.delete(`/courses/${deleteConfirmId}`);
       toast.success('Đã xóa học phần');
+      setDeleteConfirmId(null);
       loadCourses();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Có lỗi xảy ra');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -281,8 +282,8 @@ export default function CourseManagement() {
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleDelete(course._id)}
+                         <button
+                          onClick={() => setDeleteConfirmId(course._id)}
                           className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors"
                           title="Xóa"
                         >
@@ -577,6 +578,40 @@ export default function CourseManagement() {
             </Button>
           </DialogFooter>
         </form>
+      </Dialog>
+
+      {/* ===== Confirm Delete Dialog ===== */}
+      <Dialog open={!!deleteConfirmId} onClose={() => setDeleteConfirmId(null)} className="max-w-sm">
+        <DialogHeader onClose={() => setDeleteConfirmId(null)}>
+          Xác nhận xóa học phần
+        </DialogHeader>
+        <DialogBody>
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+              <Trash2 className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Bạn có chắc muốn xóa học phần này?</p>
+              <p className="text-muted-foreground text-xs mt-1">
+                Học phần sẽ bị ẩn khỏi hệ thống. Hành động này không thể hoàn tác.
+              </p>
+            </div>
+          </div>
+        </DialogBody>
+        <DialogFooter>
+          <Button type="button" variant="outline" size="sm" onClick={() => setDeleteConfirmId(null)}>
+            Hủy
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            className="bg-red-600 hover:bg-red-700 text-white"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? 'Đang xóa...' : 'Xóa'}
+          </Button>
+        </DialogFooter>
       </Dialog>
     </div>
   );

@@ -114,6 +114,8 @@ export default function CurriculumManagement() {
   const [pickerOpenFor, setPickerOpenFor] = useState(null); // semId or _localId
   const [saving, setSaving] = useState(false);
   const [loadingEdit, setLoadingEdit] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // ── Detail Dialog ──
   const [showDetail, setShowDetail] = useState(false);
@@ -140,7 +142,7 @@ export default function CurriculumManagement() {
   useEffect(() => {
     api.get('/courses/all').then(({ data }) => {
       setAllCourses(data.data || []);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   // ── View Detail ──
@@ -338,14 +340,18 @@ export default function CurriculumManagement() {
     }
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Bạn có chắc muốn xóa CTĐT này?')) return;
+  async function handleDelete() {
+    if (!deleteConfirmId) return;
+    setDeleting(true);
     try {
-      await api.delete(`/curriculum-programs/${id}`);
+      await api.delete(`/curriculum-programs/${deleteConfirmId}`);
       toast.success('Đã xóa CTĐT');
+      setDeleteConfirmId(null);
       loadPrograms();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Có lỗi xảy ra');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -362,7 +368,7 @@ export default function CurriculumManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Quản Lý Chương Trình Đào Tạo</h1>
-          <p className="text-muted-foreground text-sm mt-1">Quản lý CTĐT, học kỳ và học phần</p>
+          <p className="text-muted-foreground text-sm mt-1">Quản lý CTĐT mẫu, học kỳ và học phần</p>
         </div>
         <Button onClick={openCreate} className="gap-2">
           <Plus className="w-4 h-4" /> Thêm CTĐT
@@ -420,7 +426,7 @@ export default function CurriculumManagement() {
                     className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Sửa">
                     <Pencil className="w-4 h-4" />
                   </button>
-                  <button onClick={() => handleDelete(program._id)}
+                  <button onClick={() => setDeleteConfirmId(program._id)}
                     className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors" title="Xóa">
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -821,6 +827,40 @@ export default function CurriculumManagement() {
             </Button>
           </DialogFooter>
         </form>
+      </Dialog>
+
+      {/* ═══════════════ Confirm Delete Dialog ═══════════════ */}
+      <Dialog open={!!deleteConfirmId} onClose={() => setDeleteConfirmId(null)} className="max-w-sm">
+        <DialogHeader onClose={() => setDeleteConfirmId(null)}>
+          Xác nhận xóa CTĐT
+        </DialogHeader>
+        <DialogBody>
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+              <Trash2 className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Bạn có chắc muốn xóa chương trình đào tạo này?</p>
+              <p className="text-muted-foreground text-xs mt-1">
+                CTĐT sẽ bị ẩn khỏi hệ thống. Hành động này không thể hoàn tác.
+              </p>
+            </div>
+          </div>
+        </DialogBody>
+        <DialogFooter>
+          <Button type="button" variant="outline" size="sm" onClick={() => setDeleteConfirmId(null)}>
+            Hủy
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            className="bg-red-600 hover:bg-red-700 text-white"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? 'Đang xóa...' : 'Xóa'}
+          </Button>
+        </DialogFooter>
       </Dialog>
     </div>
   );
