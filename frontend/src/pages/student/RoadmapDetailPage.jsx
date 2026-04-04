@@ -4,8 +4,9 @@
  * Thời gian tự tính từ số slot rảnh được chọn
  */
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import api from '../../lib/api';
+import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
@@ -24,6 +25,8 @@ const dayLabels = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 export default function RoadmapDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const toast = useToast();
   const [roadmap, setRoadmap] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -71,6 +74,10 @@ export default function RoadmapDetailPage() {
 
   // Load occupied slots khi mở dialog đăng ký
   async function openEnrollDialog() {
+    if (!isAuthenticated) {
+      navigate(`/login?next=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
     setShowEnroll(true);
     setFreeSlots([]);
     try {
@@ -83,6 +90,10 @@ export default function RoadmapDetailPage() {
 
   async function submitReview(e) {
     e.preventDefault();
+    if (!isAuthenticated) {
+      navigate(`/login?next=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
     if (reviewRating === 0) { toast.error('Vui lòng chọn số sao'); return; }
     setSubmittingReview(true);
     try {
@@ -160,7 +171,7 @@ export default function RoadmapDetailPage() {
       <div className="animate-fade-in text-center py-20">
         <Route className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
         <p className="text-muted-foreground">Không tìm thấy lộ trình</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate('/student/roadmaps')}>
+        <Button variant="outline" className="mt-4" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-4 h-4 mr-1" /> Quay lại
         </Button>
       </div>
@@ -168,13 +179,7 @@ export default function RoadmapDetailPage() {
   }
 
   return (
-    <div className="animate-fade-in space-y-6 max-w-4xl">
-      {/* Back + Header */}
-      <button onClick={() => navigate('/student/roadmaps')}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Quay lại danh sách
-      </button>
-
+    <div className="animate-fade-in space-y-6 max-w-4xl mx-auto">
       <div className="rounded-xl border bg-card overflow-hidden">
         {/* Hero */}
         <div className="h-36 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent flex items-center px-8">

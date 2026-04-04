@@ -12,6 +12,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import GoogleCallbackPage from './pages/GoogleCallbackPage';
 import AuthLayout from './components/layout/AuthLayout';
+import PublicLayout from './components/layout/PublicLayout';
 
 // Pages - Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -91,6 +92,15 @@ const router = createBrowserRouter([
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
       { path: '/auth/google/callback', element: <GoogleCallbackPage /> },
+      // Public roadmap + job (có header + container padding)
+      {
+        element: <PublicLayout />,
+        children: [
+          { path: '/roadmaps', element: <RoadmapListPage /> },
+          { path: '/roadmaps/:id', element: <RoadmapDetailPage /> },
+          { path: '/jobs', element: <JobListPage /> },
+        ],
+      },
 
       // === Admin (protected) ===
       {

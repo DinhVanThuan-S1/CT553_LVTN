@@ -111,7 +111,7 @@ export default function JobPostingManagement() {
         <div>
           <h1 className="text-2xl font-bold">Quản Lý Tin Tuyển Dụng</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Tổng {pagination.total} tin : Duyệt / Từ chối tin NTD gửi
+            Tổng {pagination.total} tin : Duyệt hoặc từ chối tin nhà tuyển dụng gửi
           </p>
         </div>
         {pendingCount > 0 && (

@@ -1,9 +1,11 @@
 /**
  * WelcomePage - Landing Page
- * Cập nhật: Hero + Tính năng + Lộ trình nổi bật + Công việc nổi bật + CTA
+ * Lấy dữ liệu thật từ API: roadmaps nổi bật + công việc nổi bật + stats
  */
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
+import api from '../lib/api';
 import {
   GraduationCap,
   Route,
@@ -17,89 +19,30 @@ import {
   MapPin,
   DollarSign,
   Users,
-  Star,
   ChevronRight,
   CheckCircle2,
   Zap,
   Brain,
   BarChart3,
   Calendar,
+  Building2,
+  Loader2,
 } from 'lucide-react';
 
-// Dữ liệu mock cho Lộ trình nổi bật
-const featuredRoadmaps = [
-  {
-    title: 'Full-Stack Web Developer',
-    description: 'Từ cơ bản HTML/CSS đến React + Node.js, xây dựng ứng dụng web hoàn chỉnh',
-    skills: ['HTML/CSS', 'JavaScript', 'React', 'Node.js', 'MongoDB'],
-    duration: '6 tháng',
-    level: 'Cơ bản → Nâng cao',
-    enrolled: 234,
-    color: 'from-cyan-500 to-blue-600',
-  },
-  {
-    title: 'Data Science & AI',
-    description: 'Phân tích dữ liệu, Machine Learning và ứng dụng AI thực tế',
-    skills: ['Python', 'SQL', 'Pandas', 'Scikit-learn', 'TensorFlow'],
-    duration: '9 tháng',
-    level: 'Trung cấp → Nâng cao',
-    enrolled: 186,
-    color: 'from-emerald-500 to-teal-600',
-  },
-  {
-    title: 'Mobile App Developer',
-    description: 'Phát triển ứng dụng mobile đa nền tảng với React Native',
-    skills: ['JavaScript', 'React Native', 'Firebase', 'UI/UX Mobile'],
-    duration: '6 tháng',
-    level: 'Cơ bản → Nâng cao',
-    enrolled: 152,
-    color: 'from-amber-500 to-orange-600',
-  },
+// Màu gradient cho lộ trình theo index
+const ROAD_COLORS = [
+  'from-cyan-500 to-blue-600',
+  'from-emerald-500 to-teal-600',
+  'from-amber-500 to-orange-600',
+  'from-rose-500 to-pink-600',
 ];
 
-// Dữ liệu mock cho Công việc nổi bật
-const featuredJobs = [
-  {
-    title: 'Frontend Developer (React)',
-    company: 'FPT Software',
-    location: 'TP. Cần Thơ',
-    salary: '12 - 18 triệu',
-    type: 'Full-time',
-    skills: ['React', 'TypeScript', 'TailwindCSS'],
-    posted: '2 ngày trước',
-    matchPercent: 92,
-  },
-  {
-    title: 'Backend Developer (Node.js)',
-    company: 'KMS Technology',
-    location: 'TP. Hồ Chí Minh',
-    salary: '15 - 25 triệu',
-    type: 'Full-time',
-    skills: ['Node.js', 'MongoDB', 'Docker'],
-    posted: '1 ngày trước',
-    matchPercent: 85,
-  },
-  {
-    title: 'Data Analyst Intern',
-    company: 'VNG Corporation',
-    location: 'Remote',
-    salary: '8 - 12 triệu',
-    type: 'Internship',
-    skills: ['Python', 'SQL', 'Power BI'],
-    posted: '3 ngày trước',
-    matchPercent: 78,
-  },
-  {
-    title: 'DevOps Engineer',
-    company: 'Tiki',
-    location: 'TP. Hồ Chí Minh',
-    salary: '20 - 35 triệu',
-    type: 'Full-time',
-    skills: ['Docker', 'Kubernetes', 'AWS', 'CI/CD'],
-    posted: '5 ngày trước',
-    matchPercent: 70,
-  },
-];
+const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
+
+const jobTypeLabels = {
+  'full-time': 'Full-time', 'part-time': 'Part-time',
+  internship: 'Thực tập', freelance: 'Freelance', remote: 'Remote',
+};
 
 const features = [
   {
@@ -135,14 +78,61 @@ const processSteps = [
   { step: '04', title: 'Ứng tuyển', desc: 'CV thông minh, match công việc', icon: Briefcase },
 ];
 
-const stats = [
-  { value: '82+', label: 'Học phần', icon: BookOpen },
-  { value: '40+', label: 'Kỹ năng CNTT', icon: Target },
-  { value: '6+', label: 'Lộ trình mẫu', icon: Route },
-  { value: 'AI', label: 'Gợi ý thông minh', icon: Sparkles },
-];
 
 export default function WelcomePage() {
+  const [roadmaps, setRoadmaps] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [stats, setStats] = useState([
+    { value: '...', label: 'Kỹ năng CNTT', icon: Target },
+    { value: '...', label: 'Lộ trình mẫu', icon: Route },
+    { value: '...', label: 'Việc làm', icon: Briefcase },
+    { value: 'AI', label: 'Gợi ý thông minh', icon: Sparkles },
+  ]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [roadmapRes, jobRes, skillRes] = await Promise.allSettled([
+          api.get('/roadmaps', { params: { limit: 3, sort: '-enrollmentCount' } }),
+          api.get('/jobs', { params: { limit: 4, sort: '-createdAt' } }),
+          api.get('/skills/all'),
+        ]);
+
+        if (roadmapRes.status === 'fulfilled') {
+          const data = roadmapRes.value.data.data || [];
+          setRoadmaps(data);
+          setStats(prev => prev.map(s =>
+            s.label === 'Lộ trình mẫu'
+              ? { ...s, value: (roadmapRes.value.data.pagination?.total || data.length) + '+' }
+              : s
+          ));
+        }
+
+        if (jobRes.status === 'fulfilled') {
+          setJobs(jobRes.value.data.data || []);
+          setStats(prev => prev.map(s =>
+            s.label === 'Việc làm'
+              ? { ...s, value: (jobRes.value.data.pagination?.total || 0) + '+' }
+              : s
+          ));
+        }
+
+        if (skillRes.status === 'fulfilled') {
+          const count = (skillRes.value.data.data || []).length;
+          setStats(prev => prev.map(s =>
+            s.label === 'Kỹ năng CNTT'
+              ? { ...s, value: count + '+' }
+              : s
+          ));
+        }
+      } catch {/* fail silently */} finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* ====== HEADER ====== */}
@@ -232,7 +222,7 @@ export default function WelcomePage() {
             <p className="text-muted-foreground">Từ nhập học đến ứng tuyển – mọi thứ trong một hệ thống</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {processSteps.map(({ step, title, desc, icon: Icon }, i) => (
+            {processSteps.map(({ step, title, desc, icon: Icon }) => (
               <div key={step} className="relative group">
                 <div className="bg-card border rounded-xl p-5 text-center card-hover h-full">
                   <div className="text-[10px] font-bold text-primary/40 mb-3">BƯỚC {step}</div>
@@ -242,9 +232,6 @@ export default function WelcomePage() {
                   <h3 className="font-semibold mb-1">{title}</h3>
                   <p className="text-sm text-muted-foreground">{desc}</p>
                 </div>
-                {i < 3 && (
-                  <ChevronRight className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/30 z-10" />
-                )}
               </div>
             ))}
           </div>
@@ -288,40 +275,60 @@ export default function WelcomePage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {featuredRoadmaps.map((roadmap) => (
-              <div key={roadmap.title} className="rounded-xl border bg-card overflow-hidden card-hover group">
-                {/* Gradient header */}
-                <div className={`h-2 bg-gradient-to-r ${roadmap.color}`} />
-                <div className="p-5">
-                  <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors">
-                    {roadmap.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{roadmap.description}</p>
-
-                  {/* Skills tags */}
-                  <div className="flex flex-wrap gap-1.5 mb-4">
-                    {roadmap.skills.map((skill) => (
-                      <span key={skill} className="px-2 py-0.5 rounded-md bg-primary/8 text-primary text-xs font-medium">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Meta */}
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" /> {roadmap.duration}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users className="w-3.5 h-3.5" /> {roadmap.enrolled} SV
-                      </span>
+            {loading ? (
+              // Skeleton cards
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded-xl border bg-card overflow-hidden animate-pulse">
+                  <div className="h-2 bg-muted" />
+                  <div className="p-5 space-y-3">
+                    <div className="h-5 bg-muted rounded w-3/4" />
+                    <div className="h-4 bg-muted rounded w-full" />
+                    <div className="h-4 bg-muted rounded w-2/3" />
+                    <div className="flex gap-2">
+                      {Array.from({ length: 3 }).map((_, j) => <div key={j} className="h-5 bg-muted rounded w-16" />)}
                     </div>
-                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted">{roadmap.level}</span>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : roadmaps.length > 0 ? (
+              roadmaps.map((roadmap, idx) => (
+                <Link key={roadmap._id} to={`/roadmaps/${roadmap._id}`}
+                  className="rounded-xl border bg-card overflow-hidden card-hover group block">
+                  <div className={`h-2 bg-gradient-to-r ${ROAD_COLORS[idx % ROAD_COLORS.length]}`} />
+                  <div className="p-5">
+                    <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors">
+                      {roadmap.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{roadmap.description}</p>
+                    {/* Skills tags */}
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                      {(roadmap.skills || []).slice(0, 5).map((s) => (
+                        <span key={s._id || s.skill?._id}
+                          className="px-2 py-0.5 rounded-md bg-primary/8 text-primary text-xs font-medium">
+                          {s.skill?.icon} {s.skill?.name || s.name}
+                        </span>
+                      ))}
+                    </div>
+                    {/* Meta */}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" /> {roadmap.estimatedMonths} tháng
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Users className="w-3.5 h-3.5" /> {roadmap.enrollmentCount || 0} SV
+                        </span>
+                      </div>
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted">
+                        {difficultyLabels[roadmap.difficulty] || roadmap.difficulty}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-3 text-center text-muted-foreground py-8">Chưa có lộ trình</div>
+            )}
           </div>
 
           <div className="md:hidden text-center mt-6">
@@ -347,39 +354,67 @@ export default function WelcomePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {featuredJobs.map((job, i) => (
-            <div key={i} className="rounded-xl border bg-card p-5 card-hover group">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold group-hover:text-primary transition-colors">{job.title}</h3>
-                  <p className="text-sm text-muted-foreground">{job.company}</p>
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-xl border bg-card p-5 animate-pulse space-y-3">
+                <div className="h-5 bg-muted rounded w-2/3" />
+                <div className="h-4 bg-muted rounded w-1/2" />
+                <div className="flex gap-3">
+                  <div className="h-4 bg-muted rounded w-20" />
+                  <div className="h-4 bg-muted rounded w-24" />
                 </div>
-                {job.matchPercent && (
-                  <div className={`flex-shrink-0 px-2 py-1 rounded-lg text-xs font-bold ${job.matchPercent >= 90 ? 'bg-emerald-500/10 text-emerald-600' :
-                    job.matchPercent >= 80 ? 'bg-blue-500/10 text-blue-600' :
-                      'bg-amber-500/10 text-amber-600'
-                    }`}>
-                    {job.matchPercent}% phù hợp
+                <div className="flex gap-2">
+                  {Array.from({ length: 3 }).map((_, j) => <div key={j} className="h-5 bg-muted rounded w-16" />)}
+                </div>
+              </div>
+            ))
+          ) : jobs.length > 0 ? (
+            jobs.map((job) => (
+              <Link key={job._id} to={`/jobs`}
+                className="rounded-xl border bg-card p-5 card-hover group block">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="font-semibold group-hover:text-primary transition-colors">{job.title}</h3>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <Building2 className="w-3.5 h-3.5" />
+                      {job.company?.name || 'Ẩn tên công ty'}
+                    </p>
+                  </div>
+                  <span className="flex-shrink-0 px-2 py-0.5 rounded-md bg-muted text-[11px]">
+                    {jobTypeLabels[job.jobType] || job.jobType}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-3">
+                  {(job.locationText || job.location) && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {job.locationText || 'Xem chi tiết'}
+                    </span>
+                  )}
+                  {job.salaryRange?.min > 0 && (
+                    <span className="flex items-center gap-1">
+                      <DollarSign className="w-3.5 h-3.5" />
+                      {job.salaryRange.min}{job.salaryRange.isNegotiable ? '+ triệu' : ` - ${job.salaryRange.max} triệu`}
+                    </span>
+                  )}
+                  {job.salaryRange?.isNegotiable && !job.salaryRange?.min && (
+                    <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" /> Thỏa thuận</span>
+                  )}
+                </div>
+                {job.requiredSkills?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {job.requiredSkills.slice(0, 4).map((rs) => (
+                      <span key={rs._id} className="px-2 py-0.5 rounded-md bg-muted text-xs">
+                        {rs.skill?.icon} {rs.skill?.name}
+                      </span>
+                    ))}
                   </div>
                 )}
-              </div>
-
-              <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-                <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {job.location}</span>
-                <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" /> {job.salary}</span>
-                <span className="px-1.5 py-0.5 rounded bg-muted text-[11px]">{job.type}</span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex flex-wrap gap-1.5">
-                  {job.skills.map((skill) => (
-                    <span key={skill} className="px-2 py-0.5 rounded-md bg-muted text-xs">{skill}</span>
-                  ))}
-                </div>
-                <span className="text-[11px] text-muted-foreground">{job.posted}</span>
-              </div>
-            </div>
-          ))}
+              </Link>
+            ))
+          ) : (
+            <div className="col-span-2 text-center text-muted-foreground py-8">Chưa có công việc nào</div>
+          )}
         </div>
 
         <div className="md:hidden text-center mt-6">
@@ -452,8 +487,8 @@ export default function WelcomePage() {
             </div>
           </div>
           <div className="border-t pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-            <p>© 2026 EduPath - Trường Đại học Cần Thơ - Khoa CNTT & Truyền thông</p>
-            <p>Đồ án tốt nghiệp - Ngành Kỹ thuật Phần mềm K50</p>
+            <p>© 2026 EduPath - Đại học Cần Thơ - Trường CNTT & Truyền thông</p>
+            <p>Luận văn tốt nghiệp - Ngành Kỹ thuật phần mềm K48</p>
           </div>
         </div>
       </footer>

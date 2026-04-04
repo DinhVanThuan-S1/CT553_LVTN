@@ -215,11 +215,16 @@ export default function CVPage() {
               </div>
               {cv.headline && <p className="text-sm text-muted-foreground mb-2">{cv.headline}</p>}
               <div className="flex flex-wrap gap-1 mb-3">
-                {(cv.skills || []).slice(0, 4).map((s) => (
-                  <Badge key={s._id} variant="secondary" className="text-[10px]">
-                    {s.icon} {s.name}
-                  </Badge>
-                ))}
+                {(cv.skills || []).slice(0, 4).map((s) => {
+                  const done = completedSkills.includes(s._id);
+                  return (
+                    <Badge key={s._id}
+                      variant={done ? 'default' : 'secondary'}
+                      className={`text-[10px] ${done ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30' : ''}`}>
+                      {done && '✅'} {s.icon} {s.name}
+                    </Badge>
+                  );
+                })}
                 {(cv.skills || []).length > 4 && (
                   <Badge variant="secondary" className="text-[10px]">+{cv.skills.length - 4}</Badge>
                 )}
@@ -271,11 +276,28 @@ export default function CVPage() {
             )}
             {detailCV.skills?.length > 0 && (
               <div>
-                <h4 className="text-xs font-medium text-muted-foreground mb-1">Kỹ năng</h4>
+                <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                  Kỹ năng
+                  {completedSkills.some(id => detailCV.skills.find(s => s._id === id)) && (
+                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5">
+                      <CheckCircle2 className="w-3 h-3" /> = Đã hoàn thành 100%
+                    </span>
+                  )}
+                </h4>
                 <div className="flex flex-wrap gap-1.5">
-                  {detailCV.skills.map((s) => (
-                    <Badge key={s._id} variant="secondary">{s.icon} {s.name}</Badge>
-                  ))}
+                  {detailCV.skills.map((s) => {
+                    const done = completedSkills.includes(s._id);
+                    return (
+                      <Badge key={s._id}
+                        variant={done ? 'default' : 'secondary'}
+                        className={done
+                          ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/40'
+                          : ''}>
+                        {done ? <CheckCircle2 className="w-3 h-3 mr-1" /> : null}
+                        {s.icon} {s.name}
+                      </Badge>
+                    );
+                  })}
                 </div>
               </div>
             )}

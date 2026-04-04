@@ -3,7 +3,9 @@
  * Browse jobs, search, filter, apply
  */
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../lib/api';
+import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
@@ -24,6 +26,9 @@ const jobTypeLabels = {
 
 export default function JobListPage() {
   const toast = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
@@ -59,8 +64,9 @@ export default function JobListPage() {
 
   useEffect(() => { loadJobs(); }, [loadJobs]);
 
-  // Load trạng thái yêu thích hiện tại
+  // Load trạng thái yêu thích hiện tại (chỉ khi đã đăng nhập)
   useEffect(() => {
+    if (!isAuthenticated) return;
     api.get('/student/favorites', { params: { type: 'job' } })
       .then(({ data }) => {
         const map = {};
@@ -70,7 +76,7 @@ export default function JobListPage() {
         setFavorites(map);
       })
       .catch(() => {});
-  }, []);
+  }, [isAuthenticated]);
 
   async function viewDetail(job) {
     try {
@@ -83,6 +89,10 @@ export default function JobListPage() {
   }
 
   async function toggleFavorite(jobId) {
+    if (!isAuthenticated) {
+      navigate(`/login?next=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
     try {
       const { data } = await api.post('/student/favorites/toggle', {
         type: 'job', itemId: jobId,
@@ -95,6 +105,10 @@ export default function JobListPage() {
   }
 
   async function openApplyDialog() {
+    if (!isAuthenticated) {
+      navigate(`/login?next=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
     setCvsLoading(true);
     setShowApply(true);
     try {
@@ -144,7 +158,10 @@ export default function JobListPage() {
             {pagination.total} công việc đang tuyển
           </p>
         </div>
-        <Button className="gap-2 bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shadow-md shadow-primary/20" onClick={() => setShowSuggestion(true)}>
+        <Button className="gap-2 bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shadow-md shadow-primary/20" onClick={() => {
+          if (!isAuthenticated) { navigate(`/login?next=${encodeURIComponent(location.pathname)}`); return; }
+          setShowSuggestion(true);
+        }}>
           <Sparkles className="w-4 h-4" /> Gợi ý việc làm (AI)
         </Button>
       </div>

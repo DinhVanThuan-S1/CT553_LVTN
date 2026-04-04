@@ -3,8 +3,9 @@
  * Browse, search, filter + button "Gợi ý lộ trình" (AI)
  */
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../../lib/api';
+import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
@@ -21,6 +22,9 @@ const difficultyColors = { beginner: 'success', intermediate: 'warning', advance
 
 export default function RoadmapListPage() {
   const toast = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const [roadmaps, setRoadmaps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -45,8 +49,9 @@ export default function RoadmapListPage() {
 
   useEffect(() => { loadRoadmaps(); }, [loadRoadmaps]);
 
-  // Load trạng thái yêu thích hiện tại
+  // Load trạng thái yêu thích (chỉ khi đã đăng nhập)
   useEffect(() => {
+    if (!isAuthenticated) return;
     api.get('/student/favorites', { params: { type: 'roadmap' } })
       .then(({ data }) => {
         const map = {};
@@ -56,9 +61,13 @@ export default function RoadmapListPage() {
         setFavorites(map);
       })
       .catch(() => {});
-  }, []);
+  }, [isAuthenticated]);
 
   async function toggleFavorite(roadmapId) {
+    if (!isAuthenticated) {
+      navigate(`/login?next=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
     try {
       const { data } = await api.post('/student/favorites/toggle', {
         type: 'roadmap', itemId: roadmapId,
@@ -70,6 +79,14 @@ export default function RoadmapListPage() {
     }
   }
 
+  function handleAISuggestion() {
+    if (!isAuthenticated) {
+      navigate(`/login?next=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
+    setShowSuggestion(true);
+  }
+
   return (
     <div className="animate-fade-in space-y-6">
       <RoadmapSuggestionModal isOpen={showSuggestion} onClose={() => setShowSuggestion(false)} />
@@ -78,7 +95,7 @@ export default function RoadmapListPage() {
           <h1 className="text-2xl font-bold">Danh sách Lộ trình</h1>
           <p className="text-muted-foreground text-sm mt-1">Khám phá các lộ trình học tập phù hợp</p>
         </div>
-        <Button className="gap-2 bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shadow-md shadow-primary/20" onClick={() => setShowSuggestion(true)}>
+        <Button className="gap-2 bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shadow-md shadow-primary/20" onClick={handleAISuggestion}>
           <Sparkles className="w-4 h-4" /> Gợi ý lộ trình (AI)
         </Button>
       </div>
@@ -177,7 +194,7 @@ export default function RoadmapListPage() {
                   </span>
                   <div className="flex-1" />
                   <Link
-                    to={`/student/roadmaps/${roadmap._id}`}
+                    to={`/roadmaps/${roadmap._id}`}
                     className="text-sm text-primary font-medium hover:underline flex items-center gap-1"
                   >
                     Xem chi tiết <ChevronRight className="w-4 h-4" />
