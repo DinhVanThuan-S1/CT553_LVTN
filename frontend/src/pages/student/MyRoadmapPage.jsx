@@ -13,7 +13,7 @@ import {
   Route, Clock, Calendar, CheckCircle2, Loader2,
   Target, Play, BookOpen, TrendingUp, ChevronRight,
   Circle, Flame, Pause, RotateCcw, AlertTriangle, Trash2,
-  ExternalLink, FileText, HelpCircle,
+  ExternalLink, FileText, HelpCircle, Briefcase,
 } from 'lucide-react';
 
 const statusLabels = { active: 'Đang học', completed: 'Hoàn thành', paused: 'Tạm dừng', cancelled: 'Đã hủy' };
@@ -422,6 +422,39 @@ export default function MyRoadmapPage() {
                         </span>
                       </div>
                     ))}
+                </div>
+              </div>
+            )}
+
+            {/* Related Jobs */}
+            {detailPR.roadmap?.relatedJobs?.length > 0 && (
+              <div>
+                <h4 className="font-medium text-sm mb-3 flex items-center gap-1">
+                  <Briefcase className="w-4 h-4 text-primary" />
+                  Công việc liên quan ({detailPR.roadmap.relatedJobs.length})
+                </h4>
+                <div className="space-y-2">
+                  {detailPR.roadmap.relatedJobs.map((job) => (
+                    <div key={job._id} className="rounded-lg border p-3 hover:border-primary/30 transition-colors">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">{job.title}</span>
+                        {job.salaryRange?.min > 0 && (
+                          <Badge variant="success" className="text-[10px]">
+                            {job.salaryRange.min}-{job.salaryRange.max}M
+                          </Badge>
+                        )}
+                      </div>
+                      {job.requiredSkills?.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {job.requiredSkills.map((rs, i) => (
+                            <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                              {rs.skill?.icon} {rs.skill?.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

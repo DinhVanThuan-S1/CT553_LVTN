@@ -23,7 +23,14 @@ class PersonalRoadmapService {
     const pr = await PersonalRoadmap.findOne({ _id: id, student: studentId })
       .populate({
         path: 'roadmap',
-        populate: { path: 'skills.skill', select: 'name category icon estimatedHours description' },
+        populate: [
+          { path: 'skills.skill', select: 'name category icon estimatedHours description' },
+          {
+            path: 'relatedJobs',
+            select: 'title description careerPath requiredSkills salaryRange',
+            populate: { path: 'requiredSkills.skill', select: 'name icon' },
+          },
+        ],
       })
       .populate('sessions.skill', 'name icon');
 
@@ -244,6 +251,43 @@ class PersonalRoadmapService {
     }
 
     return sessions;
+  }
+
+  /**
+   * Lấy danh sách kỹ năng đã hoàn thành 100%
+   * Một skill chỉ được tính khi TẤT CẢ sessions của skill đó đều completed
+   */
+  async getCompletedSkills(studentId) {
+    const Skill = require('../models/Skill');
+
+    const roadmaps = await PersonalRoadmap.find({
+      student: studentId,
+      status: { $in: ['active', 'completed'] },
+    }).select('sessions');
+
+    // Group sessions by skill: { skillId → { total, completed } }
+    const skillStats = new Map();
+    for (const pr of roadmaps) {
+      for (const s of pr.sessions || []) {
+        if (!s.skill) continue;
+        const id = s.skill.toString();
+        if (!skillStats.has(id)) skillStats.set(id, { total: 0, completed: 0 });
+        const stat = skillStats.get(id);
+        stat.total += 1;
+        if (s.status === 'completed') stat.completed += 1;
+      }
+    }
+
+    // Chỉ lấy skill mà 100% sessions đều completed (total > 0)
+    const fullyCompletedIds = [...skillStats.entries()]
+      .filter(([, stat]) => stat.total > 0 && stat.completed === stat.total)
+      .map(([id]) => id);
+
+    if (fullyCompletedIds.length === 0) return [];
+
+    return Skill.find({ _id: { $in: fullyCompletedIds }, isActive: true })
+      .select('name category icon estimatedHours')
+      .sort('category name');
   }
 }
 

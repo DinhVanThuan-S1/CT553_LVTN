@@ -31,8 +31,12 @@ class RoadmapService {
 
   async getRoadmapById(id) {
     const roadmap = await Roadmap.findById(id)
-      .populate('skills.skill', 'name category icon description estimatedHours resources exercises')
-      .populate('relatedJobs', 'title careerPath skillsRequired')
+      .populate('skills.skill', 'name category icon description estimatedHours')
+      .populate({
+        path: 'relatedJobs',
+        select: 'title description careerPath requiredSkills salaryRange',
+        populate: { path: 'requiredSkills.skill', select: 'name icon' },
+      })
       .populate('createdBy', 'fullName');
     if (!roadmap) throw { status: 404, message: 'Không tìm thấy lộ trình' };
     return roadmap;

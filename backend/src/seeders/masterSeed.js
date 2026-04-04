@@ -115,6 +115,31 @@ const SKILLS = [
   { name: 'Web Security', category: 'networking', icon: '🔒', estimatedHours: 20, description: 'Bảo mật web — OWASP Top 10, XSS, CSRF, SQL Injection' },
   { name: 'Authentication & Authorization', category: 'networking', icon: '🔑', estimatedHours: 15, description: 'Xác thực — JWT, OAuth2, RBAC, session management' },
   { name: 'Bảo mật ứng dụng Web', category: 'networking', icon: '🛡️', estimatedHours: 30, description: 'Mạng & Bảo mật — penetration testing, vulnerability assessment' },
+
+  // ─── Game Development ──────────────────────────────
+  { name: 'Unity', category: 'game_development', icon: '🎮', estimatedHours: 40, description: 'Game engine phổ biến nhất — C#, physics, UI, 2D/3D' },
+  { name: 'Unreal Engine', category: 'game_development', icon: '🎯', estimatedHours: 45, description: 'AAA game engine — Blueprints, C++, Nanite, Lumen' },
+  { name: 'Game Design', category: 'game_development', icon: '🎲', estimatedHours: 25, description: 'Thiết kế game — mechanics, level design, balancing, GDD' },
+  { name: '2D/3D Graphics', category: 'game_development', icon: '🖼️', estimatedHours: 30, description: 'Đồ họa game — sprite, modeling, animation, shaders' },
+  { name: 'Game AI', category: 'game_development', icon: '🤖', estimatedHours: 20, description: 'AI trong game — pathfinding, FSM, behavior trees, NPC' },
+  { name: 'Godot Engine', category: 'game_development', icon: '🔵', estimatedHours: 25, description: 'Open-source game engine — GDScript, scene system, signals' },
+
+  // ─── Embedded Systems ──────────────────────────────
+  { name: 'Embedded C', category: 'embedded', icon: '🔧', estimatedHours: 35, description: 'Lập trình C cho hệ nhúng — register, interrupt, DMA' },
+  { name: 'Arduino', category: 'embedded', icon: '🟢', estimatedHours: 20, description: 'Nền tảng phần cứng mở — sensors, actuators, serial' },
+  { name: 'Raspberry Pi', category: 'embedded', icon: '🍓', estimatedHours: 20, description: 'Single-board computer — Linux, GPIO, IoT projects' },
+  { name: 'RTOS', category: 'embedded', icon: '⏱️', estimatedHours: 30, description: 'Real-Time OS — FreeRTOS, tasks, semaphores, scheduling' },
+  { name: 'IoT', category: 'embedded', icon: '📡', estimatedHours: 25, description: 'Internet of Things — MQTT, sensors, cloud connectivity' },
+  { name: 'Microcontroller', category: 'embedded', icon: '🔌', estimatedHours: 30, description: 'Vi điều khiển — STM32, ESP32, ARM Cortex, firmware' },
+  { name: 'PCB Design', category: 'embedded', icon: '📐', estimatedHours: 20, description: 'Thiết kế mạch in — KiCad, Eagle, schematic, layout' },
+
+  // ─── Testing & QA ──────────────────────────────────
+  { name: 'Manual Testing', category: 'testing', icon: '🔍', estimatedHours: 20, description: 'Kiểm thử thủ công — test case, test plan, bug report' },
+  { name: 'Selenium/Cypress', category: 'testing', icon: '🤖', estimatedHours: 25, description: 'Test automation web — locators, assertions, page objects' },
+  { name: 'API Testing', category: 'testing', icon: '🔗', estimatedHours: 20, description: 'Kiểm thử API — Postman, REST Assured, contract testing' },
+  { name: 'Performance Testing', category: 'testing', icon: '📊', estimatedHours: 20, description: 'Kiểm thử hiệu năng — JMeter, k6, load testing, stress testing' },
+  { name: 'Test Automation', category: 'testing', icon: '⚡', estimatedHours: 30, description: 'Tự động hóa kiểm thử — CI/CD integration, test framework' },
+  { name: 'Mobile Testing', category: 'testing', icon: '📱', estimatedHours: 20, description: 'Kiểm thử mobile — Appium, XCTest, Espresso, device farms' },
 ];
 
 // ─── RESOURCES cho mỗi skill ──────────────────────────────
@@ -338,6 +363,46 @@ const ROADMAPS = [
     estimatedMonths: 7,
     skillNames: ['Python', 'Django', 'Flask', 'HTML/CSS', 'JavaScript', 'React', 'PostgreSQL', 'Git/GitHub', 'Docker', 'RESTful API Design'],
   },
+  {
+    title: 'Game Developer (Unity)',
+    description: 'Lộ trình Game Developer với Unity — C#, game design, 2D/3D graphics, AI, deployment',
+    careerPath: 'Game Developer',
+    difficulty: 'intermediate',
+    estimatedMonths: 8,
+    skillNames: ['C#/.NET', 'Unity', 'Game Design', '2D/3D Graphics', 'Game AI', 'Git/GitHub', 'Data Structures & Algorithms', 'Design Patterns'],
+  },
+  {
+    title: 'Game Developer (Unreal)',
+    description: 'Lộ trình Game Developer với Unreal Engine — C++, Blueprints, 3D graphics, performance',
+    careerPath: 'Game Developer',
+    difficulty: 'advanced',
+    estimatedMonths: 10,
+    skillNames: ['C/C++', 'Unreal Engine', 'Game Design', '2D/3D Graphics', 'Game AI', 'Git/GitHub', 'Data Structures & Algorithms'],
+  },
+  {
+    title: 'Embedded Systems Engineer',
+    description: 'Lộ trình kỹ sư hệ thống nhúng — C/C++, vi điều khiển, RTOS, IoT, PCB design',
+    careerPath: 'Embedded Engineer',
+    difficulty: 'advanced',
+    estimatedMonths: 9,
+    skillNames: ['C/C++', 'Embedded C', 'Arduino', 'Raspberry Pi', 'RTOS', 'IoT', 'Microcontroller', 'PCB Design', 'Git/GitHub', 'Linux/Shell'],
+  },
+  {
+    title: 'QA/Test Engineer',
+    description: 'Lộ trình QA Engineer — kiểm thử thủ công, automation, API testing, performance testing',
+    careerPath: 'QA Engineer',
+    difficulty: 'intermediate',
+    estimatedMonths: 6,
+    skillNames: ['Manual Testing', 'Selenium/Cypress', 'API Testing', 'Performance Testing', 'Test Automation', 'Git/GitHub', 'Python', 'SQL Fundamentals'],
+  },
+  {
+    title: 'Mobile QA Tester',
+    description: 'Lộ trình kiểm thử di động — manual + automation cho iOS & Android',
+    careerPath: 'QA Engineer',
+    difficulty: 'intermediate',
+    estimatedMonths: 5,
+    skillNames: ['Manual Testing', 'Mobile Testing', 'API Testing', 'Test Automation', 'Git/GitHub'],
+  },
 ];
 
 // ─── JOB TEMPLATES ────────────────────────────────────────
@@ -491,6 +556,69 @@ const JOB_TEMPLATES = [
       { name: 'Networking Fundamentals', level: 'intermediate' },
       { name: 'Linux/Shell', level: 'intermediate' },
       { name: 'Python', level: 'beginner' },
+    ],
+  },
+  {
+    title: 'Game Developer (Unity)',
+    description: 'Phát triển game với Unity — gameplay programming, UI, physics, optimization',
+    careerPath: 'Game Developer',
+    salaryRange: { min: 12, max: 30 },
+    skillNames: [
+      { name: 'C#/.NET', level: 'intermediate' },
+      { name: 'Unity', level: 'intermediate' },
+      { name: 'Game Design', level: 'beginner' },
+      { name: '2D/3D Graphics', level: 'beginner' },
+      { name: 'Git/GitHub', level: 'beginner' },
+    ],
+  },
+  {
+    title: 'Game Developer (Unreal)',
+    description: 'Phát triển game AAA với Unreal Engine — C++, Blueprints, shaders',
+    careerPath: 'Game Developer',
+    salaryRange: { min: 18, max: 45 },
+    skillNames: [
+      { name: 'C/C++', level: 'advanced' },
+      { name: 'Unreal Engine', level: 'intermediate' },
+      { name: '2D/3D Graphics', level: 'intermediate' },
+      { name: 'Game AI', level: 'beginner' },
+    ],
+  },
+  {
+    title: 'Embedded Systems Engineer',
+    description: 'Kỹ sư hệ thống nhúng — firmware, vi điều khiển, RTOS, IoT, hardware interfacing',
+    careerPath: 'Embedded Engineer',
+    salaryRange: { min: 15, max: 35 },
+    skillNames: [
+      { name: 'C/C++', level: 'advanced' },
+      { name: 'Embedded C', level: 'intermediate' },
+      { name: 'Microcontroller', level: 'intermediate' },
+      { name: 'RTOS', level: 'beginner' },
+      { name: 'IoT', level: 'beginner' },
+    ],
+  },
+  {
+    title: 'QA Engineer',
+    description: 'Kỹ sư kiểm thử phần mềm — test planning, automation, API testing, reporting',
+    careerPath: 'QA Engineer',
+    salaryRange: { min: 10, max: 25 },
+    skillNames: [
+      { name: 'Manual Testing', level: 'intermediate' },
+      { name: 'Selenium/Cypress', level: 'beginner' },
+      { name: 'API Testing', level: 'intermediate' },
+      { name: 'Git/GitHub', level: 'beginner' },
+    ],
+  },
+  {
+    title: 'Automation Tester',
+    description: 'Chuyên viên kiểm thử tự động — test framework, CI/CD, performance testing',
+    careerPath: 'QA Engineer',
+    salaryRange: { min: 15, max: 35 },
+    skillNames: [
+      { name: 'Test Automation', level: 'advanced' },
+      { name: 'Selenium/Cypress', level: 'advanced' },
+      { name: 'API Testing', level: 'intermediate' },
+      { name: 'Performance Testing', level: 'intermediate' },
+      { name: 'Python', level: 'intermediate' },
     ],
   },
 ];

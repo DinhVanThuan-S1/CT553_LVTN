@@ -42,6 +42,7 @@ router.patch('/my-roadmaps/:id/pause', prCtrl.pauseRoadmap);
 router.patch('/my-roadmaps/:id/cancel', prCtrl.cancelRoadmap);
 router.patch('/my-roadmaps/:id/resume', prCtrl.resumeRoadmap);
 router.get('/my-roadmaps-occupied-slots', prCtrl.getOccupiedSlots);
+router.get('/completed-skills', prCtrl.getCompletedSkills);
 
 // === Gợi ý lộ trình (AI Matching) ===
 router.get('/roadmap-suggestions', prCtrl.getSuggestions);

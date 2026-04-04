@@ -26,6 +26,9 @@ const skillSchema = new mongoose.Schema({
       'software_engineering', // Kỹ thuật phần mềm
       'soft_skills',          // Kỹ năng mềm
       'networking',           // Mạng & Bảo mật
+      'game_development',     // Game Development
+      'embedded',             // Hệ thống nhúng
+      'testing',              // Testing & QA
       'other',
     ],
     required: [true, 'Nhóm kỹ năng là bắt buộc'],

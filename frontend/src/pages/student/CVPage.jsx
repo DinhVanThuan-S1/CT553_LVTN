@@ -12,7 +12,7 @@ import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components
 import { useToast } from '../../components/ui/Toast';
 import {
   FileText, Plus, Pencil, Trash2, Star, Loader2, Eye,
-  Briefcase, GraduationCap, Award, FolderOpen, X,
+  Briefcase, GraduationCap, Award, FolderOpen, X, CheckCircle2,
 } from 'lucide-react';
 
 const emptyCV = {
@@ -35,16 +35,19 @@ export default function CVPage() {
   const [form, setForm] = useState({ ...emptyCV });
   const [saving, setSaving] = useState(false);
   const [allSkills, setAllSkills] = useState([]);
+  const [completedSkills, setCompletedSkills] = useState([]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [cvRes, skillRes] = await Promise.all([
+      const [cvRes, skillRes, completedRes] = await Promise.all([
         api.get('/student/cvs'),
         api.get('/skills/all'),
+        api.get('/student/completed-skills'),
       ]);
       setCvs(cvRes.data.data);
       setAllSkills(skillRes.data.data);
+      setCompletedSkills((completedRes.data.data || []).map(s => s._id));
     } catch {
       toast.error('Không thể tải dữ liệu');
     } finally {
@@ -374,19 +377,44 @@ export default function CVPage() {
 
             {/* Skills picker */}
             <div>
-              <h4 className="text-sm font-medium mb-2">Kỹ năng ({form.skills.length} đã chọn)</h4>
-              <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 rounded-lg border bg-muted/10">
-                {allSkills.map((skill) => (
-                  <button key={skill._id} type="button" onClick={() => toggleSkill(skill._id)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-                      form.skills.includes(skill._id)
-                        ? 'bg-primary text-white'
-                        : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                    }`}>
-                    {skill.icon} {skill.name}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-medium">Kỹ năng ({form.skills.length} đã chọn)</h4>
+                {completedSkills.length > 0 && (
+                  <Button type="button" variant="outline" size="sm" className="text-xs gap-1"
+                    onClick={() => {
+                      const newSkills = new Set(form.skills);
+                      completedSkills.forEach(id => newSkills.add(id));
+                      setForm(f => ({ ...f, skills: [...newSkills] }));
+                      toast.success(`Đã thêm ${completedSkills.length} kỹ năng đã học`);
+                    }}>
+                    <CheckCircle2 className="w-3 h-3" /> Thêm kỹ năng đã học
+                  </Button>
+                )}
               </div>
+              <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 rounded-lg border bg-muted/10">
+                {allSkills.map((skill) => {
+                  const isCompleted = completedSkills.includes(skill._id);
+                  const isSelected = form.skills.includes(skill._id);
+                  return (
+                    <button key={skill._id} type="button" onClick={() => toggleSkill(skill._id)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
+                        isSelected
+                          ? 'bg-primary text-white'
+                          : isCompleted
+                            ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 hover:bg-emerald-500/20'
+                            : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                      }`}>
+                      {skill.icon} {skill.name}
+                      {isCompleted && !isSelected && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
+                    </button>
+                  );
+                })}
+              </div>
+              {completedSkills.length > 0 && (
+                <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-500" /> = Kỹ năng đã hoàn thành từ lộ trình học
+                </p>
+              )}
             </div>
 
             {/* Experiences */}

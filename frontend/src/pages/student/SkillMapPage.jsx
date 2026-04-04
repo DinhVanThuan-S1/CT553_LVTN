@@ -26,6 +26,9 @@ const categoryLabels = {
   software_engineering: 'Kỹ thuật phần mềm',
   networking: 'Mạng & Bảo mật',
   soft_skills: 'Kỹ năng mềm',
+  game_development: 'Phát triển Game',     // Game Development
+  embedded: 'Hệ thống nhúng',             // Hệ thống nhúng
+  testing: 'Testing & QA',              // Testing & QA
 };
 
 const categoryIcons = {
@@ -251,13 +254,12 @@ export default function SkillMapPage() {
                       <button
                         key={skill._id}
                         onClick={() => openSkillDetail(skill)}
-                        className={`relative rounded-lg border p-3 text-center transition-all cursor-pointer group ${
-                          isCompleted
-                            ? 'border-emerald-500/30 bg-emerald-500/[0.04] shadow-sm'
-                            : hasProgress
-                              ? 'border-primary/30 bg-primary/[0.04] shadow-sm'
-                              : 'hover:border-muted-foreground/30 hover:shadow-sm'
-                        }`}
+                        className={`relative rounded-lg border p-3 text-center transition-all cursor-pointer group ${isCompleted
+                          ? 'border-emerald-500/30 bg-emerald-500/[0.04] shadow-sm'
+                          : hasProgress
+                            ? 'border-primary/30 bg-primary/[0.04] shadow-sm'
+                            : 'hover:border-muted-foreground/30 hover:shadow-sm'
+                          }`}
                       >
                         {/* Badge trạng thái */}
                         {isCompleted && (
@@ -276,9 +278,8 @@ export default function SkillMapPage() {
                         )}
 
                         <span className="text-2xl block mb-1">{skill.icon || '📘'}</span>
-                        <p className={`text-xs font-medium truncate group-hover:text-primary transition-colors ${
-                          isCompleted ? 'text-emerald-600' : hasProgress ? 'text-primary' : ''
-                        }`}>
+                        <p className={`text-xs font-medium truncate group-hover:text-primary transition-colors ${isCompleted ? 'text-emerald-600' : hasProgress ? 'text-primary' : ''
+                          }`}>
                           {skill.name}
                         </p>
                         <p className="text-[10px] text-muted-foreground mt-0.5">{skill.estimatedHours}h</p>
@@ -334,9 +335,8 @@ export default function SkillMapPage() {
                   const pct = Math.round((prog.completed / prog.total) * 100);
                   return (
                     <div className="text-center">
-                      <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center ${
-                        pct === 100 ? 'border-emerald-500 text-emerald-600' : 'border-primary text-primary'
-                      }`}>
+                      <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center ${pct === 100 ? 'border-emerald-500 text-emerald-600' : 'border-primary text-primary'
+                        }`}>
                         <span className="text-sm font-bold">{pct}%</span>
                       </div>
                       <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -382,11 +382,10 @@ export default function SkillMapPage() {
                                 key={res._id}
                                 className="flex items-center gap-3 rounded-lg border px-3 py-2.5 hover:bg-muted/20 transition-colors group"
                               >
-                                <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${
-                                  type === 'content' ? 'bg-blue-500/10 text-blue-500'
-                                    : type === 'exercise' ? 'bg-amber-500/10 text-amber-500'
-                                      : 'bg-emerald-500/10 text-emerald-500'
-                                }`}>
+                                <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${type === 'content' ? 'bg-blue-500/10 text-blue-500'
+                                  : type === 'exercise' ? 'bg-amber-500/10 text-amber-500'
+                                    : 'bg-emerald-500/10 text-emerald-500'
+                                  }`}>
                                   <TypeIcon className="w-4 h-4" />
                                 </div>
                                 <div className="flex-1 min-w-0">

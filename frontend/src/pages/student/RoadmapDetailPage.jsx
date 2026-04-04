@@ -12,7 +12,7 @@ import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components
 import { useToast } from '../../components/ui/Toast';
 import {
   ArrowLeft, Route, Clock, Users, Star, Target, CheckCircle2,
-  BookOpen, Loader2, Calendar, MessageSquare, Send, Lock,
+  BookOpen, Loader2, Calendar, MessageSquare, Send, Lock, Briefcase,
 } from 'lucide-react';
 
 const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
@@ -270,6 +270,45 @@ export default function RoadmapDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Related Jobs Section */}
+      {roadmap.relatedJobs?.length > 0 && (
+        <div className="rounded-xl border bg-card p-6 space-y-4">
+          <h3 className="font-semibold flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-primary" />
+            Công việc liên quan ({roadmap.relatedJobs.length})
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {roadmap.relatedJobs.map((job) => (
+              <div key={job._id} className="rounded-lg border p-4 hover:border-primary/30 transition-colors">
+                <h4 className="font-medium text-sm mb-1">{job.title}</h4>
+                {job.description && (
+                  <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{job.description}</p>
+                )}
+                <div className="flex items-center gap-2 mb-2">
+                  {job.salaryRange?.min > 0 && (
+                    <Badge variant="success" className="text-[10px]">
+                      {job.salaryRange.min}-{job.salaryRange.max}M VNĐ
+                    </Badge>
+                  )}
+                  <Badge variant="secondary" className="text-[10px]">
+                    {job.careerPath}
+                  </Badge>
+                </div>
+                {job.requiredSkills?.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {job.requiredSkills.map((rs, i) => (
+                      <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                        {rs.skill?.icon} {rs.skill?.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Reviews Section */}
       <div className="rounded-xl border bg-card p-6 space-y-5">

@@ -93,3 +93,12 @@ exports.getOccupiedSlots = async (req, res) => {
     res.status(error.status || 500).json({ success: false, message: error.message });
   }
 };
+
+exports.getCompletedSkills = async (req, res) => {
+  try {
+    const data = await prService.getCompletedSkills(req.user._id);
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
