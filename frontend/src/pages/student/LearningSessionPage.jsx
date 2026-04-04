@@ -3,7 +3,7 @@
  * Hiển thị nội dung kỹ năng, tài nguyên (từ Resource collection), bài tập, nút hoàn thành
  */
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -29,6 +29,7 @@ const DIFFICULTY_LABELS = {
 export default function LearningSessionPage() {
   const { prId, sessionId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +37,14 @@ export default function LearningSessionPage() {
   const [notes, setNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [expandedExercise, setExpandedExercise] = useState(null);
+
+  function goBack() {
+    if (location.state?.openPrId) {
+      navigate('/student/my-roadmap', { state: { openPrId: location.state.openPrId } });
+    } else {
+      navigate(-1);
+    }
+  }
 
   useEffect(() => { loadSession(); }, [prId, sessionId]);
 
@@ -47,7 +56,7 @@ export default function LearningSessionPage() {
       setNotes(res.data.session.notes || '');
     } catch {
       toast.error('Không thể tải buổi học');
-      navigate(-1);
+      goBack();
     } finally {
       setLoading(false);
     }
@@ -94,7 +103,7 @@ export default function LearningSessionPage() {
     <div className="animate-fade-in space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+        <Button variant="ghost" size="sm" onClick={goBack}>
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div className="flex-1">

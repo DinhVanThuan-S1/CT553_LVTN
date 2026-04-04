@@ -3,7 +3,7 @@
  * Danh sách lộ trình cá nhân + tiến độ + lịch học
  */
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -13,6 +13,7 @@ import {
   Route, Clock, Calendar, CheckCircle2, Loader2,
   Target, Play, BookOpen, TrendingUp, ChevronRight,
   Circle, Flame, Pause, RotateCcw, AlertTriangle, Trash2,
+  ExternalLink, FileText, HelpCircle,
 } from 'lucide-react';
 
 const statusLabels = { active: 'Đang học', completed: 'Hoàn thành', paused: 'Tạm dừng', cancelled: 'Đã hủy' };
@@ -20,13 +21,18 @@ const statusColors = { active: 'success', completed: 'default', paused: 'warning
 
 export default function MyRoadmapPage() {
   const toast = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [roadmaps, setRoadmaps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showDetail, setShowDetail] = useState(false);
   const [detailPR, setDetailPR] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [completing, setCompleting] = useState(null);
-  const [conflictData, setConflictData] = useState(null); // { prId, conflicts }
+  const [conflictData, setConflictData] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null); // prId to cancel
+  const [skillDetail, setSkillDetail] = useState(null);
+  const [skillDetailLoading, setSkillDetailLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -41,6 +47,28 @@ export default function MyRoadmapPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // Re-open detail dialog when returning from session page
+  useEffect(() => {
+    if (location.state?.openPrId && roadmaps.length > 0) {
+      const pr = roadmaps.find(r => r._id === location.state.openPrId);
+      if (pr) openDetail(pr);
+      // Clear state so it doesn't re-open on next render
+      window.history.replaceState({}, '');
+    }
+  }, [roadmaps, location.state]);
+
+  async function openSkillDetail(skillId) {
+    setSkillDetailLoading(true);
+    try {
+      const { data } = await api.get(`/skills/${skillId}`);
+      setSkillDetail(data.data);
+    } catch {
+      toast.error('Không thể tải chi tiết kỹ năng');
+    } finally {
+      setSkillDetailLoading(false);
+    }
+  }
 
   async function openDetail(pr) {
     setDetailLoading(true);
@@ -81,10 +109,10 @@ export default function MyRoadmapPage() {
   }
 
   async function cancelRoadmap(prId) {
-    if (!window.confirm('Bạn có chắc muốn hủy đăng ký lộ trình này? Thao tác này không thể hoàn tác.')) return;
     try {
       await api.patch(`/student/my-roadmaps/${prId}/cancel`);
       toast.success('Đã hủy đăng ký lộ trình');
+      setCancelTarget(null);
       load();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Có lỗi xảy ra');
@@ -248,7 +276,7 @@ export default function MyRoadmapPage() {
                     )}
                     {(pr.status === 'active' || pr.status === 'paused') && pr.status !== 'completed' && (
                       <Button size="sm" variant="outline" className="gap-1 text-red-500 border-red-500/30 hover:bg-red-500/10"
-                        onClick={() => cancelRoadmap(pr._id)}>
+                        onClick={() => setCancelTarget(pr._id)}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     )}
@@ -311,17 +339,20 @@ export default function MyRoadmapPage() {
                     const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
                     return (
-                      <div key={rSkill._id} className="flex items-center gap-3 rounded-lg border p-2.5">
+                      <div key={rSkill._id}
+                        className="flex items-center gap-3 rounded-lg border p-2.5 hover:bg-muted/20 transition-colors cursor-pointer"
+                        onClick={() => openSkillDetail(rSkill.skill?._id || rSkill.skill)}>
                         <span className="text-lg">{rSkill.skill?.icon || '📘'}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-medium truncate">{rSkill.skill?.name}</span>
+                            <span className="text-sm font-medium truncate hover:text-primary transition-colors">{rSkill.skill?.name}</span>
                             <span className="text-xs text-muted-foreground">{completed}/{total}</span>
                           </div>
                           <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                             <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
                           </div>
                         </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                       </div>
                     );
                   })}
@@ -338,13 +369,18 @@ export default function MyRoadmapPage() {
                   .map((session) => (
                     <div key={session._id} className="flex items-center gap-3 rounded-lg border p-2.5 hover:bg-muted/20 transition-colors">
                       <Circle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <Link to={`/student/my-roadmap/${detailPR._id}/session/${session._id}`}
-                        className="flex-1 min-w-0 hover:text-primary transition-colors cursor-pointer">
+                      <div className="flex-1 min-w-0 hover:text-primary transition-colors cursor-pointer"
+                        onClick={() => {
+                          setShowDetail(false);
+                          navigate(`/student/my-roadmap/${detailPR._id}/session/${session._id}`, {
+                            state: { openPrId: detailPR._id },
+                          });
+                        }}>
                         <span className="text-sm font-medium">{session.skill?.name || 'Kỹ năng'}</span>
                         <span className="text-xs text-muted-foreground ml-2">
                           {new Date(session.date).toLocaleDateString('vi-VN')} • {session.startTime}-{session.endTime}
                         </span>
-                      </Link>
+                      </div>
                       <Button size="sm" variant="outline" className="text-xs gap-1 shrink-0"
                         disabled={completing === session._id}
                         onClick={() => completeSession(detailPR._id, session._id)}>
@@ -427,6 +463,126 @@ export default function MyRoadmapPage() {
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => setConflictData(null)}>Đóng</Button>
         </DialogFooter>
+      </Dialog>
+
+      {/* Cancel Confirmation Dialog */}
+      <Dialog open={!!cancelTarget} onClose={() => setCancelTarget(null)} className="max-w-sm">
+        <DialogHeader onClose={() => setCancelTarget(null)}>
+          <div className="flex items-center gap-2">
+            <Trash2 className="w-5 h-5 text-red-500" />
+            Hủy đăng ký lộ trình
+          </div>
+        </DialogHeader>
+        <DialogBody>
+          <p className="text-sm text-muted-foreground">
+            Bạn có chắc muốn hủy đăng ký lộ trình này? Tất cả tiến độ học sẽ bị xóa và thao tác này không thể hoàn tác.
+          </p>
+        </DialogBody>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" size="sm" onClick={() => setCancelTarget(null)}>Không, giữ lại</Button>
+          <Button size="sm" className="bg-red-500 hover:bg-red-600 text-white" onClick={() => cancelRoadmap(cancelTarget)}>
+            Xác nhận hủy
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* Skill Detail Dialog */}
+      <Dialog open={!!skillDetail || skillDetailLoading} onClose={() => setSkillDetail(null)} className="max-w-lg">
+        <DialogHeader onClose={() => setSkillDetail(null)}>Chi tiết kỹ năng</DialogHeader>
+        <DialogBody className="max-h-[70vh] overflow-y-auto">
+          {skillDetailLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : skillDetail ? (
+            <div className="space-y-5">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center text-3xl">
+                  {skillDetail.icon || '📘'}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold">{skillDetail.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="secondary" className="text-[10px]">
+                      {skillDetail.category}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {skillDetail.estimatedHours}h
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {skillDetail.description && (
+                <p className="text-sm text-muted-foreground">{skillDetail.description}</p>
+              )}
+
+              <div>
+                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-primary" />
+                  Tài nguyên ({skillDetail.linkedResources?.length || 0})
+                </h4>
+                {(!skillDetail.linkedResources || skillDetail.linkedResources.length === 0) ? (
+                  <div className="rounded-lg border border-dashed p-6 text-center">
+                    <BookOpen className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Chưa có tài nguyên</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {['content', 'exercise', 'test'].map(type => {
+                      const resources = skillDetail.linkedResources.filter(r => r.type === type);
+                      if (!resources.length) return null;
+                      const typeLabel = { content: 'Nội dung', exercise: 'Bài tập', test: 'Bài test' }[type];
+                      const TypeIcon = { content: BookOpen, exercise: FileText, test: HelpCircle }[type];
+                      return (
+                        <div key={type}>
+                          <p className="text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">
+                            {typeLabel} ({resources.length})
+                          </p>
+                          <div className="space-y-1.5">
+                            {resources.map(res => (
+                              <div key={res._id}
+                                className="flex items-center gap-3 rounded-lg border px-3 py-2.5 hover:bg-muted/20 transition-colors">
+                                <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${
+                                  type === 'content' ? 'bg-blue-500/10 text-blue-500'
+                                    : type === 'exercise' ? 'bg-amber-500/10 text-amber-500'
+                                      : 'bg-emerald-500/10 text-emerald-500'
+                                }`}>
+                                  <TypeIcon className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{res.title}</p>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                      <Clock className="w-2.5 h-2.5" /> {res.estimatedMinutes}p
+                                    </span>
+                                    {res.difficulty && (
+                                      <Badge variant={res.difficulty === 'beginner' ? 'success' : res.difficulty === 'advanced' ? 'danger' : 'warning'}
+                                        className="text-[9px] px-1 py-0">
+                                        {res.difficulty === 'beginner' ? 'Cơ bản' : res.difficulty === 'advanced' ? 'Nâng cao' : 'Trung bình'}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                                {res.url && (
+                                  <a href={res.url} target="_blank" rel="noopener noreferrer"
+                                    className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors shrink-0"
+                                    onClick={e => e.stopPropagation()}>
+                                    <ExternalLink className="w-4 h-4" />
+                                  </a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </DialogBody>
       </Dialog>
     </div>
   );

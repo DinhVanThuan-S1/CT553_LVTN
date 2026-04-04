@@ -87,15 +87,16 @@ export default function ProgressPage() {
     return sessions;
   }, [roadmaps]);
 
-  // Stats
-  const totalRoadmaps = roadmaps.length;
-  const activeRoadmaps = roadmaps.filter((r) => r.status === 'active').length;
-  const completedRoadmaps = roadmaps.filter((r) => r.status === 'completed').length;
-  const totalHours = roadmaps.reduce((sum, r) => sum + (r.totalHoursLearned || 0), 0);
+  // Stats — chỉ tính active/paused/completed (bỏ cancelled)
+  const visibleRoadmaps = roadmaps.filter((r) => r.status !== 'cancelled');
+  const totalRoadmaps = visibleRoadmaps.length;
+  const activeRoadmaps = visibleRoadmaps.filter((r) => r.status === 'active').length;
+  const completedRoadmaps = visibleRoadmaps.filter((r) => r.status === 'completed').length;
+  const totalHours = visibleRoadmaps.reduce((sum, r) => sum + (r.totalHoursLearned || 0), 0);
   const totalSessions = allSessions.length;
   const completedSessions = allSessions.filter((s) => s.status === 'completed').length;
   const avgProgress = totalRoadmaps > 0
-    ? Math.round(roadmaps.reduce((sum, r) => sum + (r.progress || 0), 0) / totalRoadmaps)
+    ? Math.round(visibleRoadmaps.reduce((sum, r) => sum + (r.progress || 0), 0) / totalRoadmaps)
     : 0;
 
   // Navigation
@@ -219,11 +220,20 @@ export default function ProgressPage() {
               <TrendingUp className="w-5 h-5 text-primary" /> Chi tiết từng lộ trình
             </h2>
             <div className="space-y-3">
-              {roadmaps.map((pr) => {
+              {visibleRoadmaps.map((pr) => {
                 const sessions = pr.sessions || [];
                 const done = sessions.filter((s) => s.status === 'completed').length;
                 const total = sessions.length;
                 const pct = pr.progress || 0;
+
+                const badgeVariant = pr.status === 'active' ? 'success'
+                  : pr.status === 'completed' ? 'default'
+                  : pr.status === 'cancelled' ? 'danger'
+                  : 'warning';
+                const badgeLabel = pr.status === 'active' ? 'Đang học'
+                  : pr.status === 'completed' ? 'Hoàn thành'
+                  : pr.status === 'cancelled' ? 'Đã hủy'
+                  : 'Tạm dừng';
 
                 return (
                   <div key={pr._id} className="rounded-xl border bg-card p-5">
@@ -232,9 +242,7 @@ export default function ProgressPage() {
                         <h3 className="font-semibold">{pr.roadmap?.title}</h3>
                         <p className="text-xs text-muted-foreground">{pr.roadmap?.careerPath}</p>
                       </div>
-                      <Badge variant={pr.status === 'active' ? 'success' : pr.status === 'completed' ? 'default' : 'warning'}>
-                        {pr.status === 'active' ? 'Đang học' : pr.status === 'completed' ? 'Hoàn thành' : 'Tạm dừng'}
-                      </Badge>
+                      <Badge variant={badgeVariant}>{badgeLabel}</Badge>
                     </div>
 
                     <div className="mb-3">
