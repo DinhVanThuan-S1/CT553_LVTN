@@ -152,6 +152,20 @@ class PersonalRoadmapService {
   }
 
   /**
+   * Hủy đăng ký lộ trình
+   */
+  async cancelRoadmap(studentId, roadmapId) {
+    const pr = await PersonalRoadmap.findOne({ _id: roadmapId, student: studentId });
+    if (!pr) throw { status: 404, message: 'Không tìm thấy lộ trình' };
+    if (pr.status === 'completed') throw { status: 400, message: 'Không thể hủy lộ trình đã hoàn thành' };
+    if (pr.status === 'cancelled') throw { status: 400, message: 'Lộ trình đã bị hủy trước đó' };
+    pr.status = 'cancelled';
+    await pr.save();
+    await Roadmap.findByIdAndUpdate(pr.roadmap, { $inc: { enrollmentCount: -1 } });
+    return pr;
+  }
+
+  /**
    * Tiếp tục lộ trình
    */
   async resumeRoadmap(studentId, roadmapId) {

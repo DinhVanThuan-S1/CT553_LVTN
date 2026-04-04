@@ -61,17 +61,19 @@ export default function SkillMapPage() {
       ]);
       setSkills(skillsRes.data.data);
 
-      // Tính % hoàn thành cho mỗi kỹ năng
+      // Tính % hoàn thành cho mỗi kỹ năng (chỉ từ roadmaps active/completed)
       const progress = {};
-      (roadmapsRes.data.data || []).forEach((pr) => {
-        (pr.sessions || []).forEach((s) => {
-          const sid = s.skill?._id || s.skill;
-          if (!sid) return;
-          if (!progress[sid]) progress[sid] = { total: 0, completed: 0 };
-          progress[sid].total += 1;
-          if (s.status === 'completed') progress[sid].completed += 1;
+      (roadmapsRes.data.data || [])
+        .filter((pr) => pr.status === 'active' || pr.status === 'completed')
+        .forEach((pr) => {
+          (pr.sessions || []).forEach((s) => {
+            const sid = s.skill?._id || s.skill;
+            if (!sid) return;
+            if (!progress[sid]) progress[sid] = { total: 0, completed: 0 };
+            progress[sid].total += 1;
+            if (s.status === 'completed') progress[sid].completed += 1;
+          });
         });
-      });
       setSkillProgress(progress);
     } catch {
       toast.error('Không thể tải kỹ năng');

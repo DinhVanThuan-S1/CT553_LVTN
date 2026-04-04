@@ -47,7 +47,7 @@ export default function LearningSessionPage() {
       setNotes(res.data.session.notes || '');
     } catch {
       toast.error('Không thể tải buổi học');
-      navigate('/student/my-roadmap');
+      navigate(-1);
     } finally {
       setLoading(false);
     }
@@ -94,7 +94,7 @@ export default function LearningSessionPage() {
     <div className="animate-fade-in space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/student/my-roadmap')}>
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div className="flex-1">

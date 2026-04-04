@@ -39,6 +39,7 @@ router.get('/my-roadmaps/:id', prCtrl.getRoadmapDetail);
 router.post('/my-roadmaps/enroll', prCtrl.enrollRoadmap);
 router.patch('/my-roadmaps/:id/sessions/:sessionId/complete', prCtrl.completeSession);
 router.patch('/my-roadmaps/:id/pause', prCtrl.pauseRoadmap);
+router.patch('/my-roadmaps/:id/cancel', prCtrl.cancelRoadmap);
 router.patch('/my-roadmaps/:id/resume', prCtrl.resumeRoadmap);
 router.get('/my-roadmaps-occupied-slots', prCtrl.getOccupiedSlots);
 

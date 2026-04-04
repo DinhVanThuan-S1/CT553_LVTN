@@ -12,7 +12,7 @@ import { useToast } from '../../components/ui/Toast';
 import {
   Route, Clock, Calendar, CheckCircle2, Loader2,
   Target, Play, BookOpen, TrendingUp, ChevronRight,
-  Circle, Flame, Pause, RotateCcw, AlertTriangle,
+  Circle, Flame, Pause, RotateCcw, AlertTriangle, Trash2,
 } from 'lucide-react';
 
 const statusLabels = { active: 'Đang học', completed: 'Hoàn thành', paused: 'Tạm dừng', cancelled: 'Đã hủy' };
@@ -74,6 +74,17 @@ export default function MyRoadmapPage() {
     try {
       await api.patch(`/student/my-roadmaps/${prId}/pause`);
       toast.success('Đã tạm dừng lộ trình');
+      load();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra');
+    }
+  }
+
+  async function cancelRoadmap(prId) {
+    if (!window.confirm('Bạn có chắc muốn hủy đăng ký lộ trình này? Thao tác này không thể hoàn tác.')) return;
+    try {
+      await api.patch(`/student/my-roadmaps/${prId}/cancel`);
+      toast.success('Đã hủy đăng ký lộ trình');
       load();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Có lỗi xảy ra');
@@ -219,10 +230,9 @@ export default function MyRoadmapPage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2">
-                    <Button size="sm" variant={isActive ? 'default' : 'outline'} className="gap-1 flex-1"
+                    <Button size="sm" variant="outline" className="gap-1 flex-1"
                       onClick={() => openDetail(pr)}>
-                      {isActive ? <Play className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
-                      {isActive ? 'Tiếp tục học' : 'Xem chi tiết'}
+                      <BookOpen className="w-3.5 h-3.5" /> Xem chi tiết
                     </Button>
                     {pr.status === 'active' && pr.progress < 100 && (
                       <Button size="sm" variant="outline" className="gap-1 text-amber-600 border-amber-500/30 hover:bg-amber-500/10"
@@ -234,6 +244,12 @@ export default function MyRoadmapPage() {
                       <Button size="sm" variant="outline" className="gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
                         onClick={() => resumeRoadmap(pr._id)}>
                         <RotateCcw className="w-3.5 h-3.5" /> Tiếp tục
+                      </Button>
+                    )}
+                    {(pr.status === 'active' || pr.status === 'paused') && pr.status !== 'completed' && (
+                      <Button size="sm" variant="outline" className="gap-1 text-red-500 border-red-500/30 hover:bg-red-500/10"
+                        onClick={() => cancelRoadmap(pr._id)}>
+                        <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     )}
                   </div>

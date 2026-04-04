@@ -63,6 +63,15 @@ exports.pauseRoadmap = async (req, res) => {
   }
 };
 
+exports.cancelRoadmap = async (req, res) => {
+  try {
+    const data = await prService.cancelRoadmap(req.user._id, req.params.id);
+    res.json({ success: true, data, message: 'Đã hủy đăng ký lộ trình' });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
+
 exports.resumeRoadmap = async (req, res) => {
   try {
     const data = await prService.resumeRoadmap(req.user._id, req.params.id);
