@@ -160,14 +160,32 @@ class PersonalRoadmapService {
     if (pr.status !== 'paused') throw { status: 400, message: 'Lộ trình không ở trạng thái tạm dừng' };
 
     // Kiểm tra trùng slot khi resume
-    const occupiedSlots = await this.getOccupiedSlots(studentId);
+    const activeRoadmaps = await PersonalRoadmap.find({
+      student: studentId, status: 'active',
+    }).populate('roadmap', 'title');
+
+    const conflicts = [];
     for (const slot of (pr.freeTimeSlots || [])) {
-      const conflict = occupiedSlots.find(
-        o => o.dayOfWeek === slot.dayOfWeek && o.startTime === slot.startTime
-      );
-      if (conflict) {
-        throw { status: 400, message: `Không thể tiếp tục — khung giờ ${slot.startTime} đã được dùng bởi lộ trình khác. Hãy tạm dừng lộ trình đó trước.` };
+      for (const other of activeRoadmaps) {
+        const match = (other.freeTimeSlots || []).find(
+          o => o.dayOfWeek === slot.dayOfWeek && o.startTime === slot.startTime
+        );
+        if (match && !conflicts.find(c => c.roadmapId === other._id.toString())) {
+          conflicts.push({
+            roadmapId: other._id.toString(),
+            roadmapTitle: other.roadmap?.title || 'Lộ trình',
+          });
+        }
       }
+    }
+
+    if (conflicts.length > 0) {
+      const err = {
+        status: 409,
+        message: `Xung đột lịch với: ${conflicts.map(c => c.roadmapTitle).join(', ')}`,
+        conflicts,
+      };
+      throw err;
     }
 
     pr.status = 'active';

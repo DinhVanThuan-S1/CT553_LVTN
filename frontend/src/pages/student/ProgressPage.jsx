@@ -69,19 +69,21 @@ export default function ProgressPage() {
     }
   }
 
-  // Flatten all sessions across all roadmaps
+  // Flatten all sessions across active/completed roadmaps only (exclude paused/cancelled)
   const allSessions = useMemo(() => {
     const sessions = [];
-    roadmaps.forEach((pr) => {
-      (pr.sessions || []).forEach((s) => {
-        sessions.push({
-          ...s,
-          roadmapId: pr._id,
-          roadmapTitle: pr.roadmap?.title || '',
-          date: new Date(s.date),
+    roadmaps
+      .filter((pr) => pr.status === 'active' || pr.status === 'completed')
+      .forEach((pr) => {
+        (pr.sessions || []).forEach((s) => {
+          sessions.push({
+            ...s,
+            roadmapId: pr._id,
+            roadmapTitle: pr.roadmap?.title || '',
+            date: new Date(s.date),
+          });
         });
       });
-    });
     return sessions;
   }, [roadmaps]);
 

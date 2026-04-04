@@ -68,7 +68,11 @@ exports.resumeRoadmap = async (req, res) => {
     const data = await prService.resumeRoadmap(req.user._id, req.params.id);
     res.json({ success: true, data, message: 'Đã tiếp tục lộ trình' });
   } catch (error) {
-    res.status(error.status || 500).json({ success: false, message: error.message });
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message,
+      conflicts: error.conflicts || [],
+    });
   }
 };
 

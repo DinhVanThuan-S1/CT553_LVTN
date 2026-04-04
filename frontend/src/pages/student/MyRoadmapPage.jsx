@@ -12,7 +12,7 @@ import { useToast } from '../../components/ui/Toast';
 import {
   Route, Clock, Calendar, CheckCircle2, Loader2,
   Target, Play, BookOpen, TrendingUp, ChevronRight,
-  Circle, Flame, Pause, RotateCcw,
+  Circle, Flame, Pause, RotateCcw, AlertTriangle,
 } from 'lucide-react';
 
 const statusLabels = { active: 'Đang học', completed: 'Hoàn thành', paused: 'Tạm dừng', cancelled: 'Đã hủy' };
@@ -26,6 +26,7 @@ export default function MyRoadmapPage() {
   const [detailPR, setDetailPR] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [completing, setCompleting] = useState(null);
+  const [conflictData, setConflictData] = useState(null); // { prId, conflicts }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -85,7 +86,32 @@ export default function MyRoadmapPage() {
       toast.success('Đã tiếp tục lộ trình');
       load();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Có lỗi. Có thể khung giờ đã bị chiếm bởi lộ trình khác.');
+      const resp = error.response?.data;
+      if (resp?.conflicts?.length > 0) {
+        setConflictData({ prId, conflicts: resp.conflicts, message: resp.message });
+      } else {
+        toast.error(resp?.message || 'Có lỗi xảy ra');
+      }
+    }
+  }
+
+  async function pauseAndResume(conflictPrId) {
+    try {
+      await api.patch(`/student/my-roadmaps/${conflictPrId}/pause`);
+      toast.success('Đã tạm dừng lộ trình xung đột');
+      // Thử resume lại
+      await api.patch(`/student/my-roadmaps/${conflictData.prId}/resume`);
+      toast.success('Đã tiếp tục lộ trình thành công!');
+      setConflictData(null);
+      load();
+    } catch (error) {
+      const resp = error.response?.data;
+      if (resp?.conflicts?.length > 0) {
+        setConflictData({ prId: conflictData.prId, conflicts: resp.conflicts, message: resp.message });
+      } else {
+        toast.error(resp?.message || 'Có lỗi xảy ra');
+      }
+      load();
     }
   }
 
@@ -351,6 +377,39 @@ export default function MyRoadmapPage() {
         ) : null}
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Đóng</Button>
+        </DialogFooter>
+      </Dialog>
+      {/* Conflict Resolution Dialog */}
+      <Dialog open={!!conflictData} onClose={() => setConflictData(null)} className="max-w-md">
+        <DialogHeader onClose={() => setConflictData(null)}>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
+            Xung đột lịch học
+          </div>
+        </DialogHeader>
+        <DialogBody className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            {conflictData?.message}
+          </p>
+          <p className="text-sm font-medium">Bạn có thể tạm dừng lộ trình xung đột để tiếp tục:</p>
+          <div className="space-y-2">
+            {(conflictData?.conflicts || []).map((c) => (
+              <div key={c.roadmapId} className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="text-sm font-medium">{c.roadmapTitle}</p>
+                  <p className="text-xs text-muted-foreground">Đang hoạt động</p>
+                </div>
+                <Button size="sm" variant="outline"
+                  className="gap-1 text-amber-600 border-amber-500/30 hover:bg-amber-500/10"
+                  onClick={() => pauseAndResume(c.roadmapId)}>
+                  <Pause className="w-3 h-3" /> Tạm dừng & tiếp tục
+                </Button>
+              </div>
+            ))}
+          </div>
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={() => setConflictData(null)}>Đóng</Button>
         </DialogFooter>
       </Dialog>
     </div>

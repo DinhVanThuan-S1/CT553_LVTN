@@ -62,10 +62,10 @@ const personalRoadmapSchema = new mongoose.Schema({
     ref: 'Roadmap',
     required: true,
   },
-  // Thời gian học đã chọn (tháng)
+  // Thời gian học đã chọn (tháng) — tự tính từ số slot rảnh
   durationMonths: {
     type: Number,
-    enum: [6, 9, 12],
+    min: 1,
     required: true,
   },
   // TKB trường (lịch bận)
