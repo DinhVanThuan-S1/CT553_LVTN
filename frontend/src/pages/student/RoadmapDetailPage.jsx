@@ -1,18 +1,18 @@
 /**
  * RoadmapDetailPage - Chi tiết lộ trình mẫu
  * Xem skills, mô tả + đăng ký lộ trình cá nhân
+ * Thời gian tự tính từ số slot rảnh được chọn
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
-import { Select } from '../../components/ui/Select';
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
 import {
   ArrowLeft, Route, Clock, Users, Star, Target, CheckCircle2,
-  BookOpen, Loader2, Calendar, MessageSquare, Send, StarIcon,
+  BookOpen, Loader2, Calendar, MessageSquare, Send, Lock,
 } from 'lucide-react';
 
 const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
@@ -20,7 +20,6 @@ const difficultyColors = { beginner: 'success', intermediate: 'warning', advance
 const levelLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
 
 const dayLabels = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-const timeOptions = ['07:00', '08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'];
 
 export default function RoadmapDetailPage() {
   const { id } = useParams();
@@ -30,8 +29,8 @@ export default function RoadmapDetailPage() {
   const [loading, setLoading] = useState(true);
   const [showEnroll, setShowEnroll] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
-  const [duration, setDuration] = useState(6);
   const [freeSlots, setFreeSlots] = useState([]);
+  const [occupiedSlots, setOccupiedSlots] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [myReview, setMyReview] = useState(null);
   const [reviewRating, setReviewRating] = useState(0);
@@ -70,6 +69,18 @@ export default function RoadmapDetailPage() {
     }
   }
 
+  // Load occupied slots khi mở dialog đăng ký
+  async function openEnrollDialog() {
+    setShowEnroll(true);
+    setFreeSlots([]);
+    try {
+      const { data } = await api.get('/student/my-roadmaps-occupied-slots');
+      setOccupiedSlots(data.data || []);
+    } catch {
+      setOccupiedSlots([]);
+    }
+  }
+
   async function submitReview(e) {
     e.preventDefault();
     if (reviewRating === 0) { toast.error('Vui lòng chọn số sao'); return; }
@@ -86,7 +97,12 @@ export default function RoadmapDetailPage() {
     }
   }
 
+  function isSlotOccupied(dayOfWeek, startTime) {
+    return occupiedSlots.some(s => s.dayOfWeek === dayOfWeek && s.startTime === startTime);
+  }
+
   function toggleSlot(dayOfWeek, startTime) {
+    if (isSlotOccupied(dayOfWeek, startTime)) return;
     const endHour = parseInt(startTime.split(':')[0]) + 2;
     const endTime = `${endHour.toString().padStart(2, '0')}:00`;
     const exists = freeSlots.findIndex(
@@ -103,6 +119,12 @@ export default function RoadmapDetailPage() {
     return freeSlots.some((s) => s.dayOfWeek === dayOfWeek && s.startTime === startTime);
   }
 
+  // Tự tính thời gian học
+  const totalHours = roadmap?.skills?.reduce((sum, s) => sum + (s.estimatedHours || 0), 0) || 0;
+  const hoursPerWeek = freeSlots.length * 2;
+  const weeksNeeded = hoursPerWeek > 0 ? Math.ceil(totalHours / hoursPerWeek) : 0;
+  const estimatedMonths = hoursPerWeek > 0 ? Math.max(1, Math.ceil(weeksNeeded / 4)) : 0;
+
   async function handleEnroll(e) {
     e.preventDefault();
     if (freeSlots.length === 0) {
@@ -113,7 +135,6 @@ export default function RoadmapDetailPage() {
     try {
       await api.post('/student/my-roadmaps/enroll', {
         roadmapId: id,
-        durationMonths: duration,
         freeTimeSlots: freeSlots,
       });
       toast.success('Đăng ký lộ trình thành công!');
@@ -125,8 +146,6 @@ export default function RoadmapDetailPage() {
       setEnrolling(false);
     }
   }
-
-  const totalHours = roadmap?.skills?.reduce((sum, s) => sum + (s.estimatedHours || 0), 0) || 0;
 
   if (loading) {
     return (
@@ -170,7 +189,7 @@ export default function RoadmapDetailPage() {
               <Target className="w-4 h-4" /> {roadmap.careerPath}
             </p>
           </div>
-          <Button onClick={() => setShowEnroll(true)} className="gap-2 shrink-0">
+          <Button onClick={openEnrollDialog} className="gap-2 shrink-0">
             <Calendar className="w-4 h-4" /> Đăng ký lộ trình
           </Button>
         </div>
@@ -342,16 +361,30 @@ export default function RoadmapDetailPage() {
         </DialogHeader>
         <form onSubmit={handleEnroll}>
           <DialogBody className="space-y-5">
-            {/* Duration */}
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Thời gian học</label>
-              <Select value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
-                <option value={6}>6 tháng (nhanh)</option>
-                <option value={9}>9 tháng (vừa phải)</option>
-                <option value={12}>12 tháng (thoải mái)</option>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Tổng {totalHours} giờ học — trung bình {Math.ceil(totalHours / (duration * 4))} giờ/tuần
+            {/* Auto-calculated duration */}
+            <div className="rounded-lg border bg-muted/10 p-4">
+              <label className="text-sm font-medium mb-2 block">Thời gian học (tự tính)</label>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="rounded-lg bg-card border p-2">
+                  <p className="text-xl font-bold text-primary">{totalHours}</p>
+                  <p className="text-[10px] text-muted-foreground">giờ cần học</p>
+                </div>
+                <div className="rounded-lg bg-card border p-2">
+                  <p className="text-xl font-bold text-primary">{hoursPerWeek || '—'}</p>
+                  <p className="text-[10px] text-muted-foreground">giờ/tuần</p>
+                </div>
+                <div className="rounded-lg bg-card border p-2">
+                  <p className={`text-xl font-bold ${estimatedMonths > 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                    {estimatedMonths > 0 ? `~${estimatedMonths}` : '—'}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">tháng</p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {freeSlots.length === 0
+                  ? 'Chọn khung giờ rảnh bên dưới để tính thời gian'
+                  : `Với ${freeSlots.length} buổi/tuần × 2h, bạn cần khoảng ${estimatedMonths} tháng`
+                }
               </p>
             </div>
 
@@ -361,7 +394,10 @@ export default function RoadmapDetailPage() {
                 Chọn khung giờ rảnh ({freeSlots.length} đã chọn)
               </label>
               <p className="text-xs text-muted-foreground mb-3">
-                Chọn các khung giờ bạn có thể học (mỗi buổi 2 tiếng)
+                Chọn các khung giờ bạn có thể học (mỗi buổi 2 tiếng).
+                {occupiedSlots.length > 0 && (
+                  <span className="text-amber-600"> Ô 🔒 đã được sử dụng bởi lộ trình khác.</span>
+                )}
               </p>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs border rounded-lg overflow-hidden">
@@ -377,21 +413,28 @@ export default function RoadmapDetailPage() {
                     {['07:00', '09:00', '13:00', '15:00', '17:00', '19:00'].map((time) => (
                       <tr key={time} className="border-t">
                         <td className="px-2 py-1.5 text-muted-foreground font-mono">{time}</td>
-                        {[0, 1, 2, 3, 4, 5, 6].map((day) => (
-                          <td key={day} className="px-1 py-1 text-center">
-                            <button
-                              type="button"
-                              onClick={() => toggleSlot(day, time)}
-                              className={`w-full py-1.5 rounded text-[10px] font-medium transition-all ${
-                                isSlotSelected(day, time)
-                                  ? 'bg-primary text-white shadow-sm'
-                                  : 'bg-muted/30 text-muted-foreground hover:bg-primary/10'
-                              }`}
-                            >
-                              {isSlotSelected(day, time) ? '✓' : '—'}
-                            </button>
-                          </td>
-                        ))}
+                        {[0, 1, 2, 3, 4, 5, 6].map((day) => {
+                          const occupied = isSlotOccupied(day, time);
+                          const selected = isSlotSelected(day, time);
+                          return (
+                            <td key={day} className="px-1 py-1 text-center">
+                              <button
+                                type="button"
+                                onClick={() => toggleSlot(day, time)}
+                                disabled={occupied}
+                                className={`w-full py-1.5 rounded text-[10px] font-medium transition-all ${
+                                  occupied
+                                    ? 'bg-amber-500/15 text-amber-600 cursor-not-allowed border border-amber-500/20'
+                                    : selected
+                                      ? 'bg-primary text-white shadow-sm'
+                                      : 'bg-muted/30 text-muted-foreground hover:bg-primary/10'
+                                }`}
+                              >
+                                {occupied ? '🔒' : selected ? '✓' : '—'}
+                              </button>
+                            </td>
+                          );
+                        })}
                       </tr>
                     ))}
                   </tbody>
@@ -402,7 +445,7 @@ export default function RoadmapDetailPage() {
           <DialogFooter>
             <Button type="button" variant="outline" size="sm" onClick={() => setShowEnroll(false)}>Hủy</Button>
             <Button type="submit" size="sm" disabled={enrolling || freeSlots.length === 0}>
-              {enrolling ? 'Đang đăng ký...' : `Xác nhận đăng ký (${freeSlots.length} slot)`}
+              {enrolling ? 'Đang đăng ký...' : `Xác nhận (~${estimatedMonths || '?'} tháng, ${freeSlots.length} buổi/tuần)`}
             </Button>
           </DialogFooter>
         </form>

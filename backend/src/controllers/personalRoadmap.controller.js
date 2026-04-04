@@ -53,3 +53,30 @@ exports.getSuggestions = async (req, res) => {
     res.status(500).json({ success: false, message: 'Lỗi server khi gợi ý lộ trình' });
   }
 };
+
+exports.pauseRoadmap = async (req, res) => {
+  try {
+    const data = await prService.pauseRoadmap(req.user._id, req.params.id);
+    res.json({ success: true, data, message: 'Đã tạm dừng lộ trình' });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
+
+exports.resumeRoadmap = async (req, res) => {
+  try {
+    const data = await prService.resumeRoadmap(req.user._id, req.params.id);
+    res.json({ success: true, data, message: 'Đã tiếp tục lộ trình' });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getOccupiedSlots = async (req, res) => {
+  try {
+    const data = await prService.getOccupiedSlots(req.user._id);
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};

@@ -12,7 +12,7 @@ import { useToast } from '../../components/ui/Toast';
 import {
   Route, Clock, Calendar, CheckCircle2, Loader2,
   Target, Play, BookOpen, TrendingUp, ChevronRight,
-  Circle, Flame,
+  Circle, Flame, Pause, RotateCcw,
 } from 'lucide-react';
 
 const statusLabels = { active: 'Đang học', completed: 'Hoàn thành', paused: 'Tạm dừng', cancelled: 'Đã hủy' };
@@ -66,6 +66,26 @@ export default function MyRoadmapPage() {
       toast.error(error.response?.data?.message || 'Có lỗi');
     } finally {
       setCompleting(null);
+    }
+  }
+
+  async function pauseRoadmap(prId) {
+    try {
+      await api.patch(`/student/my-roadmaps/${prId}/pause`);
+      toast.success('Đã tạm dừng lộ trình');
+      load();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra');
+    }
+  }
+
+  async function resumeRoadmap(prId) {
+    try {
+      await api.patch(`/student/my-roadmaps/${prId}/resume`);
+      toast.success('Đã tiếp tục lộ trình');
+      load();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Có lỗi. Có thể khung giờ đã bị chiếm bởi lộ trình khác.');
     }
   }
 
@@ -178,6 +198,18 @@ export default function MyRoadmapPage() {
                       {isActive ? <Play className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
                       {isActive ? 'Tiếp tục học' : 'Xem chi tiết'}
                     </Button>
+                    {pr.status === 'active' && pr.progress < 100 && (
+                      <Button size="sm" variant="outline" className="gap-1 text-amber-600 border-amber-500/30 hover:bg-amber-500/10"
+                        onClick={() => pauseRoadmap(pr._id)}>
+                        <Pause className="w-3.5 h-3.5" /> Tạm dừng
+                      </Button>
+                    )}
+                    {pr.status === 'paused' && (
+                      <Button size="sm" variant="outline" className="gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
+                        onClick={() => resumeRoadmap(pr._id)}>
+                        <RotateCcw className="w-3.5 h-3.5" /> Tiếp tục
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

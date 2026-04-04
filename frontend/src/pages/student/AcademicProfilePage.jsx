@@ -566,8 +566,8 @@ export default function AcademicProfilePage() {
                   <Badge variant="default" className="mb-2">{previewProgram.code}</Badge>
                   <h2 className="text-lg font-bold">{previewProgram.name}</h2>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {previewProgram.department && `${previewProgram.department} — `}
-                    {previewProgram.totalCredits} tín chỉ
+                    {previewProgram.department && `${previewProgram.department} - `}
+                    {previewProgram.totalCredits} TC
                     {previewProgram.semesterDetails?.length > 0 && ` • ${previewProgram.semesterDetails.length} học kỳ`}
                   </p>
                 </div>
@@ -679,10 +679,10 @@ export default function AcademicProfilePage() {
               <div
                 key={semId}
                 className={`rounded-xl border bg-card overflow-hidden transition-all duration-200 ${isDragOver && !hasError && !isSameSem
-                    ? 'ring-2 ring-primary border-primary/50 bg-primary/5'
-                    : hasError
-                      ? 'ring-2 ring-red-500 border-red-500/50 bg-red-500/5'
-                      : ''
+                  ? 'ring-2 ring-primary border-primary/50 bg-primary/5'
+                  : hasError
+                    ? 'ring-2 ring-red-500 border-red-500/50 bg-red-500/5'
+                    : ''
                   }`}
                 onDragOver={e => handleDragOver(e, semId, semOrder)}
                 onDragLeave={handleDragLeave}
