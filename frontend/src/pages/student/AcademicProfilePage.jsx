@@ -146,6 +146,7 @@ export default function AcademicProfilePage() {
   const [gradeChanges, setGradeChanges] = useState({});
   const [numericChanges, setNumericChanges] = useState({});
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [confirmDeleteSem, setConfirmDeleteSem] = useState(null);
   const [confirmState, setConfirmState] = useState(null);
   const [previewProgram, setPreviewProgram] = useState(null);
   const [customProgramName, setCustomProgramName] = useState('');
@@ -264,6 +265,18 @@ export default function AcademicProfilePage() {
       toast.error(error.response?.data?.message || 'Không thể thêm HK');
     } finally {
       setAddingSem(false);
+    }
+  }
+
+  /* ──── Xóa HK ──── */
+  async function handleRemoveSemester(semId) {
+    try {
+      const { data } = await api.delete(`/student/academic-profile/semester/${semId}`);
+      setProfile(data.data);
+      setConfirmDeleteSem(null);
+      toast.success('Đã xóa học kỳ');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Không thể xóa HK');
     }
   }
 
@@ -678,7 +691,7 @@ export default function AcademicProfilePage() {
             return (
               <div
                 key={semId}
-                className={`rounded-xl border bg-card overflow-hidden transition-all duration-200 ${isDragOver && !hasError && !isSameSem
+                className={`rounded-xl border bg-card overflow-hidden transition-all duration-200 relative group/sem ${isDragOver && !hasError && !isSameSem
                   ? 'ring-2 ring-primary border-primary/50 bg-primary/5'
                   : hasError
                     ? 'ring-2 ring-red-500 border-red-500/50 bg-red-500/5'
@@ -712,6 +725,35 @@ export default function AcademicProfilePage() {
                     )}
                   </div>
                 </button>
+
+                {/* Xóa HK */}
+                {confirmDeleteSem === semId ? (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-card border rounded-lg px-2 py-1 shadow-md z-10">
+                    <span className="text-xs text-red-600 mr-1">{courses.length > 0 ? `Xóa ${courses.length} HP?` : 'Xóa?'}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleRemoveSemester(semId); }}
+                      className="p-1 rounded text-red-500 hover:bg-red-500/10"
+                      title="Xác nhận xóa"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteSem(null); }}
+                      className="p-1 rounded text-muted-foreground hover:bg-muted/30"
+                      title="Hủy"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteSem(semId); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-0 group-hover/sem:opacity-100"
+                    title="Xóa học kỳ"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
 
                 {hasError && (
                   <div className="flex items-center gap-2 px-5 py-2 text-xs text-red-600 bg-red-500/10 border-t border-red-500/20">

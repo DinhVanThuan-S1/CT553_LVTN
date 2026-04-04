@@ -93,3 +93,12 @@ exports.removeCourse = async (req, res) => {
     res.status(error.status || 500).json({ success: false, message: error.message });
   }
 };
+
+exports.removeSemester = async (req, res) => {
+  try {
+    const data = await profileService.removeSemester(req.user._id, req.params.semesterId);
+    res.json({ success: true, data, message: 'Đã xóa học kỳ' });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};

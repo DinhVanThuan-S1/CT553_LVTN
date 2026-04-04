@@ -27,6 +27,7 @@ router.post('/academic-profile/add-course', profileCtrl.addCourse);
 router.put('/academic-profile/grades', profileCtrl.updateGrades);
 router.put('/academic-profile/move-course', profileCtrl.moveCourse);
 router.delete('/academic-profile/course/:courseGradeId', profileCtrl.removeCourse);
+router.delete('/academic-profile/semester/:semesterId', profileCtrl.removeSemester);
 router.patch('/academic-profile/semester', profileCtrl.updateSemester);
 
 // === Sở thích nghề nghiệp ===

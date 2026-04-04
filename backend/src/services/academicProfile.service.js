@@ -159,6 +159,38 @@ class AcademicProfileService {
   }
 
   /**
+   * Xóa học kỳ — xóa tất cả courseGrades thuộc HK đó + xóa semester
+   */
+  async removeSemester(studentId, semesterId) {
+    if (!semesterId) throw { status: 400, message: 'Thiếu semesterId' };
+
+    const profile = await AcademicProfile.findOne({ student: studentId });
+    if (!profile || !profile.curriculumProgram) {
+      throw { status: 400, message: 'Chưa chọn CTĐT' };
+    }
+
+    const semester = await Semester.findById(semesterId);
+    if (!semester) throw { status: 404, message: 'Không tìm thấy học kỳ' };
+
+    // Xóa tất cả courseGrades thuộc HK này
+    profile.courseGrades = profile.courseGrades.filter(
+      cg => cg.semester?.toString() !== semesterId
+    );
+    await profile.save();
+
+    // Xóa semester khỏi CTĐT
+    await CurriculumProgram.findByIdAndUpdate(profile.curriculumProgram, {
+      $pull: { semesters: semester._id },
+    });
+
+    // Xóa semester document
+    await Semester.findByIdAndDelete(semesterId);
+
+    // Reload profile
+    return this.getProfile(studentId);
+  }
+
+  /**
    * Thêm HP vào profile theo semester
    * body: { courseId, semesterId, isRequired? }
    */
