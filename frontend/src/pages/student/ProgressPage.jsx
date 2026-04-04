@@ -127,7 +127,7 @@ export default function ProgressPage() {
   return (
     <div className="animate-fade-in space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Tiến độ học tập</h1>
+        <h1 className="text-2xl font-bold">Tiến Độ Học Tập</h1>
         <p className="text-muted-foreground text-sm mt-1">Tổng quan quá trình học và rèn luyện kỹ năng</p>
       </div>
 
@@ -165,16 +165,14 @@ export default function ProgressPage() {
                 {/* Mode tabs */}
                 <div className="flex rounded-lg border overflow-hidden text-xs">
                   <button
-                    className={`px-3 py-1.5 font-medium transition-colors ${
-                      calendarMode === 'week' ? 'bg-primary text-white' : 'hover:bg-muted/50'
-                    }`}
+                    className={`px-3 py-1.5 font-medium transition-colors ${calendarMode === 'week' ? 'bg-primary text-white' : 'hover:bg-muted/50'
+                      }`}
                     onClick={() => setCalendarMode('week')}>
                     Tuần
                   </button>
                   <button
-                    className={`px-3 py-1.5 font-medium transition-colors ${
-                      calendarMode === 'month' ? 'bg-primary text-white' : 'hover:bg-muted/50'
-                    }`}
+                    className={`px-3 py-1.5 font-medium transition-colors ${calendarMode === 'month' ? 'bg-primary text-white' : 'hover:bg-muted/50'
+                      }`}
                     onClick={() => setCalendarMode('month')}>
                     Tháng
                   </button>
@@ -228,12 +226,12 @@ export default function ProgressPage() {
 
                 const badgeVariant = pr.status === 'active' ? 'success'
                   : pr.status === 'completed' ? 'default'
-                  : pr.status === 'cancelled' ? 'danger'
-                  : 'warning';
+                    : pr.status === 'cancelled' ? 'danger'
+                      : 'warning';
                 const badgeLabel = pr.status === 'active' ? 'Đang học'
                   : pr.status === 'completed' ? 'Hoàn thành'
-                  : pr.status === 'cancelled' ? 'Đã hủy'
-                  : 'Tạm dừng';
+                    : pr.status === 'cancelled' ? 'Đã hủy'
+                      : 'Tạm dừng';
 
                 return (
                   <div key={pr._id} className="rounded-xl border bg-card p-5">
@@ -252,9 +250,8 @@ export default function ProgressPage() {
                       </div>
                       <div className="h-2.5 bg-muted rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all duration-700 ${
-                            pct === 100 ? 'bg-emerald-500' : pct > 50 ? 'bg-primary' : 'bg-amber-500'
-                          }`}
+                          className={`h-full rounded-full transition-all duration-700 ${pct === 100 ? 'bg-emerald-500' : pct > 50 ? 'bg-primary' : 'bg-amber-500'
+                            }`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -333,9 +330,8 @@ function WeekView({ referenceDate, sessions }) {
           const missed = daySessions.filter((s) => s.status === 'missed').length;
 
           return (
-            <div key={i} className={`rounded-lg border p-2 min-h-[140px] transition-colors ${
-              isToday ? 'border-primary bg-primary/[0.03] ring-1 ring-primary/20' : 'bg-card'
-            }`}>
+            <div key={i} className={`rounded-lg border p-2 min-h-[140px] transition-colors ${isToday ? 'border-primary bg-primary/[0.03] ring-1 ring-primary/20' : 'bg-card'
+              }`}>
               {/* Day header */}
               <div className="text-center mb-2">
                 <p className="text-[10px] text-muted-foreground font-medium">{DAY_LABELS[(i + 1) % 7]}</p>
@@ -420,9 +416,8 @@ function MonthView({ referenceDate, sessions }) {
           const total = daySessions.length;
 
           return (
-            <div key={i} className={`h-20 rounded-lg border p-1.5 transition-colors relative group ${
-              isToday ? 'border-primary bg-primary/[0.03] ring-1 ring-primary/20' : 'bg-card hover:bg-muted/20'
-            }`}>
+            <div key={i} className={`h-20 rounded-lg border p-1.5 transition-colors relative group ${isToday ? 'border-primary bg-primary/[0.03] ring-1 ring-primary/20' : 'bg-card hover:bg-muted/20'
+              }`}>
               <span className={`text-xs font-medium ${isToday ? 'text-primary font-bold' : ''}`}>
                 {day.getDate()}
               </span>
@@ -430,13 +425,12 @@ function MonthView({ referenceDate, sessions }) {
               {total > 0 && (
                 <div className="mt-0.5 space-y-0.5">
                   {daySessions.slice(0, 2).map((s) => (
-                    <div key={s._id} className={`text-[9px] px-1 py-0.5 rounded truncate ${
-                      s.status === 'completed'
+                    <div key={s._id} className={`text-[9px] px-1 py-0.5 rounded truncate ${s.status === 'completed'
                         ? 'bg-emerald-500/15 text-emerald-700'
                         : s.status === 'missed'
-                        ? 'bg-red-400/15 text-red-600'
-                        : 'bg-primary/10 text-primary'
-                    }`}>
+                          ? 'bg-red-400/15 text-red-600'
+                          : 'bg-primary/10 text-primary'
+                      }`}>
                       {s.skill?.icon || '📘'} {s.skill?.name || 'Kỹ năng'}
                     </div>
                   ))}
@@ -456,9 +450,8 @@ function MonthView({ referenceDate, sessions }) {
                   <div className="space-y-1">
                     {daySessions.map((s) => (
                       <div key={s._id} className="flex items-center gap-1.5 text-[10px]">
-                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                          s.status === 'completed' ? 'bg-emerald-500' : s.status === 'missed' ? 'bg-red-400' : 'bg-primary'
-                        }`} />
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.status === 'completed' ? 'bg-emerald-500' : s.status === 'missed' ? 'bg-red-400' : 'bg-primary'
+                          }`} />
                         <span className="truncate">{s.skill?.icon} {s.skill?.name}</span>
                         <span className="ml-auto text-muted-foreground whitespace-nowrap">{s.startTime}</span>
                       </div>
@@ -480,8 +473,8 @@ function SessionChip({ session }) {
   const colorClass = s.status === 'completed'
     ? 'bg-emerald-500/15 text-emerald-700 border-emerald-200'
     : s.status === 'missed'
-    ? 'bg-red-400/15 text-red-600 border-red-200'
-    : 'bg-primary/10 text-primary border-primary/20';
+      ? 'bg-red-400/15 text-red-600 border-red-200'
+      : 'bg-primary/10 text-primary border-primary/20';
 
   return (
     <Link to={`/student/my-roadmap/${s.roadmapId}/session/${s._id}`}

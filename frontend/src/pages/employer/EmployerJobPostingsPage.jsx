@@ -150,7 +150,7 @@ export default function EmployerJobPostingsPage() {
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Tin tuyển dụng</h1>
+          <h1 className="text-2xl font-bold">Tin Tuyển Dụng</h1>
           <p className="text-muted-foreground text-sm mt-1">{jobs.length} tin</p>
         </div>
         <Button onClick={openCreate} className="gap-2">
@@ -306,9 +306,8 @@ export default function EmployerJobPostingsPage() {
                   const selected = form.requiredSkills.some((rs) => rs.skill === skill._id);
                   return (
                     <button key={skill._id} type="button" onClick={() => toggleSkill(skill._id)}
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-                        selected ? 'bg-primary text-white' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                      }`}>
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${selected ? 'bg-primary text-white' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                        }`}>
                       {skill.icon} {skill.name}
                     </button>
                   );

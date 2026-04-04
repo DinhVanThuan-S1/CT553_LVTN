@@ -185,7 +185,7 @@ export default function CVPage() {
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">CV của tôi</h1>
+          <h1 className="text-2xl font-bold">CV Của Tôi</h1>
           <p className="text-muted-foreground text-sm mt-1">{cvs.length} CV • ứng tuyển công việc với CV phù hợp</p>
         </div>
         <Button onClick={openCreate} className="gap-2">
@@ -419,13 +419,12 @@ export default function CVPage() {
                   const isSelected = form.skills.includes(skill._id);
                   return (
                     <button key={skill._id} type="button" onClick={() => toggleSkill(skill._id)}
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
-                        isSelected
-                          ? 'bg-primary text-white'
-                          : isCompleted
-                            ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 hover:bg-emerald-500/20'
-                            : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                      }`}>
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isSelected
+                        ? 'bg-primary text-white'
+                        : isCompleted
+                          ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 hover:bg-emerald-500/20'
+                          : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                        }`}>
                       {skill.icon} {skill.name}
                       {isCompleted && !isSelected && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
                     </button>

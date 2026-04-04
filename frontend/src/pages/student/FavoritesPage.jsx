@@ -62,7 +62,7 @@ export default function FavoritesPage() {
   return (
     <div className="animate-fade-in space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Yêu thích</h1>
+        <h1 className="text-2xl font-bold">Yêu Thích</h1>
         <p className="text-muted-foreground text-sm mt-1">{favorites.length} mục đã lưu</p>
       </div>
 
@@ -74,9 +74,8 @@ export default function FavoritesPage() {
           { key: 'roadmap', label: `Lộ trình (${roadmapCount})`, icon: Route },
         ].map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-              tab === key ? 'bg-primary text-white' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-            }`}>
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${tab === key ? 'bg-primary text-white' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+              }`}>
             {Icon && <Icon className="w-3.5 h-3.5" />} {label}
           </button>
         ))}
@@ -94,9 +93,8 @@ export default function FavoritesPage() {
             <div key={fav._id} className="rounded-xl border bg-card p-4 card-hover">
               <div className="flex items-center gap-4">
                 {/* Type icon */}
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                  fav.type === 'job' ? 'bg-blue-500/10 text-blue-500' : 'bg-primary/10 text-primary'
-                }`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${fav.type === 'job' ? 'bg-blue-500/10 text-blue-500' : 'bg-primary/10 text-primary'
+                  }`}>
                   {fav.type === 'job' ? <Briefcase className="w-5 h-5" /> : <Route className="w-5 h-5" />}
                 </div>
 

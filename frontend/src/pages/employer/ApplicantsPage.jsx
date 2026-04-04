@@ -112,7 +112,7 @@ export default function ApplicantsPage() {
   return (
     <div className="animate-fade-in space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Ứng viên</h1>
+        <h1 className="text-2xl font-bold">Ứng Viên</h1>
         <p className="text-muted-foreground text-sm mt-1">Quản lý đơn ứng tuyển theo tin</p>
       </div>
 

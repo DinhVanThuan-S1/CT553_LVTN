@@ -60,7 +60,7 @@ export default function RoadmapListPage() {
         });
         setFavorites(map);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [isAuthenticated]);
 
   async function toggleFavorite(roadmapId) {
@@ -92,7 +92,7 @@ export default function RoadmapListPage() {
       <RoadmapSuggestionModal isOpen={showSuggestion} onClose={() => setShowSuggestion(false)} />
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Danh sách Lộ trình</h1>
+          <h1 className="text-2xl font-bold">Danh Sách Lộ Trình</h1>
           <p className="text-muted-foreground text-sm mt-1">Khám phá các lộ trình học tập phù hợp</p>
         </div>
         <Button className="gap-2 bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shadow-md shadow-primary/20" onClick={handleAISuggestion}>
@@ -153,11 +153,10 @@ export default function RoadmapListPage() {
                   </div>
                   <button
                     onClick={() => toggleFavorite(roadmap._id)}
-                    className={`p-1 rounded-md transition-colors ${
-                      favorites[roadmap._id]
+                    className={`p-1 rounded-md transition-colors ${favorites[roadmap._id]
                         ? 'text-red-500 hover:text-red-600'
                         : 'text-muted-foreground hover:text-red-500'
-                    }`}
+                      }`}
                   >
                     <Heart className={`w-4 h-4 ${favorites[roadmap._id] ? 'fill-current' : ''}`} />
                   </button>

@@ -54,7 +54,7 @@ export default function EmployerDashboard() {
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Tổng quan</h1>
+          <h1 className="text-2xl font-bold">Tổng Quan</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {company ? company.name : 'Chưa thiết lập hồ sơ công ty'}
           </p>
@@ -110,13 +110,13 @@ export default function EmployerDashboard() {
                 </div>
                 <Badge variant={
                   job.status === 'approved' ? 'success' :
-                  job.status === 'pending' ? 'warning' :
-                  job.status === 'rejected' ? 'danger' : 'secondary'
+                    job.status === 'pending' ? 'warning' :
+                      job.status === 'rejected' ? 'danger' : 'secondary'
                 }>
                   {job.status === 'approved' ? 'Đã duyệt' :
-                   job.status === 'pending' ? 'Chờ duyệt' :
-                   job.status === 'rejected' ? 'Từ chối' :
-                   job.status === 'draft' ? 'Nháp' : job.status}
+                    job.status === 'pending' ? 'Chờ duyệt' :
+                      job.status === 'rejected' ? 'Từ chối' :
+                        job.status === 'draft' ? 'Nháp' : job.status}
                 </Badge>
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Eye className="w-3.5 h-3.5" /> {job.viewCount || 0}

@@ -171,7 +171,7 @@ export default function MyRoadmapPage() {
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Lộ trình của tôi</h1>
+          <h1 className="text-2xl font-bold">Lộ Trình Của Tôi</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {roadmaps.length === 0 ? 'Chưa đăng ký lộ trình nào' : `${roadmaps.length} lộ trình`}
           </p>
@@ -202,15 +202,13 @@ export default function MyRoadmapPage() {
             const isActive = pr.status === 'active';
             return (
               <div key={pr._id}
-                className={`rounded-xl border bg-card overflow-hidden transition-all ${
-                  isActive ? 'card-hover' : 'opacity-75'
-                }`}>
+                className={`rounded-xl border bg-card overflow-hidden transition-all ${isActive ? 'card-hover' : 'opacity-75'
+                  }`}>
                 {/* Progress bar on top */}
                 <div className="h-1 bg-muted">
                   <div
-                    className={`h-full transition-all duration-500 ${
-                      pr.progress === 100 ? 'bg-emerald-500' : 'bg-primary'
-                    }`}
+                    className={`h-full transition-all duration-500 ${pr.progress === 100 ? 'bg-emerald-500' : 'bg-primary'
+                      }`}
                     style={{ width: `${pr.progress || 0}%` }}
                   />
                 </div>
@@ -576,11 +574,10 @@ export default function MyRoadmapPage() {
                             {resources.map(res => (
                               <div key={res._id}
                                 className="flex items-center gap-3 rounded-lg border px-3 py-2.5 hover:bg-muted/20 transition-colors">
-                                <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${
-                                  type === 'content' ? 'bg-blue-500/10 text-blue-500'
+                                <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${type === 'content' ? 'bg-blue-500/10 text-blue-500'
                                     : type === 'exercise' ? 'bg-amber-500/10 text-amber-500'
                                       : 'bg-emerald-500/10 text-emerald-500'
-                                }`}>
+                                  }`}>
                                   <TypeIcon className="w-4 h-4" />
                                 </div>
                                 <div className="flex-1 min-w-0">

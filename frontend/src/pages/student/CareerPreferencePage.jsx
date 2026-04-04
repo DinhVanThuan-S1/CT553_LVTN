@@ -126,7 +126,7 @@ export default function CareerPreferencePage() {
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Sở thích Nghề nghiệp</h1>
+          <h1 className="text-2xl font-bold">Sở Thích Nghề Nghiệp</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Thiết lập để nhận gợi ý lộ trình và công việc phù hợp hơn
           </p>
@@ -147,11 +147,10 @@ export default function CareerPreferencePage() {
             <button
               key={career}
               onClick={() => toggleCareer(career)}
-              className={`px-3 py-1.5 rounded-lg text-sm border transition-all ${
-                pref.careerPaths.includes(career)
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'hover:bg-muted border-border'
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-sm border transition-all ${pref.careerPaths.includes(career)
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'hover:bg-muted border-border'
+                }`}
             >
               {career}
             </button>
@@ -170,11 +169,10 @@ export default function CareerPreferencePage() {
             <button
               key={loc}
               onClick={() => toggleLocation(loc)}
-              className={`px-3 py-1.5 rounded-lg text-sm border transition-all ${
-                pref.preferredLocations.includes(loc)
-                  ? 'bg-emerald-500 text-white border-emerald-500'
-                  : 'hover:bg-muted border-border'
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-sm border transition-all ${pref.preferredLocations.includes(loc)
+                ? 'bg-emerald-500 text-white border-emerald-500'
+                : 'hover:bg-muted border-border'
+                }`}
             >
               {loc}
             </button>
@@ -225,11 +223,10 @@ export default function CareerPreferencePage() {
             <button
               key={value}
               onClick={() => toggleJobType(value)}
-              className={`px-3 py-1.5 rounded-lg text-sm border transition-all ${
-                pref.jobTypes.includes(value)
-                  ? 'bg-cyan-500 text-white border-cyan-500'
-                  : 'hover:bg-muted border-border'
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-sm border transition-all ${pref.jobTypes.includes(value)
+                ? 'bg-cyan-500 text-white border-cyan-500'
+                : 'hover:bg-muted border-border'
+                }`}
             >
               {label}
             </button>

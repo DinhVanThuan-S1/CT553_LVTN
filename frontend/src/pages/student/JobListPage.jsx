@@ -75,7 +75,7 @@ export default function JobListPage() {
         });
         setFavorites(map);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [isAuthenticated]);
 
   async function viewDetail(job) {
@@ -153,7 +153,7 @@ export default function JobListPage() {
       <JobSuggestionModal isOpen={showSuggestion} onClose={() => setShowSuggestion(false)} />
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Danh sách Công việc</h1>
+          <h1 className="text-2xl font-bold">Danh Sách Công Việc</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {pagination.total} công việc đang tuyển
           </p>
@@ -402,8 +402,8 @@ export default function JobListPage() {
                 {cvs.map((cv) => (
                   <label key={cv._id}
                     className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedCvId === cv._id
-                        ? 'border-primary bg-primary/[0.03]'
-                        : 'border-transparent bg-muted/30 hover:bg-muted/50'
+                      ? 'border-primary bg-primary/[0.03]'
+                      : 'border-transparent bg-muted/30 hover:bg-muted/50'
                       }`}>
                     <input type="radio" name="cv" value={cv._id}
                       checked={selectedCvId === cv._id}

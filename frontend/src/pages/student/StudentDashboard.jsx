@@ -63,7 +63,7 @@ export default function StudentDashboard() {
   return (
     <div className="animate-fade-in space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Tổng quan</h1>
+        <h1 className="text-2xl font-bold">Tổng Quan</h1>
         <p className="text-muted-foreground text-sm mt-1">Chào mừng trở lại! Đây là tình hình học tập của bạn.</p>
       </div>
 

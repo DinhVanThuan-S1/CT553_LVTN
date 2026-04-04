@@ -106,7 +106,7 @@ export default function ApplicationsPage() {
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Đơn ứng tuyển</h1>
+          <h1 className="text-2xl font-bold">Đơn Ứng Tuyển</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {apps.length} đơn • {pending > 0 ? `${pending} chờ xét` : 'không có đơn chờ'}
           </p>
@@ -129,17 +129,15 @@ export default function ApplicationsPage() {
             const Icon = statusIcons[app.status] || Clock;
             return (
               <div key={app._id}
-                className={`rounded-xl border bg-card p-4 card-hover ${
-                  app.status === 'interview_scheduled' ? 'border-primary/30' : ''
-                }`}>
+                className={`rounded-xl border bg-card p-4 card-hover ${app.status === 'interview_scheduled' ? 'border-primary/30' : ''
+                  }`}>
                 <div className="flex items-center gap-4">
                   {/* Icon */}
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                    app.status === 'accepted' ? 'bg-emerald-500/10 text-emerald-500'
-                    : app.status === 'rejected' ? 'bg-red-500/10 text-red-500'
-                    : app.status === 'interview_scheduled' ? 'bg-primary/10 text-primary'
-                    : 'bg-muted text-muted-foreground'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${app.status === 'accepted' ? 'bg-emerald-500/10 text-emerald-500'
+                      : app.status === 'rejected' ? 'bg-red-500/10 text-red-500'
+                        : app.status === 'interview_scheduled' ? 'bg-primary/10 text-primary'
+                          : 'bg-muted text-muted-foreground'
+                    }`}>
                     <Icon className="w-5 h-5" />
                   </div>
 

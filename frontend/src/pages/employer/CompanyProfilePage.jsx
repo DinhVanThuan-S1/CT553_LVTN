@@ -93,7 +93,7 @@ export default function CompanyProfilePage() {
   return (
     <div className="animate-fade-in space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold">Hồ sơ Công ty</h1>
+        <h1 className="text-2xl font-bold">Hồ Sơ Công Ty</h1>
         <p className="text-muted-foreground text-sm mt-1">Thông tin công ty hiển thị trong tin tuyển dụng</p>
       </div>
 
