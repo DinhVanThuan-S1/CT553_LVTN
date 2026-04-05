@@ -3,6 +3,7 @@
  * Hồ sơ học tập của sinh viên
  */
 const profileService = require('../services/academicProfile.service');
+const studentSkillService = require('../services/studentSkill.service');
 
 exports.getProfile = async (req, res) => {
   try {
@@ -61,6 +62,10 @@ exports.addCourse = async (req, res) => {
 exports.updateGrades = async (req, res) => {
   try {
     const data = await profileService.updateGrades(req.user._id, req.body.grades);
+    // Auto sync skills từ HP điểm cao
+    studentSkillService.syncAcademicSkills(req.user._id).catch(err =>
+      console.error('Auto-sync academic skills error:', err)
+    );
     res.json({ success: true, data, message: 'Đã cập nhật điểm' });
   } catch (error) {
     res.status(error.status || 500).json({ success: false, message: error.message });

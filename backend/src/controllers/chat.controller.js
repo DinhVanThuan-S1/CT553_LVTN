@@ -9,18 +9,16 @@ const { getIO } = require('../config/socket');
 
 /**
  * GET /api/chat/users/search?q=keyword
- * Tìm user để bắt đầu chat (student↔employer)
+ * Tìm user để bắt đầu chat
+ * SV ↔ SV, SV ↔ NTD, NTD ↔ NTD (không chat với admin)
  */
 exports.searchUsers = async (req, res) => {
   try {
     const { q = '' } = req.query;
-    const currentRole = req.user.role;
 
-    // Student tìm employer, employer tìm student
-    const targetRole = currentRole === 'student' ? 'employer' : 'student';
-
+    // Cho phép tìm tất cả user active (trừ admin và chính mình)
     const users = await User.find({
-      role: targetRole,
+      role: { $in: ['student', 'employer'] },
       isActive: true,
       _id: { $ne: req.user._id },
       $or: [
@@ -29,7 +27,7 @@ exports.searchUsers = async (req, res) => {
       ],
     })
       .select('fullName email avatar role')
-      .limit(10);
+      .limit(15);
 
     res.json({ success: true, data: users });
   } catch (err) {

@@ -14,6 +14,7 @@ const favCtrl = require('../controllers/favorite.controller');
 const cvCtrl = require('../controllers/cv.controller');
 const appCtrl = require('../controllers/application.controller');
 const learnCtrl = require('../controllers/learning.controller');
+const skillCtrl = require('../controllers/studentSkill.controller');
 
 router.use(protect, authorize('student'));
 
@@ -78,5 +79,13 @@ router.get('/job-suggestions', appCtrl.getJobSuggestions);
 router.get('/favorites', favCtrl.getFavorites);
 router.post('/favorites/toggle', favCtrl.toggleFavorite);
 router.get('/favorites/check', favCtrl.checkFavorite);
+
+// === Kỹ năng sinh viên (3 nguồn) ===
+router.get('/skills', skillCtrl.getMySkills);
+router.post('/skills/self', skillCtrl.addSelfSkills);
+router.delete('/skills/self/:skillId', skillCtrl.removeSelfSkill);
+router.patch('/skills/self/:skillId/proficiency', skillCtrl.updateProficiency);
+router.post('/skills/sync-academic', skillCtrl.syncAcademic);
+router.get('/skills/for-cv', skillCtrl.getSkillsForCV);
 
 module.exports = router;

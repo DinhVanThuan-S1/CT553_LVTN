@@ -3,6 +3,7 @@
  */
 const prService = require('../services/personalRoadmap.service');
 const suggestionService = require('../services/roadmapSuggestion.service');
+const studentSkillService = require('../services/studentSkill.service');
 
 exports.getMyRoadmaps = async (req, res) => {
   try {
@@ -34,6 +35,10 @@ exports.enrollRoadmap = async (req, res) => {
 exports.completeSession = async (req, res) => {
   try {
     const data = await prService.completeSession(req.user._id, req.params.id, req.params.sessionId);
+    // Auto sync roadmap skills khi hoàn thành buổi học
+    studentSkillService.syncRoadmapSkills(req.user._id).catch(err =>
+      console.error('Auto-sync roadmap skills error:', err)
+    );
     res.json({ success: true, data, message: 'Đã hoàn thành buổi học' });
   } catch (error) {
     res.status(error.status || 500).json({ success: false, message: error.message });
