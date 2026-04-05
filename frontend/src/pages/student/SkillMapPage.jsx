@@ -44,7 +44,7 @@ const sourceLabels = { roadmap: 'Lộ trình', academic: 'Học phần', self: '
 const sourceIcons = { roadmap: Route, academic: GraduationCap, self: User };
 const sourceColors = {
   roadmap: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-  academic: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+  academic: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
   self: 'bg-muted text-muted-foreground border-muted-foreground/20',
 };
 
@@ -268,9 +268,9 @@ export default function SkillMapPage() {
               <div className="flex items-center justify-center gap-1 mb-1"><Route className="w-3.5 h-3.5 text-emerald-600" /><span className="text-xs font-medium text-emerald-600">Lộ trình</span></div>
               <p className="text-xl font-bold text-emerald-600">{roadmapSkills.length}</p>
             </div>
-            <div className="rounded-lg bg-blue-500/5 border border-blue-500/20 p-3 text-center">
-              <div className="flex items-center justify-center gap-1 mb-1"><GraduationCap className="w-3.5 h-3.5 text-blue-600" /><span className="text-xs font-medium text-blue-600">Học phần</span></div>
-              <p className="text-xl font-bold text-blue-600">{academicSkills.length}</p>
+            <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 text-center">
+              <div className="flex items-center justify-center gap-1 mb-1"><GraduationCap className="w-3.5 h-3.5 text-amber-600" /><span className="text-xs font-medium text-amber-600">Học phần</span></div>
+              <p className="text-xl font-bold text-amber-600">{academicSkills.length}</p>
             </div>
             <div className="rounded-lg bg-muted/30 border p-3 text-center">
               <div className="flex items-center justify-center gap-1 mb-1"><User className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-xs font-medium text-muted-foreground">Tự khai báo</span></div>

@@ -102,7 +102,7 @@ class StudentSkillService {
         proficiencyLevel: 4,
         'metadata.personalRoadmapId': personalRoadmapId,
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
   }
 
@@ -208,9 +208,15 @@ class StudentSkillService {
    */
   async getSkillsForCV(studentId) {
     const skills = await this.getStudentSkills(studentId);
+    // Phân loại chi tiết hơn để CV phân biệt
+    const roadmap = skills.filter(s => s.sources.includes('roadmap'));
+    const academic = skills.filter(s => s.sources.includes('academic') && !s.sources.includes('roadmap'));
+    const self = skills.filter(s => !s.isVerified);
     return {
-      verified: skills.filter(s => s.isVerified),   // highlight trên CV
-      unverified: skills.filter(s => !s.isVerified), // không highlight
+      verified: skills.filter(s => s.isVerified),   // tất cả verified (highlight trên CV)
+      unverified: self,                               // không highlight
+      roadmap,                                        // cụ thể: từ lộ trình
+      academic,                                       // cụ thể: từ học phần
     };
   }
 }

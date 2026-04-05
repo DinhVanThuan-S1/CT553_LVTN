@@ -36,7 +36,7 @@ export default function CVPage() {
   const [form, setForm] = useState({ ...emptyCV });
   const [saving, setSaving] = useState(false);
   const [allSkills, setAllSkills] = useState([]);
-  const [cvSkills, setCvSkills] = useState({ verified: [], unverified: [] });
+  const [cvSkills, setCvSkills] = useState({ verified: [], unverified: [], roadmap: [], academic: [] });
   const [completedSkills, setCompletedSkills] = useState([]);
 
   const load = useCallback(async () => {
@@ -51,7 +51,7 @@ export default function CVPage() {
       setCvs(cvRes.data.data);
       setAllSkills(skillRes.data.data);
       setCompletedSkills((completedRes.data.data || []).map(s => s._id));
-      setCvSkills(cvSkillsRes.data.data || { verified: [], unverified: [] });
+      setCvSkills(cvSkillsRes.data.data || { verified: [], unverified: [], roadmap: [], academic: [] });
     } catch {
       toast.error('Không thể tải dữ liệu');
     } finally {
@@ -220,13 +220,19 @@ export default function CVPage() {
               {cv.headline && <p className="text-sm text-muted-foreground mb-2">{cv.headline}</p>}
               <div className="flex flex-wrap gap-1 mb-3">
                 {(cv.skills || []).slice(0, 4).map((s) => {
-                  const verifiedId = cvSkills.verified.find(v => (v.skill?._id || v.skill) === s._id);
-                  const isVerified = !!verifiedId;
+                  const isRoadmap = cvSkills.roadmap.some(v => (v.skill?._id || v.skill) === s._id);
+                  const isAcademic = cvSkills.academic.some(v => (v.skill?._id || v.skill) === s._id);
+                  const isVerified = isRoadmap || isAcademic;
                   return (
                     <Badge key={s._id}
                       variant={isVerified ? 'default' : 'secondary'}
-                      className={`text-[10px] ${isVerified ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30' : ''}`}>
-                      {isVerified && <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />}
+                      className={`text-[10px] ${
+                        isRoadmap ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30'
+                        : isAcademic ? 'bg-amber-500/15 text-amber-700 border-amber-500/30'
+                        : ''
+                      }`}>
+                      {isRoadmap && <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />}
+                      {isAcademic && <GraduationCap className="w-2.5 h-2.5 mr-0.5" />}
                       {s.icon} {s.name}
                     </Badge>
                   );
@@ -282,23 +288,30 @@ export default function CVPage() {
             )}
             {detailCV.skills?.length > 0 && (
               <div>
-                <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-3">
                   Kỹ năng
                   <span className="text-[10px] text-emerald-600 flex items-center gap-0.5">
-                    <CheckCircle2 className="w-3 h-3" /> = Xác thực (Lộ trình / Học phần)
+                    <CheckCircle2 className="w-3 h-3" /> Lộ trình (100%)
+                  </span>
+                  <span className="text-[10px] text-amber-600 flex items-center gap-0.5">
+                    <GraduationCap className="w-3 h-3" /> Học phần (điểm cao)
                   </span>
                 </h4>
                 <div className="flex flex-wrap gap-1.5">
                   {detailCV.skills.map((s) => {
-                    const verifiedEntry = cvSkills.verified.find(v => (v.skill?._id || v.skill) === s._id);
-                    const isVerified = !!verifiedEntry;
+                    const isRoadmap = cvSkills.roadmap.some(v => (v.skill?._id || v.skill) === s._id);
+                    const isAcademic = cvSkills.academic.some(v => (v.skill?._id || v.skill) === s._id);
+                    const isVerified = isRoadmap || isAcademic;
                     return (
                       <Badge key={s._id}
                         variant={isVerified ? 'default' : 'secondary'}
-                        className={isVerified
-                          ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/40'
-                          : ''}>
-                        {isVerified ? <CheckCircle2 className="w-3 h-3 mr-1" /> : null}
+                        className={`${
+                          isRoadmap ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/40'
+                          : isAcademic ? 'bg-amber-500/15 text-amber-700 border border-amber-500/40'
+                          : ''
+                        }`}>
+                        {isRoadmap && <CheckCircle2 className="w-3 h-3 mr-1" />}
+                        {isAcademic && <GraduationCap className="w-3 h-3 mr-1" />}
                         {s.icon} {s.name}
                       </Badge>
                     );
@@ -425,23 +438,25 @@ export default function CVPage() {
               </div>
               <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-2 rounded-lg border bg-muted/10">
                 {allSkills.map((skill) => {
-                  const verifiedEntry = cvSkills.verified.find(v => (v.skill?._id || v.skill) === skill._id);
-                  const isVerified = !!verifiedEntry;
-                  const selfEntry = cvSkills.unverified.find(v => (v.skill?._id || v.skill) === skill._id);
-                  const isSelf = !!selfEntry;
+                  const isRoadmap = cvSkills.roadmap.some(v => (v.skill?._id || v.skill) === skill._id);
+                  const isAcademic = cvSkills.academic.some(v => (v.skill?._id || v.skill) === skill._id);
+                  const isSelf = cvSkills.unverified.some(v => (v.skill?._id || v.skill) === skill._id);
                   const isSelected = form.skills.includes(skill._id);
                   return (
                     <button key={skill._id} type="button" onClick={() => toggleSkill(skill._id)}
                       className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isSelected
                         ? 'bg-primary text-white'
-                        : isVerified
+                        : isRoadmap
                           ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 hover:bg-emerald-500/20'
-                          : isSelf
-                            ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20'
-                            : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                          : isAcademic
+                            ? 'bg-amber-500/10 text-amber-700 border border-amber-500/30 hover:bg-amber-500/20'
+                            : isSelf
+                              ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20'
+                              : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                         }`}>
                       {skill.icon} {skill.name}
-                      {isVerified && !isSelected && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
+                      {isRoadmap && !isSelected && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
+                      {isAcademic && !isSelected && <GraduationCap className="w-3 h-3 text-amber-500" />}
                       {isSelf && !isSelected && <User className="w-3 h-3 text-blue-500" />}
                     </button>
                   );
@@ -449,7 +464,10 @@ export default function CVPage() {
               </div>
               <div className="flex items-center gap-3 mt-1">
                 <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Xác thực (highlight CV)
+                  <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Lộ trình (100%)
+                </p>
+                <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                  <GraduationCap className="w-3 h-3 text-amber-500" /> Học phần (điểm cao)
                 </p>
                 <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                   <User className="w-3 h-3 text-blue-500" /> Tự khai báo

@@ -6,9 +6,15 @@ const studentSkillService = require('../services/studentSkill.service');
 
 /**
  * GET /api/student/skills — Lấy tất cả skills của mình
+ * Auto-sync roadmap + academic trước khi trả về
  */
 exports.getMySkills = async (req, res) => {
   try {
+    // Auto-sync để đảm bảo dữ liệu luôn cập nhật
+    await Promise.all([
+      studentSkillService.syncRoadmapSkills(req.user._id),
+      studentSkillService.syncAcademicSkills(req.user._id),
+    ]);
     const skills = await studentSkillService.getStudentSkills(req.user._id);
     res.json({ success: true, data: skills });
   } catch (err) {
@@ -82,9 +88,14 @@ exports.syncAcademic = async (req, res) => {
 
 /**
  * GET /api/student/skills/for-cv — Lấy skills phân loại cho CV
+ * Auto-sync trước khi trả về
  */
 exports.getSkillsForCV = async (req, res) => {
   try {
+    await Promise.all([
+      studentSkillService.syncRoadmapSkills(req.user._id),
+      studentSkillService.syncAcademicSkills(req.user._id),
+    ]);
     const data = await studentSkillService.getSkillsForCV(req.user._id);
     res.json({ success: true, data });
   } catch (err) {
