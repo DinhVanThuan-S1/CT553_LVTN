@@ -83,6 +83,7 @@ app.use('/api/jobs', require('./routes/job.routes'));
 app.use('/api/employer', require('./routes/employer.routes'));
 app.use('/api/chat', require('./routes/chat.routes'));
 app.use('/api/notifications', require('./routes/notification.routes'));
+app.use('/api/ai', require('../../ai/routes/ai.routes'));
 
 // ===== ERROR HANDLING =====
 

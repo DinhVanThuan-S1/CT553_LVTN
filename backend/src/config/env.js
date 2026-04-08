@@ -45,7 +45,10 @@ const env = {
   SMTP_PASS: process.env.SMTP_PASS,
   SMTP_FROM: process.env.SMTP_FROM || 'noreply@edupath.local',
 
-  // Ollama
+  // Gemini AI (primary)
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
+
+  // Ollama (fallback khi hết quota Gemini)
   OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
   OLLAMA_MODEL: process.env.OLLAMA_MODEL || 'mistral',
 
