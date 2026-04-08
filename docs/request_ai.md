@@ -1,5 +1,5 @@
 # Mô tả chức năng hệ thống gợi ý lộ trình học tập, việc làm và chatbot AI
-**Công nghệ dự kiến:** Python + Gemini API Key + Ollama
+**Công nghệ dự kiến:** Python + Openrouter
 
 ---
 
