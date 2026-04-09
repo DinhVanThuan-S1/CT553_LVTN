@@ -5,8 +5,9 @@ import { useEffect, useRef } from 'react';
 import { cn } from '../../lib/utils';
 import { X } from 'lucide-react';
 
-export function Dialog({ open, onClose, children, className }) {
+export function Dialog({ open, onClose, children, className, zIndex }) {
   const overlayRef = useRef(null);
+  const zCls = zIndex ? `z-[${zIndex}]` : 'z-50';
 
   useEffect(() => {
     if (open) {
@@ -22,7 +23,8 @@ export function Dialog({ open, onClose, children, className }) {
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ zIndex: zIndex || 50 }}
       onClick={(e) => e.target === overlayRef.current && onClose?.()}
     >
       {/* Overlay */}
@@ -30,9 +32,10 @@ export function Dialog({ open, onClose, children, className }) {
       {/* Content */}
       <div
         className={cn(
-          'relative z-50 w-full max-h-[90vh] overflow-y-auto bg-card border rounded-xl shadow-2xl animate-in zoom-in-95 mx-4',
+          'relative w-full max-h-[90vh] overflow-y-auto bg-card border rounded-xl shadow-2xl animate-in zoom-in-95 mx-4',
           className || 'max-w-lg'
         )}
+        style={{ zIndex: (zIndex || 50) + 1 }}
       >
         {children}
       </div>

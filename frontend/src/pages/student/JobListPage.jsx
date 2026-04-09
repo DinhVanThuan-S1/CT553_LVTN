@@ -13,10 +13,11 @@ import { Select } from '../../components/ui/Select';
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
 import JobSuggestionModal from '../../components/student/JobSuggestionModal';
+import SmartJobModal from '../../components/student/SmartJobModal';
 import {
   Search, Briefcase, MapPin, DollarSign, Clock, Eye, Heart,
   ChevronLeft, ChevronRight, Building2, Target, Send, FileText,
-  Loader2, CheckCircle2, Star, Sparkles,
+  Loader2, CheckCircle2, Star, Sparkles, Compass,
 } from 'lucide-react';
 
 const jobTypeLabels = {
@@ -38,6 +39,7 @@ export default function JobListPage() {
   const [showDetail, setShowDetail] = useState(false);
   const [favorites, setFavorites] = useState({});
   const [showSuggestion, setShowSuggestion] = useState(false);
+  const [showSmart, setShowSmart] = useState(false);
 
   // Apply flow
   const [showApply, setShowApply] = useState(false);
@@ -151,6 +153,7 @@ export default function JobListPage() {
   return (
     <div className="animate-fade-in space-y-6">
       <JobSuggestionModal isOpen={showSuggestion} onClose={() => setShowSuggestion(false)} />
+      <SmartJobModal isOpen={showSmart} onClose={() => setShowSmart(false)} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Danh Sách Công Việc</h1>
@@ -158,12 +161,29 @@ export default function JobListPage() {
             {pagination.total} công việc đang tuyển
           </p>
         </div>
-        <Button className="gap-2 bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shadow-md shadow-primary/20" onClick={() => {
-          if (!isAuthenticated) { navigate(`/login?next=${encodeURIComponent(location.pathname)}`); return; }
-          setShowSuggestion(true);
-        }}>
-          <Sparkles className="w-4 h-4" /> Gợi ý việc làm (AI)
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950/30 shadow-sm"
+            onClick={() => {
+              if (!isAuthenticated) { navigate(`/login?next=${encodeURIComponent(location.pathname)}`); return; }
+              setShowSmart(true);
+            }}
+          >
+            <Compass className="w-3.5 h-3.5" /> Gợi ý việc làm
+          </Button>
+          <Button
+            size="sm"
+            className="gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-md shadow-emerald-500/20 text-white"
+            onClick={() => {
+              if (!isAuthenticated) { navigate(`/login?next=${encodeURIComponent(location.pathname)}`); return; }
+              setShowSuggestion(true);
+            }}
+          >
+            <Sparkles className="w-3.5 h-3.5" /> Gợi ý việc làm (AI)
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

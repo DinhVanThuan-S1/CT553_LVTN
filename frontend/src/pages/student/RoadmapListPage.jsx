@@ -12,9 +12,10 @@ import { Badge } from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Select';
 import { useToast } from '../../components/ui/Toast';
 import RoadmapSuggestionModal from '../../components/student/RoadmapSuggestionModal';
+import SmartRoadmapModal from '../../components/student/SmartRoadmapModal';
 import {
   Search, Route, Clock, Users, Star, ChevronRight,
-  Sparkles, Heart, Target,
+  Sparkles, Heart, Target, Compass,
 } from 'lucide-react';
 
 const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
@@ -31,6 +32,7 @@ export default function RoadmapListPage() {
   const [difficulty, setDifficulty] = useState('');
   const [favorites, setFavorites] = useState({});
   const [showSuggestion, setShowSuggestion] = useState(false);
+  const [showSmart, setShowSmart] = useState(false);
 
   const loadRoadmaps = useCallback(async () => {
     setLoading(true);
@@ -48,6 +50,15 @@ export default function RoadmapListPage() {
   }, [search, difficulty]);
 
   useEffect(() => { loadRoadmaps(); }, [loadRoadmaps]);
+
+  // Auto-open smart modal when navigated back from detail page
+  useEffect(() => {
+    if (location.state?.openSmart) {
+      setShowSmart(true);
+      // Clear state to prevent re-triggering on refresh
+      window.history.replaceState({}, '');
+    }
+  }, [location.state]);
 
   // Load trạng thái yêu thích (chỉ khi đã đăng nhập)
   useEffect(() => {
@@ -90,14 +101,32 @@ export default function RoadmapListPage() {
   return (
     <div className="animate-fade-in space-y-6">
       <RoadmapSuggestionModal isOpen={showSuggestion} onClose={() => setShowSuggestion(false)} />
+      <SmartRoadmapModal isOpen={showSmart} onClose={() => setShowSmart(false)} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Danh Sách Lộ Trình</h1>
           <p className="text-muted-foreground text-sm mt-1">Khám phá các lộ trình học tập phù hợp</p>
         </div>
-        <Button className="gap-2 bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shadow-md shadow-primary/20" onClick={handleAISuggestion}>
-          <Sparkles className="w-4 h-4" /> Gợi ý lộ trình (AI)
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950/30 shadow-sm"
+            onClick={() => {
+              if (!isAuthenticated) { navigate(`/login?next=${encodeURIComponent(location.pathname)}`); return; }
+              setShowSmart(true);
+            }}
+          >
+            <Compass className="w-3.5 h-3.5" /> Gợi ý lộ trình
+          </Button>
+          <Button
+            size="sm"
+            className="gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-md shadow-emerald-500/20 text-white"
+            onClick={handleAISuggestion}
+          >
+            <Sparkles className="w-3.5 h-3.5" /> Gợi ý lộ trình (AI)
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

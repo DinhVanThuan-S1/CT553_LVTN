@@ -13,7 +13,7 @@ import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components
 import { useToast } from '../../components/ui/Toast';
 import {
   ArrowLeft, Route, Clock, Users, Star, Target, CheckCircle2,
-  BookOpen, Loader2, Calendar, MessageSquare, Send, Lock, Briefcase,
+  BookOpen, Loader2, Calendar, MessageSquare, Send, Lock, Briefcase, Compass,
 } from 'lucide-react';
 
 const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
@@ -180,6 +180,17 @@ export default function RoadmapDetailPage() {
 
   return (
     <div className="animate-fade-in space-y-6 max-w-4xl mx-auto">
+      {/* Back to suggestions banner */}
+      {location.state?.from === 'smart-suggestion' && (
+        <button
+          onClick={() => navigate('/student/roadmaps', { state: { openSmart: true } })}
+          className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+          <Compass className="w-4 h-4" />
+          Quay lại gợi ý lộ trình
+        </button>
+      )}
       <div className="rounded-xl border bg-card overflow-hidden">
         {/* Hero */}
         <div className="h-36 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent flex items-center px-8">
