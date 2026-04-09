@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import AIChatBubble from '../student/AIChatBubble';
 import { cn } from '../../lib/utils';
 
 export default function MainLayout({ role = 'student', user, onLogout }) {
@@ -32,6 +33,9 @@ export default function MainLayout({ role = 'student', user, onLogout }) {
           </div>
         </main>
       </div>
+
+      {/* AI Chat Bubble — chỉ hiện cho student */}
+      {role === 'student' && <AIChatBubble />}
     </div>
   );
 }

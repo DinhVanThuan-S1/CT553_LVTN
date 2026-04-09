@@ -1,6 +1,7 @@
 /**
  * JobSuggestionModal
- * AI gợi ý việc làm phù hợp với hồ sơ sinh viên
+ * Gợi ý việc làm bằng AI (Python + OpenRouter)
+ * Theo request_ai.md Section 2
  */
 import { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
@@ -9,7 +10,7 @@ import { Badge } from '../ui/Badge';
 import {
   Sparkles, X, Briefcase, MapPin, DollarSign, Clock,
   CheckCircle2, Info, TrendingUp, Loader2, Building2, Send,
-  AlertCircle, ChevronRight,
+  AlertCircle, Star, Target,
 } from 'lucide-react';
 import api from '../../lib/api';
 import { useToast } from '../ui/Toast';
@@ -25,20 +26,6 @@ const jobTypeColors = {
   'internship': 'success', 'freelance': 'warning', 'remote': 'danger',
 };
 
-function getScoreColor(score) {
-  if (score >= 80) return { bar: 'bg-green-500', text: 'text-green-600' };
-  if (score >= 60) return { bar: 'bg-primary', text: 'text-primary' };
-  if (score >= 40) return { bar: 'bg-amber-500', text: 'text-amber-600' };
-  return { bar: 'bg-muted-foreground', text: 'text-muted-foreground' };
-}
-
-function getScoreLabel(score) {
-  if (score >= 80) return 'Rất phù hợp';
-  if (score >= 60) return 'Phù hợp';
-  if (score >= 40) return 'Khá phù hợp';
-  return 'Ít phù hợp';
-}
-
 function formatSalary(range) {
   if (!range || (!range.min && !range.max)) return 'Thỏa thuận';
   if (range.isNegotiable) return 'Thương lượng';
@@ -46,26 +33,39 @@ function formatSalary(range) {
 }
 
 export default function JobSuggestionModal({ isOpen, onClose }) {
-  const [suggestions, setSuggestions] = useState([]);
+  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [selectedJob, setSelectedJob] = useState(null);
+  const [error, setError] = useState('');
   const [showApply, setShowApply] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
   const [cvs, setCvs] = useState([]);
   const [selectedCvId, setSelectedCvId] = useState('');
   const [applying, setApplying] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
-    if (isOpen) fetchSuggestions();
+    if (isOpen && !result) fetchAISuggestion();
   }, [isOpen]);
 
-  const fetchSuggestions = async () => {
+  const fetchAISuggestion = async () => {
     setLoading(true);
+    setError('');
     try {
-      const { data } = await api.get('/student/job-suggestions');
-      if (data.success) setSuggestions(data.data);
-    } catch {
-      toast.error('Không thể tải gợi ý việc làm');
+      const { data } = await api.post('/ai/suggest-jobs', {}, { timeout: 180000 });
+      if (data.success) {
+        setResult(data.data);
+      } else {
+        setError(data.message || 'Không thể phân tích');
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || '';
+      if (msg.includes('429') || msg.includes('rate limit') || msg.includes('Rate limit')) {
+        setError('AI đang quá tải. Vui lòng thử lại sau vài phút.');
+      } else if (msg.includes('timeout') || msg.includes('Timeout')) {
+        setError('AI phản hồi quá lâu. Vui lòng thử lại.');
+      } else {
+        setError(msg || 'Không thể kết nối AI. Vui lòng thử lại.');
+      }
     } finally {
       setLoading(false);
     }
@@ -103,6 +103,8 @@ export default function JobSuggestionModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
+  const { matchedJobs, skillGaps, overallAdvice, marketInsight } = result || {};
+
   return (
     <>
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
@@ -116,13 +118,10 @@ export default function JobSuggestionModal({ isOpen, onClose }) {
               </div>
               <div>
                 <h2 className="text-base font-semibold">AI Gợi ý Việc làm</h2>
-                <p className="text-xs text-muted-foreground">Phân tích hồ sơ, kỹ năng & sở thích nghề nghiệp</p>
+                <p className="text-xs text-muted-foreground">Phân tích kỹ năng & đối chiếu công việc</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -130,7 +129,7 @@ export default function JobSuggestionModal({ isOpen, onClose }) {
           {/* Content */}
           <div className="overflow-y-auto flex-1 scrollbar-thin">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-4">
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <div className="relative">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-teal-500/10 flex items-center justify-center">
                     <Briefcase className="w-7 h-7 text-primary" />
@@ -138,150 +137,165 @@ export default function JobSuggestionModal({ isOpen, onClose }) {
                   <div className="absolute -inset-1 rounded-2xl border-2 border-primary/20 animate-ping" />
                 </div>
                 <div className="text-center">
-                  <p className="font-medium text-sm">Đang tìm kiếm cơ hội...</p>
-                  <p className="text-xs text-muted-foreground mt-1">Hệ thống đang so khớp với hàng chục công việc</p>
+                  <p className="font-medium text-sm">AI đang phân tích việc làm...</p>
+                  <p className="text-xs text-muted-foreground mt-1">Đối chiếu kỹ năng với {result?.jobs?.length || 'hàng chục'} công việc</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Quá trình này mất khoảng 15-30 giây</p>
                 </div>
                 <Loader2 className="w-5 h-5 text-primary animate-spin" />
               </div>
-            ) : suggestions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-                <Briefcase className="w-12 h-12 text-muted-foreground/30" />
-                <p className="font-medium">Không tìm thấy công việc phù hợp</p>
-                <p className="text-sm text-muted-foreground">Hãy cập nhật sở thích nghề nghiệp và hoàn thành lộ trình học</p>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-center px-6">
+                <AlertCircle className="w-12 h-12 text-destructive/50" />
+                <p className="font-medium text-destructive">{error}</p>
+                <Button variant="outline" size="sm" onClick={fetchAISuggestion} className="gap-1.5 mt-2">
+                  <Sparkles className="w-3.5 h-3.5" /> Thử lại
+                </Button>
               </div>
-            ) : (
-              <div className="p-4 space-y-3">
-                {suggestions.map((item, index) => {
-                  const { job, matchScore, matchDetails, strengths, gaps } = item;
-                  const colors = getScoreColor(matchScore);
+            ) : result ? (
+              <div className="p-5 space-y-5">
 
-                  return (
-                    <div
-                      key={job._id}
-                      className={cn(
-                        'rounded-xl border p-4 transition-all duration-200',
-                        index === 0
-                          ? 'border-primary/30 bg-primary/[0.03] shadow-sm'
-                          : 'border-border/50 hover:border-border hover:shadow-sm'
-                      )}
-                    >
-                      {/* Top row */}
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                            <Building2 className="w-5 h-5 text-muted-foreground" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
-                              {index === 0 && (
-                                <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                                  ⭐ Tốt nhất
+                {/* Matched Jobs */}
+                {matchedJobs?.length > 0 && (
+                  <div className="space-y-2.5">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <Briefcase className="w-4 h-4 text-primary" />
+                      Công việc phù hợp ({matchedJobs.length})
+                    </h3>
+                    <div className="space-y-2.5">
+                      {matchedJobs.map((item, index) => {
+                        const job = item.job || {};
+                        const matchScore = item.matchScore || item.matchPercent || 0;
+
+                        return (
+                          <div
+                            key={item.jobId || index}
+                            className={cn(
+                              'rounded-xl border p-4 transition-all duration-200',
+                              index === 0
+                                ? 'border-primary/30 bg-primary/[0.03] shadow-sm'
+                                : 'border-border/50 hover:border-border hover:shadow-sm'
+                            )}
+                          >
+                            <div className="flex items-start justify-between gap-3 mb-2">
+                              <div className="flex items-start gap-3 flex-1 min-w-0">
+                                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                                  <Building2 className="w-5 h-5 text-muted-foreground" />
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2 mb-0.5">
+                                    {index === 0 && (
+                                      <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                                        ⭐ Tốt nhất
+                                      </span>
+                                    )}
+                                    <Badge variant={jobTypeColors[job.jobType] || 'secondary'} className="text-[10px]">
+                                      {jobTypeLabels[job.jobType] || job.jobType || 'N/A'}
+                                    </Badge>
+                                  </div>
+                                  <h4 className="font-semibold text-sm line-clamp-1">{job.title || item.title || 'N/A'}</h4>
+                                  <p className="text-xs text-muted-foreground">{job.company?.name || item.companyName || 'N/A'}</p>
+                                </div>
+                              </div>
+                              <div className="flex-shrink-0 text-center">
+                                <div className={cn(
+                                  'text-xl font-bold',
+                                  matchScore >= 80 ? 'text-green-600' :
+                                  matchScore >= 60 ? 'text-primary' : 'text-amber-600'
+                                )}>
+                                  {matchScore}%
+                                </div>
+                                <div className="text-[10px] text-muted-foreground">Phù hợp</div>
+                              </div>
+                            </div>
+
+                            {/* Meta */}
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+                              <span className="flex items-center gap-1">
+                                <DollarSign className="w-3.5 h-3.5" />{formatSalary(job.salaryRange)}
+                              </span>
+                              {(job.locationText || item.location) && (
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="w-3.5 h-3.5" />{job.locationText || item.location}
                                 </span>
                               )}
-                              <Badge variant={jobTypeColors[job.jobType] || 'secondary'} className="text-[10px]">
-                                {jobTypeLabels[job.jobType]}
-                              </Badge>
                             </div>
-                            <h3 className="font-semibold text-sm line-clamp-1">{job.title}</h3>
-                            <p className="text-xs text-muted-foreground">{job.company?.name}</p>
+
+                            {/* AI Reason */}
+                            {item.reason && (
+                              <p className="text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2 mb-2">
+                                💡 {item.reason}
+                              </p>
+                            )}
+
+                            {/* Missing skills */}
+                            {item.missingSkills?.length > 0 && (
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <Info className="w-3 h-3 text-amber-500 flex-shrink-0" />
+                                <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                                  Cần bổ sung: {item.missingSkills.join(', ')}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Action */}
+                            {job._id && (
+                              <Button size="sm" className="h-7 text-xs gap-1.5" onClick={() => openApplyDialog(job)}>
+                                <Send className="w-3 h-3" /> Ứng tuyển ngay
+                              </Button>
+                            )}
                           </div>
-                        </div>
-
-                        {/* Match score */}
-                        <div className="flex-shrink-0 text-center">
-                          <div className={cn('text-2xl font-bold', colors.text)}>{matchScore}%</div>
-                          <div className="text-[10px] text-muted-foreground">{getScoreLabel(matchScore)}</div>
-                        </div>
-                      </div>
-
-                      {/* Progress bar */}
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-3">
-                        <div
-                          className={cn('h-full rounded-full transition-all duration-700', colors.bar)}
-                          style={{ width: `${matchScore}%` }}
-                        />
-                      </div>
-
-                      {/* Score breakdown */}
-                      <div className="grid grid-cols-5 gap-1.5 mb-3">
-                        {[
-                          { label: 'Hướng nghề', score: matchDetails?.careerPath || 0, max: 35 },
-                          { label: 'Kỹ năng', score: matchDetails?.skillMatch || 0, max: 30 },
-                          { label: 'Loại hình', score: matchDetails?.jobType || 0, max: 15 },
-                          { label: 'Lương', score: matchDetails?.salary || 0, max: 10 },
-                          { label: 'Địa điểm', score: matchDetails?.location || 0, max: 10 },
-                        ].map(({ label, score, max }) => (
-                          <div key={label} className="text-center">
-                            <div className="text-[10px] text-muted-foreground leading-tight">{label}</div>
-                            <div className="text-[11px] font-semibold">{score}/{max}</div>
-                            <div className="h-1 rounded-full bg-muted mt-0.5 overflow-hidden">
-                              <div
-                                className={cn('h-full rounded-full', getScoreColor(Math.round(score / max * 100)).bar)}
-                                style={{ width: `${(score / max) * 100}%` }}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Meta info */}
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                        <span className="flex items-center gap-1">
-                          <DollarSign className="w-3.5 h-3.5" />{formatSalary(job.salaryRange)}
-                        </span>
-                        {job.locationText && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3.5 h-3.5" />{job.locationText}
-                          </span>
-                        )}
-                        {job.deadline && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" />
-                            Hạn: {new Date(job.deadline).toLocaleDateString('vi-VN')}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Strengths & Gaps */}
-                      {(strengths.length > 0 || gaps.length > 0) && (
-                        <div className="rounded-lg bg-muted/40 p-2.5 mb-3 space-y-1.5">
-                          {strengths.slice(0, 2).map((s, i) => (
-                            <p key={i} className="text-xs text-green-700 dark:text-green-400 flex items-start gap-1.5">
-                              <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                              {s}
-                            </p>
-                          ))}
-                          {gaps.slice(0, 1).map((g, i) => (
-                            <p key={i} className="text-xs text-amber-700 dark:text-amber-400 flex items-start gap-1.5">
-                              <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                              {g}
-                            </p>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Action */}
-                      <Button
-                        size="sm"
-                        className="h-7 text-xs gap-1.5"
-                        onClick={() => openApplyDialog(job)}
-                      >
-                        <Send className="w-3 h-3" /> Ứng tuyển ngay
-                      </Button>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </div>
+                )}
+
+                {/* Skill Gaps */}
+                {skillGaps?.length > 0 && (
+                  <div className="rounded-xl border bg-amber-500/5 p-4 space-y-2">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <Target className="w-4 h-4 text-amber-600" /> Kỹ năng cần bổ sung
+                    </h3>
+                    <div className="flex flex-wrap gap-1.5">
+                      {skillGaps.map((skill, i) => (
+                        <span key={i} className="text-[11px] px-2.5 py-1 rounded-md bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                          {typeof skill === 'string' ? skill : skill.name || skill.skillName}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Market Insight */}
+                {marketInsight && (
+                  <div className="rounded-xl bg-blue-500/5 border border-blue-500/10 p-4">
+                    <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1.5 mb-1.5">
+                      <TrendingUp className="w-3.5 h-3.5" /> Xu hướng thị trường
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{marketInsight}</p>
+                  </div>
+                )}
+
+                {/* Overall Advice */}
+                {overallAdvice && (
+                  <div className="rounded-xl bg-primary/5 border border-primary/10 p-4">
+                    <p className="text-xs font-semibold text-primary flex items-center gap-1.5 mb-1.5">
+                      <Star className="w-3.5 h-3.5" /> Lời khuyên từ AI
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{overallAdvice}</p>
+                  </div>
+                )}
               </div>
-            )}
+            ) : null}
           </div>
 
           {/* Footer */}
           <div className="px-6 py-3 border-t border-border/30 flex-shrink-0 flex items-center justify-between bg-muted/30">
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <AlertCircle className="w-3.5 h-3.5" />
-              Gợi ý dựa trên kỹ năng, lộ trình và sở thích nghề nghiệp
+            <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3" />
+              Phân tích bởi AI dựa trên kỹ năng & sở thích
             </p>
-            <Button variant="ghost" size="sm" onClick={fetchSuggestions} className="h-7 text-xs gap-1.5">
+            <Button variant="ghost" size="sm" onClick={fetchAISuggestion} className="h-7 text-xs gap-1.5" disabled={loading}>
               <Sparkles className="w-3 h-3" /> Phân tích lại
             </Button>
           </div>

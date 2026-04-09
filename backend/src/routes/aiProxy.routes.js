@@ -1,8 +1,12 @@
 /**
  * AI Proxy Routes — /api/ai/*
- * Backend Node.js query DB → gửi data JSON → Python AI Service (:8000)
+ * Backend Node.js lấy cached AI profile → gửi Python AI Service (:8000)
  * 
- * Flow: Frontend → Backend (auth + DB query) → Python (AI) → Response
+ * Optimization:
+ * - Dùng StudentAIProfile (pre-computed) thay vì query 5 collections
+ * - Cache AIPersonalizedRoadmap (lần 1 gọi AI, lần sau instant)
+ * 
+ * Flow: Frontend → Backend (cached profile) → Python (AI) → Response
  */
 const express = require('express');
 const router = express.Router();
@@ -10,12 +14,13 @@ const { protect, authorize } = require('../middleware/auth');
 const env = require('../config/env');
 
 // Models
-const AcademicProfile = require('../models/AcademicProfile');
-const CareerPreference = require('../models/CareerPreference');
-const StudentSkill = require('../models/StudentSkill');
 const Roadmap = require('../models/Roadmap');
 const JobPosting = require('../models/JobPosting');
 const ChatHistory = require('../models/ChatHistory');
+const AIPersonalizedRoadmap = require('../models/AIPersonalizedRoadmap');
+
+// Services
+const aiProfileService = require('../services/studentAIProfile.service');
 
 const AI_URL = env.AI_SERVICE_URL;
 
@@ -29,28 +34,35 @@ router.post('/suggest-roadmap', async (req, res) => {
   try {
     const studentId = req.user._id;
 
-    // Thu thập 7 nguồn dữ liệu (request_ai.md 1.1)
-    const [careerPreference, academicProfile, studentSkills, availableRoadmaps] = await Promise.all([
-      CareerPreference.findOne({ student: studentId }).lean(),
-      AcademicProfile.findOne({ student: studentId })
-        .populate('courseGrades.course', 'name code courseType relatedSkills')
-        .lean(),
-      StudentSkill.find({ student: studentId })
-        .populate('skill', 'name category')
-        .lean(),
+    // 1. Check cache AIPersonalizedRoadmap (instant!)
+    const cached = await AIPersonalizedRoadmap.findOne({
+      student: studentId,
+      isValid: true,
+      expiresAt: { $gt: new Date() },
+    }).sort({ generatedAt: -1 }).lean();
+
+    if (cached) {
+      return res.json({
+        success: true,
+        data: {
+          analysis: cached.analysis,
+          suggestedCareerPaths: cached.suggestedCareerPaths,
+          personalizedRoadmap: cached.personalizedRoadmap,
+          advice: cached.advice,
+        },
+        cached: true,
+      });
+    }
+
+    // 2. Lấy AI Profile (pre-computed, 1 query) + roadmaps mẫu
+    const [aiProfile, availableRoadmaps] = await Promise.all([
+      aiProfileService.getOrCreate(studentId, req.user.fullName || req.user.email),
       Roadmap.find({ isActive: true })
         .populate('skills.skill', 'name category')
         .lean(),
     ]);
 
-    // Chuẩn hóa data cho Python (flatten populated fields)
-    const preparedSkills = (studentSkills || []).map(ss => ({
-      skillName: ss.skill?.name || 'N/A',
-      category: ss.skill?.category || '',
-      proficiencyLevel: ss.proficiencyLevel || 1,
-      source: ss.source || 'manual',
-    }));
-
+    // Chuẩn bị data cho Python (dùng pre-computed data)
     const preparedRoadmaps = (availableRoadmaps || []).map(r => ({
       title: r.title,
       careerPath: r.careerPath,
@@ -59,29 +71,25 @@ router.post('/suggest-roadmap', async (req, res) => {
       skillNames: r.skills?.map(s => s.skill?.name).filter(Boolean) || [],
     }));
 
-    const preparedProfile = academicProfile ? {
-      gpa: academicProfile.gpa,
-      completedCredits: academicProfile.completedCredits,
-      currentSemester: academicProfile.currentSemester,
-      courseGrades: (academicProfile.courseGrades || []).map(cg => ({
-        courseName: cg.course?.name || cg.courseName || 'N/A',
-        courseCode: cg.course?.code || '',
-        numericGrade: cg.numericGrade,
-        letterGrade: cg.letterGrade,
-      })),
-    } : null;
-
-    // Gọi Python AI Service
+    // 3. Gọi Python AI Service
     const response = await fetch(`${AI_URL}/ai/suggest-roadmap`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        careerPreference,
-        academicProfile: preparedProfile,
-        studentSkills: preparedSkills,
+        // Gửi pre-computed data thay vì raw data
+        careerPreference: aiProfile.careerData || {},
+        academicProfile: aiProfile.profileData || {},
+        studentSkills: aiProfile.skillsData || [],
         availableRoadmaps: preparedRoadmaps,
+        // Thêm summaries cho context
+        summaries: {
+          profile: aiProfile.profileSummary,
+          career: aiProfile.careerSummary,
+          skills: aiProfile.skillsSummary,
+          academic: aiProfile.academicSummary,
+        },
       }),
-      signal: AbortSignal.timeout(120000),
+      signal: AbortSignal.timeout(180000),
     });
 
     if (!response.ok) {
@@ -90,6 +98,23 @@ router.post('/suggest-roadmap', async (req, res) => {
     }
 
     const result = await response.json();
+
+    // 4. Cache kết quả AI → AIPersonalizedRoadmap
+    if (result.success && result.data) {
+      AIPersonalizedRoadmap.create({
+        student: studentId,
+        analysis: result.data.analysis || {},
+        suggestedCareerPaths: result.data.suggestedCareerPaths || [],
+        personalizedRoadmap: result.data.personalizedRoadmap || {},
+        advice: result.data.advice || '',
+        modelUsed: 'google/gemma-4-31b-it:free',
+        profileDataHash: aiProfile.dataHash || '',
+        generatedAt: new Date(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        isValid: true,
+      }).catch(err => console.error('Cache AI roadmap error:', err));
+    }
+
     res.json(result);
   } catch (error) {
     console.error('❌ AI Roadmap error:', error.message);
@@ -106,11 +131,9 @@ router.post('/suggest-jobs', async (req, res) => {
   try {
     const studentId = req.user._id;
 
-    const [studentSkills, careerPreference, jobs] = await Promise.all([
-      StudentSkill.find({ student: studentId })
-        .populate('skill', 'name category')
-        .lean(),
-      CareerPreference.findOne({ student: studentId }).lean(),
+    // Lấy AI Profile (pre-computed) + jobs
+    const [aiProfile, jobs] = await Promise.all([
+      aiProfileService.getOrCreate(studentId, req.user.fullName || req.user.email),
       JobPosting.find({ status: 'approved' })
         .populate('company', 'name logo')
         .populate('requiredSkills.skill', 'name category')
@@ -119,13 +142,6 @@ router.post('/suggest-jobs', async (req, res) => {
         .limit(20)
         .lean(),
     ]);
-
-    // Chuẩn hóa data
-    const preparedSkills = (studentSkills || []).map(ss => ({
-      skillName: ss.skill?.name || 'N/A',
-      proficiencyLevel: ss.proficiencyLevel || 1,
-      source: ss.source || 'manual',
-    }));
 
     const preparedJobs = (jobs || []).map(job => ({
       _id: job._id.toString(),
@@ -141,11 +157,16 @@ router.post('/suggest-jobs', async (req, res) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        studentSkills: preparedSkills,
-        careerPreference,
+        studentSkills: aiProfile.skillsData || [],
+        careerPreference: aiProfile.careerData || {},
         jobs: preparedJobs,
+        summaries: {
+          profile: aiProfile.profileSummary,
+          career: aiProfile.careerSummary,
+          skills: aiProfile.skillsSummary,
+        },
       }),
-      signal: AbortSignal.timeout(120000),
+      signal: AbortSignal.timeout(180000),
     });
 
     if (!response.ok) {
@@ -184,29 +205,20 @@ router.post('/chat', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Tin nhắn không được rỗng.' });
     }
 
-    // Thu thập context data từ DB
-    const [academicProfile, careerPref, skills, roadmaps, myRoadmaps] = await Promise.all([
-      AcademicProfile.findOne({ student: studentId }).lean(),
-      CareerPreference.findOne({ student: studentId }).lean(),
-      StudentSkill.find({ student: studentId }).populate('skill', 'name').lean(),
-      Roadmap.find({ isActive: true }).select('title careerPath difficulty estimatedMonths').lean(),
-      // Lấy lộ trình đang học (nếu có model StudentRoadmap)
-      Promise.resolve([]),
-    ]);
+    // Lấy AI Profile (pre-computed, 1 query thay vì 5)
+    const aiProfile = await aiProfileService.getOrCreate(
+      studentId, req.user.fullName || req.user.email
+    );
 
     const contextData = {
-      studentProfile: academicProfile ? {
-        fullName: req.user.fullName || req.user.email,
-        gpa: academicProfile.gpa,
-        completedCredits: academicProfile.completedCredits,
-      } : { fullName: req.user.fullName || req.user.email },
-      careerPref,
-      skills: (skills || []).map(s => ({ skillName: s.skill?.name || 'N/A' })),
-      roadmaps: (roadmaps || []).map(r => ({
-        title: r.title, careerPath: r.careerPath,
-        difficulty: r.difficulty, estimatedMonths: r.estimatedMonths,
-      })),
-      myRoadmaps,
+      studentProfile: {
+        fullName: aiProfile.profileData?.fullName || req.user.fullName || req.user.email,
+        gpa: aiProfile.profileData?.gpa || 0,
+        completedCredits: aiProfile.profileData?.completedCredits || 0,
+      },
+      careerSummary: aiProfile.careerSummary || '',
+      skillsSummary: aiProfile.skillsSummary || '',
+      academicSummary: aiProfile.academicSummary || '',
     };
 
     // Lấy lịch sử chat gần nhất
@@ -231,7 +243,7 @@ router.post('/chat', async (req, res) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, history, contextData }),
-      signal: AbortSignal.timeout(120000),
+      signal: AbortSignal.timeout(180000),
     });
 
     if (!aiResponse.ok) {
@@ -248,12 +260,10 @@ router.post('/chat', async (req, res) => {
 
     for await (const chunk of reader) {
       const text = decoder.decode(chunk, { stream: true });
-      // Python trả SSE format "data: {...}\n\n", forward trực tiếp
       const lines = text.split('\n');
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           res.write(line + '\n\n');
-          // Thu thập full response để lưu history
           try {
             const payload = JSON.parse(line.slice(6));
             if (payload.text) fullResponse += payload.text;

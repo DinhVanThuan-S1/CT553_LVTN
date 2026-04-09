@@ -1,9 +1,7 @@
 /**
  * RoadmapSuggestionModal
- * Modal AI gợi ý lộ trình:
- * - Hiển thị top 5 lộ trình phù hợp nhất
- * - Match % với breakdown chi tiết
- * - Nút đăng ký / xem chi tiết
+ * Gợi ý lộ trình CÁ NHÂN HÓA bằng AI (Python + OpenRouter)
+ * Theo request_ai.md Section 1
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -12,75 +10,55 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import {
   Sparkles, X, ChevronRight, Route, Clock, CheckCircle2,
-  AlertCircle, Info, TrendingUp, Loader2, Lock,
+  AlertCircle, Info, TrendingUp, Loader2, Star, BookOpen,
+  Target, Briefcase,
 } from 'lucide-react';
 import api from '../../lib/api';
 import { useToast } from '../ui/Toast';
 
-// Score → màu
-function getScoreColor(score) {
-  if (score >= 80) return { bar: 'bg-green-500', text: 'text-green-600', badge: 'success' };
-  if (score >= 60) return { bar: 'bg-primary', text: 'text-primary', badge: 'default' };
-  if (score >= 40) return { bar: 'bg-amber-500', text: 'text-amber-600', badge: 'warning' };
-  return { bar: 'bg-muted-foreground', text: 'text-muted-foreground', badge: 'secondary' };
-}
-
-// Score label
-function getScoreLabel(score) {
-  if (score >= 80) return 'Rất phù hợp';
-  if (score >= 60) return 'Phù hợp';
-  if (score >= 40) return 'Khá phù hợp';
-  return 'Ít phù hợp';
-}
-
 const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
-const difficultyColors = { beginner: 'success', intermediate: 'warning', advanced: 'danger' };
 
 export default function RoadmapSuggestionModal({ isOpen, onClose }) {
-  const [suggestions, setSuggestions] = useState([]);
+  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [enrollingId, setEnrollingId] = useState(null);
-  const [enrollData, setEnrollData] = useState({ roadmapId: null, step: null }); // null | 'duration' | 'schedule'
-  const [durationMonths, setDurationMonths] = useState(6);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [fromCache, setFromCache] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
-    if (isOpen) fetchSuggestions();
+    if (isOpen && !result) fetchAISuggestion();
   }, [isOpen]);
 
-  const fetchSuggestions = async () => {
+  const fetchAISuggestion = async () => {
     setLoading(true);
+    setError('');
+    setFromCache(false);
     try {
-      const { data } = await api.get('/student/roadmap-suggestions');
-      if (data.success) setSuggestions(data.data);
-    } catch {
-      toast.error('Không thể tải gợi ý lộ trình');
+      const { data } = await api.post('/ai/suggest-roadmap', {}, { timeout: 180000 });
+      if (data.success) {
+        setResult(data.data);
+        setFromCache(!!data.cached);
+      } else {
+        setError(data.message || 'Không thể phân tích');
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || '';
+      if (msg.includes('429') || msg.includes('rate limit') || msg.includes('Rate limit')) {
+        setError('AI đang quá tải. Vui lòng thử lại sau vài phút.');
+      } else if (msg.includes('timeout') || msg.includes('Timeout')) {
+        setError('AI phản hồi quá lâu. Vui lòng thử lại.');
+      } else {
+        setError(msg || 'Không thể kết nối AI. Vui lòng thử lại.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEnroll = async (roadmapId) => {
-    setEnrollingId(roadmapId);
-    try {
-      await api.post('/student/my-roadmaps/enroll', {
-        roadmapId,
-        durationMonths,
-        freeTimeSlots: [],
-        schoolSchedule: [],
-      });
-      toast.success('Đã đăng ký lộ trình thành công!');
-      onClose();
-      navigate('/student/my-roadmap');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Có lỗi xảy ra');
-    } finally {
-      setEnrollingId(null);
-    }
-  };
-
   if (!isOpen) return null;
+
+  const { analysis, suggestedCareerPaths, personalizedRoadmap, advice } = result || {};
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
@@ -94,13 +72,10 @@ export default function RoadmapSuggestionModal({ isOpen, onClose }) {
             </div>
             <div>
               <h2 className="text-base font-semibold">AI Gợi ý Lộ trình</h2>
-              <p className="text-xs text-muted-foreground">Phân tích hồ sơ học tập & sở thích nghề nghiệp</p>
+              <p className="text-xs text-muted-foreground">Phân tích cá nhân hóa bằng AI</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
-          >
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -108,7 +83,7 @@ export default function RoadmapSuggestionModal({ isOpen, onClose }) {
         {/* Content */}
         <div className="overflow-y-auto flex-1 scrollbar-thin">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-4">
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
               <div className="relative">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-teal-500/10 flex items-center justify-center">
                   <Sparkles className="w-7 h-7 text-primary" />
@@ -116,168 +91,163 @@ export default function RoadmapSuggestionModal({ isOpen, onClose }) {
                 <div className="absolute -inset-1 rounded-2xl border-2 border-primary/20 animate-ping" />
               </div>
               <div className="text-center">
-                <p className="font-medium text-sm">Đang phân tích hồ sơ...</p>
-                <p className="text-xs text-muted-foreground mt-1">Hệ thống đang so khớp với các lộ trình phù hợp</p>
+                <p className="font-medium text-sm">AI đang phân tích hồ sơ...</p>
+                <p className="text-xs text-muted-foreground mt-1">Thu thập dữ liệu học tập, kỹ năng, sở thích nghề nghiệp</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Quá trình này mất khoảng 15-30 giây</p>
               </div>
               <Loader2 className="w-5 h-5 text-primary animate-spin" />
             </div>
-          ) : suggestions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-              <Route className="w-12 h-12 text-muted-foreground/30" />
-              <p className="font-medium">Chưa có lộ trình để gợi ý</p>
-              <p className="text-sm text-muted-foreground">Hãy cập nhật hồ sơ học tập và sở thích nghề nghiệp</p>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 text-center px-6">
+              <AlertCircle className="w-12 h-12 text-destructive/50" />
+              <p className="font-medium text-destructive">{error}</p>
+              <Button variant="outline" size="sm" onClick={fetchAISuggestion} className="gap-1.5 mt-2">
+                <Sparkles className="w-3.5 h-3.5" /> Thử lại
+              </Button>
             </div>
-          ) : (
-            <div className="p-4 space-y-3">
-              {suggestions.map((item, index) => {
-                const { roadmap, matchScore, matchDetails, strengths, gaps, isEnrolled } = item;
-                const colors = getScoreColor(matchScore);
-                const isEnrollingThis = enrollingId === roadmap._id;
+          ) : result ? (
+            <div className="p-5 space-y-5">
 
-                return (
-                  <div
-                    key={roadmap._id}
-                    className={cn(
-                      'rounded-xl border p-4 transition-all duration-200',
-                      index === 0
-                        ? 'border-primary/30 bg-primary/[0.03] shadow-sm'
-                        : 'border-border/50 hover:border-border hover:shadow-sm',
-                      isEnrolled && 'opacity-70'
+              {/* Phân tích tổng quan */}
+              {analysis && (
+                <div className="rounded-xl border bg-muted/20 p-4 space-y-3">
+                  <h3 className="text-sm font-semibold flex items-center gap-2">
+                    <Target className="w-4 h-4 text-primary" /> Phân tích hồ sơ
+                  </h3>
+                  <p className="text-xs text-muted-foreground">{analysis.summary}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {analysis.strengths?.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p className="text-[11px] font-medium text-green-600 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> Điểm mạnh
+                        </p>
+                        {analysis.strengths.map((s, i) => (
+                          <p key={i} className="text-xs text-green-700 dark:text-green-400 pl-4">• {s}</p>
+                        ))}
+                      </div>
                     )}
-                  >
-                    {/* Top row */}
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          {index === 0 && (
-                            <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                              ⭐ Tốt nhất
-                            </span>
-                          )}
-                          <Badge variant={difficultyColors[roadmap.difficulty]} className="text-[10px]">
-                            {difficultyLabels[roadmap.difficulty]}
-                          </Badge>
-                          {isEnrolled && (
-                            <span className="text-[10px] font-medium text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" /> Đã đăng ký
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="font-semibold text-sm">{roadmap.title}</h3>
-                        <p className="text-xs text-muted-foreground">{roadmap.careerPath}</p>
+                    {analysis.weaknesses?.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p className="text-[11px] font-medium text-amber-600 flex items-center gap-1">
+                          <Info className="w-3 h-3" /> Cần cải thiện
+                        </p>
+                        {analysis.weaknesses.map((w, i) => (
+                          <p key={i} className="text-xs text-amber-700 dark:text-amber-400 pl-4">• {w}</p>
+                        ))}
                       </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
-                      {/* Match score */}
-                      <div className="flex-shrink-0 text-center">
-                        <div className={cn('text-2xl font-bold', colors.text)}>{matchScore}%</div>
-                        <div className="text-[10px] text-muted-foreground">{getScoreLabel(matchScore)}</div>
-                      </div>
-                    </div>
-
-                    {/* Progress bar */}
-                    <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-3">
-                      <div
-                        className={cn('h-full rounded-full transition-all duration-700', colors.bar)}
-                        style={{ width: `${matchScore}%` }}
-                      />
-                    </div>
-
-                    {/* Score breakdown */}
-                    <div className="grid grid-cols-4 gap-2 mb-3">
-                      {[
-                        { label: 'Hướng nghề', score: matchDetails?.careerPath || 0, max: 40 },
-                        { label: 'Năng lực', score: matchDetails?.academic || 0, max: 30 },
-                        { label: 'Kỹ năng', score: matchDetails?.skillCoverage || 0, max: 20 },
-                        { label: 'Thời gian', score: matchDetails?.duration || 0, max: 10 },
-                      ].map(({ label, score, max }) => (
-                        <div key={label} className="text-center">
-                          <div className="text-[10px] text-muted-foreground">{label}</div>
-                          <div className="text-xs font-semibold">{score}/{max}</div>
-                          <div className="h-1 rounded-full bg-muted mt-0.5 overflow-hidden">
-                            <div
-                              className={cn('h-full rounded-full', getScoreColor(Math.round(score / max * 100)).bar)}
-                              style={{ width: `${(score / max) * 100}%` }}
-                            />
+              {/* Hướng nghề gợi ý */}
+              {suggestedCareerPaths?.length > 0 && (
+                <div className="space-y-2.5">
+                  <h3 className="text-sm font-semibold flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-primary" /> Hướng nghề phù hợp
+                  </h3>
+                  <div className="grid grid-cols-1 gap-2">
+                    {suggestedCareerPaths.map((cp, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-lg border bg-card/50">
+                        <div className="text-center flex-shrink-0">
+                          <div className={cn(
+                            'text-lg font-bold',
+                            cp.matchScore >= 80 ? 'text-green-600' :
+                            cp.matchScore >= 60 ? 'text-primary' : 'text-amber-600'
+                          )}>
+                            {cp.matchScore}%
                           </div>
                         </div>
-                      ))}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">{cp.title}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{cp.reason}</p>
+                        </div>
+                        {i === 0 && (
+                          <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full flex-shrink-0">
+                            ⭐ Tốt nhất
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Lộ trình cá nhân hóa */}
+              {personalizedRoadmap && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold flex items-center gap-2">
+                    <Route className="w-4 h-4 text-primary" /> Lộ trình cá nhân hóa
+                  </h3>
+                  <div className="rounded-xl border bg-gradient-to-br from-primary/[0.02] to-teal-500/[0.02] p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="font-semibold text-sm">{personalizedRoadmap.title}</h4>
+                        <p className="text-xs text-muted-foreground mt-0.5">{personalizedRoadmap.description}</p>
+                      </div>
+                      <Badge variant="default" className="flex-shrink-0 text-[10px]">
+                        <Clock className="w-3 h-3 mr-1" /> {personalizedRoadmap.estimatedMonths} tháng
+                      </Badge>
                     </div>
 
-                    {/* Meta */}
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" /> {roadmap.estimatedMonths} tháng
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Route className="w-3.5 h-3.5" /> {roadmap.skills?.length || 0} kỹ năng
-                      </span>
-                    </div>
+                    {/* Phases */}
+                    {personalizedRoadmap.phases?.map((phase, pi) => (
+                      <div key={pi} className="rounded-lg bg-muted/40 p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold flex items-center gap-1.5">
+                            <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] flex items-center justify-center font-bold">
+                              {pi + 1}
+                            </span>
+                            {phase.name}
+                          </p>
+                          <span className="text-[10px] text-muted-foreground">{phase.duration}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {phase.skills?.map((skill, si) => (
+                            <span key={si} className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-background border">
+                              {skill.name}
+                              <span className="text-muted-foreground">({skill.sessions || '?'} buổi)</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
 
-                    {/* Strengths & Gaps */}
-                    {(strengths.length > 0 || gaps.length > 0) && (
-                      <div className="rounded-lg bg-muted/40 p-2.5 mb-3 space-y-1.5">
-                        {strengths.slice(0, 2).map((s, i) => (
-                          <p key={i} className="text-xs text-green-700 dark:text-green-400 flex items-start gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                            {s}
-                          </p>
-                        ))}
-                        {gaps.slice(0, 1).map((g, i) => (
-                          <p key={i} className="text-xs text-amber-700 dark:text-amber-400 flex items-start gap-1.5">
-                            <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                            {g}
-                          </p>
+                    {/* Adjustments */}
+                    {personalizedRoadmap.adjustments?.length > 0 && (
+                      <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 space-y-1.5">
+                        <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                          <TrendingUp className="w-3 h-3" /> Điều chỉnh cá nhân hóa
+                        </p>
+                        {personalizedRoadmap.adjustments.map((adj, ai) => (
+                          <p key={ai} className="text-xs text-amber-700/80 dark:text-amber-400/80 pl-4">• {adj}</p>
                         ))}
                       </div>
                     )}
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs"
-                        onClick={() => { navigate(`/student/roadmaps/${roadmap._id}`); onClose(); }}
-                      >
-                        Xem chi tiết <ChevronRight className="w-3 h-3 ml-1" />
-                      </Button>
-                      {!isEnrolled ? (
-                        <Button
-                          size="sm"
-                          className="h-7 text-xs gap-1.5"
-                          onClick={() => handleEnroll(roadmap._id)}
-                          disabled={isEnrollingThis}
-                        >
-                          {isEnrollingThis ? (
-                            <><Loader2 className="w-3 h-3 animate-spin" /> Đang đăng ký...</>
-                          ) : (
-                            <><TrendingUp className="w-3 h-3" /> Đăng ký ngay</>
-                          )}
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm" variant="ghost"
-                          className="h-7 text-xs gap-1.5 text-green-600"
-                          onClick={() => { navigate('/student/my-roadmap'); onClose(); }}
-                        >
-                          <CheckCircle2 className="w-3 h-3" /> Xem lộ trình của tôi
-                        </Button>
-                      )}
-                    </div>
                   </div>
-                );
-              })}
+                </div>
+              )}
+
+              {/* Lời khuyên */}
+              {advice && (
+                <div className="rounded-xl bg-primary/5 border border-primary/10 p-4">
+                  <p className="text-xs font-semibold text-primary flex items-center gap-1.5 mb-1.5">
+                    <Star className="w-3.5 h-3.5" /> Lời khuyên từ AI
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{advice}</p>
+                </div>
+              )}
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-border/30 flex-shrink-0 flex items-center justify-between bg-muted/30">
-          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-            <AlertCircle className="w-3.5 h-3.5" />
-            Gợi ý dựa trên hồ sơ học tập & sở thích nghề nghiệp
+          <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+            <Sparkles className="w-3 h-3" />
+            Phân tích bởi AI dựa trên hồ sơ cá nhân
           </p>
-          <Button variant="ghost" size="sm" onClick={fetchSuggestions} className="h-7 text-xs gap-1.5">
+          <Button variant="ghost" size="sm" onClick={fetchAISuggestion} className="h-7 text-xs gap-1.5" disabled={loading}>
             <Sparkles className="w-3 h-3" /> Phân tích lại
           </Button>
         </div>

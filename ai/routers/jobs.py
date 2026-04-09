@@ -3,6 +3,8 @@ Router — Gợi ý Việc làm AI
 POST /ai/suggest-jobs
 """
 import json
+import re
+import traceback
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
@@ -17,6 +19,28 @@ class JobRequest(BaseModel):
     studentSkills: Optional[list] = None
     careerPreference: Optional[dict] = None
     jobs: Optional[list] = None
+
+
+def extract_json(text: str) -> dict:
+    """Trích xuất JSON từ response AI"""
+    if not text:
+        raise ValueError("AI trả về response rỗng")
+
+    cleaned = text.strip()
+
+    # Xóa code block markdown nếu có
+    match = re.search(r'```(?:json)?\s*\n?(.*?)\n?\s*```', cleaned, re.DOTALL)
+    if match:
+        cleaned = match.group(1).strip()
+
+    if not cleaned.startswith('{'):
+        json_match = re.search(r'\{[\s\S]*\}', cleaned)
+        if json_match:
+            cleaned = json_match.group(0)
+        else:
+            raise ValueError(f"Không tìm thấy JSON: {cleaned[:200]}")
+
+    return json.loads(cleaned)
 
 
 @router.post("/suggest-jobs")
@@ -42,17 +66,18 @@ async def suggest_jobs(body: JobRequest):
             temperature=0.5,
         )
 
-        cleaned = raw.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("```")[1]
-            if cleaned.startswith("json"):
-                cleaned = cleaned[4:]
-            cleaned = cleaned.strip()
+        if not raw:
+            raise HTTPException(status_code=500, detail="AI không trả về dữ liệu. Vui lòng thử lại.")
 
-        result = json.loads(cleaned)
+        result = extract_json(raw)
         return {"success": True, "data": result}
 
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=500, detail=f"AI trả về dữ liệu không hợp lệ: {str(e)}")
+        print(f"❌ JSON parse error: {e}")
+        print(f"Raw response: {raw[:500] if raw else 'None'}")
+        raise HTTPException(status_code=500, detail="AI trả về dữ liệu không hợp lệ. Vui lòng thử lại.")
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"❌ Jobs error: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))

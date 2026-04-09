@@ -3,6 +3,7 @@
  * API quản lý kỹ năng sinh viên (3 nguồn)
  */
 const studentSkillService = require('../services/studentSkill.service');
+const aiProfileService = require('../services/studentAIProfile.service');
 
 /**
  * GET /api/student/skills — Lấy tất cả skills của mình
@@ -34,6 +35,7 @@ exports.addSelfSkills = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Chọn ít nhất 1 kỹ năng' });
     }
     const skills = await studentSkillService.addSelfSkills(req.user._id, skillIds);
+    aiProfileService.refreshSkills(req.user._id).catch(() => {});
     res.json({ success: true, data: skills, message: 'Đã thêm kỹ năng' });
   } catch (err) {
     console.error('addSelfSkills error:', err);
@@ -47,6 +49,7 @@ exports.addSelfSkills = async (req, res) => {
 exports.removeSelfSkill = async (req, res) => {
   try {
     const skills = await studentSkillService.removeSelfSkill(req.user._id, req.params.skillId);
+    aiProfileService.refreshSkills(req.user._id).catch(() => {});
     res.json({ success: true, data: skills, message: 'Đã xóa kỹ năng' });
   } catch (err) {
     console.error('removeSelfSkill error:', err);
@@ -65,6 +68,7 @@ exports.updateProficiency = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Level phải từ 1-5' });
     }
     const skills = await studentSkillService.updateProficiency(req.user._id, req.params.skillId, level);
+    aiProfileService.refreshSkills(req.user._id).catch(() => {});
     res.json({ success: true, data: skills });
   } catch (err) {
     console.error('updateProficiency error:', err);
