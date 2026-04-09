@@ -73,11 +73,11 @@ async def suggest_jobs(body: JobRequest):
         return {"success": True, "data": result}
 
     except json.JSONDecodeError as e:
-        print(f"❌ JSON parse error: {e}")
+        print(f"[ERROR] JSON parse error: {e}")
         print(f"Raw response: {raw[:500] if raw else 'None'}")
         raise HTTPException(status_code=500, detail="AI trả về dữ liệu không hợp lệ. Vui lòng thử lại.")
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Jobs error: {traceback.format_exc()}")
+        print(f"[ERROR] Jobs error: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))

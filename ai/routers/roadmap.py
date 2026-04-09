@@ -67,7 +67,7 @@ async def suggest_roadmap(body: RoadmapRequest):
         return {"success": True, "data": result}
 
     except json.JSONDecodeError as e:
-        print(f"❌ JSON parse error: {e}")
+        print(f"[ERROR] JSON parse error: {e}")
         print(f"Raw response: {raw[:500] if raw else 'None'}")
         raise HTTPException(
             status_code=500,
@@ -76,5 +76,5 @@ async def suggest_roadmap(body: RoadmapRequest):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Roadmap error: {traceback.format_exc()}")
+        print(f"[ERROR] Roadmap error: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
