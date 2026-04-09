@@ -150,7 +150,7 @@ export default function AIChatPage() {
           </div>
           <div>
             <h1 className="text-lg font-bold">EduPath AI</h1>
-            <p className="text-xs text-muted-foreground">Trợ lý tư vấn nghề nghiệp • Powered by Gemini</p>
+            <p className="text-xs text-muted-foreground">Trợ lý tư vấn nghề nghiệp • Powered by AI</p>
           </div>
         </div>
         {messages.length > 0 && (

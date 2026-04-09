@@ -45,12 +45,8 @@ const env = {
   SMTP_PASS: process.env.SMTP_PASS,
   SMTP_FROM: process.env.SMTP_FROM || 'noreply@edupath.local',
 
-  // Gemini AI (primary)
-  GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
-
-  // Ollama (fallback khi hết quota Gemini)
-  OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
-  OLLAMA_MODEL: process.env.OLLAMA_MODEL || 'mistral',
+  // AI Service (Python FastAPI)
+  AI_SERVICE_URL: process.env.AI_SERVICE_URL || 'http://localhost:8000',
 
   // File Upload
   MAX_FILE_SIZE: parseInt(process.env.MAX_FILE_SIZE, 10) || 10485760, // 10MB

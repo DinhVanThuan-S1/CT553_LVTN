@@ -70,7 +70,7 @@ Hệ thống phân tích các kỹ năng sinh viên đã có để gợi ý các
 
 ### 1.2. Cơ chế tổng hợp và tạo lộ trình cá nhân hóa
 
-Sau khi thu thập và tổng hợp toàn bộ dữ liệu đầu vào, hệ thống sử dụng **Ollama** hoặc một **thuật toán gợi ý** để sinh ra một lộ trình học tập hoàn toàn mới cho từng cá nhân.
+Sau khi thu thập và tổng hợp toàn bộ dữ liệu đầu vào, hệ thống sử dụng **Openrouter** hoặc một **thuật toán gợi ý** để sinh ra một lộ trình học tập hoàn toàn mới cho từng cá nhân.
 
 Lộ trình được tạo ra dựa trên:
 - Lộ trình mẫu có sẵn trong hệ thống
@@ -163,4 +163,4 @@ Hệ thống hướng đến việc hỗ trợ sinh viên trong quá trình:
 - Tiếp cận cơ hội việc làm phù hợp
 - Được hỗ trợ bởi chatbot AI trong suốt quá trình sử dụng
 
-Với việc kết hợp giữa **Python**, **Ollama**, dữ liệu học tập, dữ liệu kỹ năng và dữ liệu tuyển dụng, hệ thống có thể trở thành một nền tảng hỗ trợ định hướng nghề nghiệp và cá nhân hóa lộ trình học tập một cách linh hoạt, thực tiễn và phù hợp với từng sinh viên.
+Với việc kết hợp giữa **Python**, **Openrouter**, dữ liệu học tập, dữ liệu kỹ năng và dữ liệu tuyển dụng, hệ thống có thể trở thành một nền tảng hỗ trợ định hướng nghề nghiệp và cá nhân hóa lộ trình học tập một cách linh hoạt, thực tiễn và phù hợp với từng sinh viên.
