@@ -614,7 +614,7 @@ Các dữ liệu quan trọng của hệ thống:
 - Python
 - Tailwind CSS
 - shadcn/ui
-- Các mô hình LLM của Ollama
+- Các mô hình LLM của OpenRouter
 
 ### Định hướng triển khai
 - Hệ thống được tổ chức rõ ràng theo các phần: backend, frontend, ai-service...
@@ -623,7 +623,7 @@ Các dữ liệu quan trọng của hệ thống:
 - AI service xử lý các bài toán gợi ý và phân tích dữ liệu học tập / nghề nghiệp.
 
 ### Công nghệ của chức năng “Gợi ý lộ trình”
-- Sử dụng mô hình LLM của Ollama
+- Sử dụng mô hình LLM của OpenRouter
 - Dữ liệu đầu vào gồm:
   - Hồ sơ học tập
   - Sở thích nghề nghiệp
