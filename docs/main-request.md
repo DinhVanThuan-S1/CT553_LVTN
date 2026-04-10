@@ -184,11 +184,6 @@ Các dữ liệu quan trọng của hệ thống:
 
 **Luồng chính:**
 - Sinh viên chọn một lộ trình
-- Hệ thống hiển thị bước chọn thời gian học
-- Sinh viên chọn thời gian
-- Hệ thống hiển thị bước nhập TKB trường
-- Sinh viên nhập lịch học trên trường
-- Hệ thống hiển thị bước chọn giờ rảnh
 - Sinh viên chọn khung giờ rảnh
 - Sinh viên tạo lịch học
 - Hệ thống phân bổ kỹ năng theo tuần vào các khung giờ rảnh
