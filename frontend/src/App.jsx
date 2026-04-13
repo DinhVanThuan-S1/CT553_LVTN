@@ -47,9 +47,7 @@ import LearningSessionPage from './pages/student/LearningSessionPage';
 import SkillTestPage from './pages/student/SkillTestPage';
 import ChatPage from './pages/ChatPage';
 
-// Pages - AI
-import AIRoadmapPage from './pages/student/AIRoadmapPage';
-import AIJobSuggestionPage from './pages/student/AIJobSuggestionPage';
+
 
 // Pages - Employer
 import EmployerDashboard from './pages/employer/EmployerDashboard';
@@ -145,8 +143,7 @@ const router = createBrowserRouter([
           { path: 'applications', element: <ApplicationsPage /> },
           { path: 'favorites', element: <FavoritesPage /> },
           { path: 'chat', element: <ChatPage /> },
-          { path: 'ai-roadmap', element: <AIRoadmapPage /> },
-          { path: 'ai-jobs', element: <AIJobSuggestionPage /> },
+
           { path: 'profile', element: <ProfilePage /> },
           { path: 'settings', element: <SettingsPage /> },
         ],

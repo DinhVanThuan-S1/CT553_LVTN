@@ -169,19 +169,23 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
                 const { roadmap: rm, matchScore, cbScore, cfBonus, matchDetails, strengths, gaps, isEnrolled } = item;
                 const isExpanded = expandedId === rm._id;
                 const isGenerating = generating === rm._id;
+                // "Phù hợp nhất" = roadmap đầu tiên CHƯA enrolled
+                const firstAvailableIdx = suggestions.findIndex(s => !s.isEnrolled);
+                const isBestMatch = idx === firstAvailableIdx;
                 return (
                   <div
                     key={rm._id}
                     className={cn(
                       'rounded-xl border p-4 space-y-3 transition-all',
-                      idx === 0 && 'ring-2 ring-blue-500/20 border-blue-300 dark:border-blue-700'
+                      isBestMatch && 'ring-2 ring-blue-500/20 border-blue-300 dark:border-blue-700',
+                      isEnrolled && 'opacity-50 bg-muted/30 border-dashed'
                     )}
                   >
                     {/* Top */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          {idx === 0 && (
+                          {isBestMatch && (
                             <span className="text-[10px] font-bold text-blue-600 bg-blue-100 dark:bg-blue-900/40 dark:text-blue-400 px-1.5 py-0.5 rounded-full">
                               Phù hợp nhất
                             </span>

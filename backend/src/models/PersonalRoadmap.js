@@ -113,6 +113,11 @@ const personalRoadmapSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  // Tổng giờ của lộ trình (giờ kế hoạch, tính từ skills khi enroll)
+  totalHoursPlanned: {
+    type: Number,
+    default: 0,
+  },
   // Readiness Score (điểm sẵn sàng đi làm)
   readinessScore: {
     type: Number,

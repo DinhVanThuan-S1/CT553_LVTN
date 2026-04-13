@@ -12,10 +12,20 @@ class PersonalRoadmapService {
    * Danh sách lộ trình cá nhân
    */
   async getMyRoadmaps(studentId) {
-    return PersonalRoadmap.find({ student: studentId, status: { $ne: 'cancelled' } })
+    const prs = await PersonalRoadmap.find({ student: studentId, status: { $ne: 'cancelled' } })
       .populate('roadmap', 'title careerPath thumbnail difficulty estimatedMonths')
       .populate('sessions.skill', 'name icon category')
       .sort('-createdAt');
+
+    // Backfill totalHoursPlanned cho PR cũ (chưa có field)
+    for (const pr of prs) {
+      if (!pr.totalHoursPlanned && pr.sessions?.length > 0) {
+        // Ước tính từ sessions: mỗi session 2h
+        pr.totalHoursPlanned = pr.sessions.length * 2;
+        await pr.save();
+      }
+    }
+    return prs;
   }
 
   /**
@@ -120,6 +130,7 @@ class PersonalRoadmapService {
       student: studentId,
       roadmap: roadmapId,
       durationMonths,
+      totalHoursPlanned: totalHours,
       schoolSchedule: schoolSchedule || [],
       freeTimeSlots: freeTimeSlots || [],
       startDate,

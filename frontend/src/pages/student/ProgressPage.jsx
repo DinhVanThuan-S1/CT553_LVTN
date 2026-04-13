@@ -99,6 +99,23 @@ export default function ProgressPage() {
     ? Math.round(visibleRoadmaps.reduce((sum, r) => sum + (r.progress || 0), 0) / totalRoadmaps)
     : 0;
 
+  // Color map cho từng roadmap — mỗi roadmap 1 màu riêng
+  const ROADMAP_COLORS = [
+    { bg: 'bg-blue-500/15', text: 'text-blue-700', border: 'border-l-blue-500', dot: 'bg-blue-500' },
+    { bg: 'bg-amber-500/15', text: 'text-amber-700', border: 'border-l-amber-500', dot: 'bg-amber-500' },
+    { bg: 'bg-violet-500/15', text: 'text-violet-700', border: 'border-l-violet-500', dot: 'bg-violet-500' },
+    { bg: 'bg-rose-500/15', text: 'text-rose-700', border: 'border-l-rose-500', dot: 'bg-rose-500' },
+    { bg: 'bg-teal-500/15', text: 'text-teal-700', border: 'border-l-teal-500', dot: 'bg-teal-500' },
+    { bg: 'bg-orange-500/15', text: 'text-orange-700', border: 'border-l-orange-500', dot: 'bg-orange-500' },
+  ];
+  const roadmapColorMap = useMemo(() => {
+    const map = {};
+    visibleRoadmaps.forEach((pr, idx) => {
+      map[pr._id] = ROADMAP_COLORS[idx % ROADMAP_COLORS.length];
+    });
+    return map;
+  }, [visibleRoadmaps]);
+
   // Navigation
   function navigate(dir) {
     setReferenceDate((prev) => {
@@ -193,13 +210,14 @@ export default function ProgressPage() {
 
             {/* Calendar Content */}
             {calendarMode === 'week' ? (
-              <WeekView referenceDate={referenceDate} sessions={allSessions} />
+              <WeekView referenceDate={referenceDate} sessions={allSessions} roadmapColorMap={roadmapColorMap} />
             ) : (
-              <MonthView referenceDate={referenceDate} sessions={allSessions} />
+              <MonthView referenceDate={referenceDate} sessions={allSessions} roadmapColorMap={roadmapColorMap} />
             )}
 
             {/* Legend */}
-            <div className="px-4 py-2.5 border-t bg-muted/10 flex items-center gap-4 text-[11px] text-muted-foreground">
+            <div className="px-4 py-2.5 border-t bg-muted/10 flex items-center gap-4 text-[11px] text-muted-foreground flex-wrap">
+              <span className="font-medium text-foreground mr-1">Trạng thái:</span>
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Hoàn thành
               </span>
@@ -209,6 +227,18 @@ export default function ProgressPage() {
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-400" /> Bỏ lỡ
               </span>
+              {visibleRoadmaps.length > 1 && (
+                <>
+                  <span className="mx-1 text-border">|</span>
+                  <span className="font-medium text-foreground mr-1">Lộ trình:</span>
+                  {visibleRoadmaps.filter(r => r.status === 'active' || r.status === 'completed').map((pr) => (
+                    <span key={pr._id} className="flex items-center gap-1.5">
+                      <span className={`w-2.5 h-2.5 rounded-sm ${roadmapColorMap[pr._id]?.dot}`} />
+                      <span className="truncate max-w-[120px]">{pr.roadmap?.title}</span>
+                    </span>
+                  ))}
+                </>
+              )}
             </div>
           </div>
 
@@ -298,7 +328,7 @@ export default function ProgressPage() {
 }
 
 /* ---------- Week View ---------- */
-function WeekView({ referenceDate, sessions }) {
+function WeekView({ referenceDate, sessions, roadmapColorMap }) {
   const { start, end } = getWeekRange(referenceDate);
 
   const days = [];
@@ -346,7 +376,7 @@ function WeekView({ referenceDate, sessions }) {
                   <p className="text-[10px] text-muted-foreground/40 text-center mt-4">—</p>
                 )}
                 {daySessions.map((s) => (
-                  <SessionChip key={s._id} session={s} />
+                  <SessionChip key={s._id} session={s} roadmapColorMap={roadmapColorMap} />
                 ))}
               </div>
 
@@ -367,7 +397,7 @@ function WeekView({ referenceDate, sessions }) {
 }
 
 /* ---------- Month View ---------- */
-function MonthView({ referenceDate, sessions }) {
+function MonthView({ referenceDate, sessions, roadmapColorMap }) {
   const { start: monthStart, end: monthEnd } = getMonthRange(referenceDate);
   const year = referenceDate.getFullYear();
   const month = referenceDate.getMonth();
@@ -424,16 +454,19 @@ function MonthView({ referenceDate, sessions }) {
 
               {total > 0 && (
                 <div className="mt-0.5 space-y-0.5">
-                  {daySessions.slice(0, 2).map((s) => (
-                    <div key={s._id} className={`text-[9px] px-1 py-0.5 rounded truncate ${s.status === 'completed'
+                  {daySessions.slice(0, 2).map((s) => {
+                    const rmColor = roadmapColorMap?.[s.roadmapId];
+                    const statusClass = s.status === 'completed'
                         ? 'bg-emerald-500/15 text-emerald-700'
                         : s.status === 'missed'
                           ? 'bg-red-400/15 text-red-600'
-                          : 'bg-primary/10 text-primary'
-                      }`}>
-                      {s.skill?.icon || '📘'} {s.skill?.name || 'Kỹ năng'}
-                    </div>
-                  ))}
+                          : 'bg-primary/10 text-primary';
+                    return (
+                      <div key={s._id} className={`text-[9px] px-1 py-0.5 rounded truncate border-l-[2px] ${statusClass} ${rmColor?.border || ''}`}>
+                        {s.skill?.icon || '📘'} {s.skill?.name || 'Kỹ năng'}
+                      </div>
+                    );
+                  })}
                   {total > 2 && (
                     <span className="text-[9px] text-muted-foreground">+{total - 2} khác</span>
                   )}
@@ -456,6 +489,21 @@ function MonthView({ referenceDate, sessions }) {
                         <span className="ml-auto text-muted-foreground whitespace-nowrap">{s.startTime}</span>
                       </div>
                     ))}
+                    {/* Hiện tên lộ trình ở dưới tooltip */}
+                    {daySessions.some(s => s.roadmapTitle) && (
+                      <div className="mt-1 pt-1 border-t border-border/50 space-y-0.5">
+                        {[...new Set(daySessions.map(s => s.roadmapId))].map(rid => {
+                          const s = daySessions.find(x => x.roadmapId === rid);
+                          const color = roadmapColorMap?.[rid];
+                          return (
+                            <div key={rid} className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                              <span className={`w-1.5 h-1.5 rounded-sm shrink-0 ${color?.dot || 'bg-muted-foreground'}`} />
+                              <span className="truncate">{s?.roadmapTitle}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -468,9 +516,10 @@ function MonthView({ referenceDate, sessions }) {
 }
 
 /* ---------- Session Chip (for Week View) ---------- */
-function SessionChip({ session }) {
+function SessionChip({ session, roadmapColorMap }) {
   const s = session;
-  const colorClass = s.status === 'completed'
+  const rmColor = roadmapColorMap?.[s.roadmapId];
+  const statusBg = s.status === 'completed'
     ? 'bg-emerald-500/15 text-emerald-700 border-emerald-200'
     : s.status === 'missed'
       ? 'bg-red-400/15 text-red-600 border-red-200'
@@ -478,7 +527,7 @@ function SessionChip({ session }) {
 
   return (
     <Link to={`/student/my-roadmap/${s.roadmapId}/session/${s._id}`}
-      className={`block px-1.5 py-1 rounded border text-[10px] leading-tight hover:opacity-80 transition-opacity ${colorClass}`}>
+      className={`block px-1.5 py-1 rounded border text-[10px] leading-tight hover:opacity-80 transition-opacity border-l-[3px] ${statusBg} ${rmColor?.border || ''}`}>
       <div className="font-medium truncate">{s.skill?.icon} {s.skill?.name || 'Kỹ năng'}</div>
       <div className="text-[9px] opacity-70">{s.startTime}-{s.endTime}</div>
     </Link>

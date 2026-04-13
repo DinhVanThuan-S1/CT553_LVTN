@@ -232,7 +232,7 @@ export default function MyRoadmapPage() {
                     </div>
                     <div className="rounded-lg bg-muted/30 p-2.5 text-center">
                       <p className="text-xl font-bold">{pr.totalHoursLearned || 0}h</p>
-                      <p className="text-[10px] text-muted-foreground">Đã học</p>
+                      <p className="text-[10px] text-muted-foreground">/ {pr.totalHoursPlanned || (pr.sessions?.length || 0) * 2}h tổng</p>
                     </div>
                     <div className="rounded-lg bg-muted/30 p-2.5 text-center">
                       <p className="text-xl font-bold">{pr.durationMonths}</p>
