@@ -9,6 +9,7 @@ import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { Textarea } from '../../components/ui/Textarea';
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../components/ui/Toast';
 import {
   FileText, Plus, Pencil, Trash2, Star, Loader2, Eye,
@@ -35,6 +36,7 @@ export default function CVPage() {
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ ...emptyCV });
   const [saving, setSaving] = useState(false);
+  const [confirmState, setConfirmState] = useState(null);
   const [allSkills, setAllSkills] = useState([]);
   const [cvSkills, setCvSkills] = useState({ verified: [], unverified: [], roadmap: [], academic: [] });
   const [completedSkills, setCompletedSkills] = useState([]);
@@ -113,15 +115,22 @@ export default function CVPage() {
     }
   }
 
-  async function handleDelete(cvId) {
-    if (!confirm('Xóa CV này?')) return;
-    try {
-      await api.delete(`/student/cvs/${cvId}`);
-      toast.success('Đã xóa CV');
-      load();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Có lỗi');
-    }
+  function handleDelete(cvId) {
+    setConfirmState({
+      title: 'Xóa CV',
+      message: 'Bạn có chắc muốn xóa CV này?',
+      confirmLabel: 'Xóa',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await api.delete(`/student/cvs/${cvId}`);
+          toast.success('Đã xóa CV');
+          load();
+        } catch (error) {
+          toast.error(error.response?.data?.message || 'Có lỗi');
+        }
+      },
+    });
   }
 
   async function handleSetDefault(cvId) {
@@ -542,6 +551,9 @@ export default function CVPage() {
           </DialogFooter>
         </form>
       </Dialog>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
     </div>
   );
 }

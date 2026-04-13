@@ -7,6 +7,7 @@ import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../components/ui/Toast';
 import {
   ClipboardList, Loader2, Eye, Building2, Calendar,
@@ -47,6 +48,7 @@ export default function ApplicationsPage() {
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
+  const [confirmState, setConfirmState] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -76,19 +78,27 @@ export default function ApplicationsPage() {
     }
   }
 
-  async function handleWithdraw(appId) {
-    if (!confirm('Bạn có chắc muốn rút đơn ứng tuyển?')) return;
-    setWithdrawing(true);
-    try {
-      await api.patch(`/student/applications/${appId}/withdraw`);
-      toast.success('Đã rút đơn ứng tuyển');
-      setShowDetail(false);
-      load();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Có lỗi');
-    } finally {
-      setWithdrawing(false);
-    }
+  function handleWithdraw(appId) {
+    setConfirmState({
+      title: 'Rút đơn ứng tuyển',
+      message: 'Bạn có chắc muốn rút đơn ứng tuyển này?',
+      confirmLabel: 'Rút đơn',
+      variant: 'warning',
+      icon: XCircle,
+      onConfirm: async () => {
+        setWithdrawing(true);
+        try {
+          await api.patch(`/student/applications/${appId}/withdraw`);
+          toast.success('Đã rút đơn ứng tuyển');
+          setShowDetail(false);
+          load();
+        } catch (error) {
+          toast.error(error.response?.data?.message || 'Có lỗi');
+        } finally {
+          setWithdrawing(false);
+        }
+      },
+    });
   }
 
   const pending = apps.filter((a) => a.status === 'pending').length;
@@ -262,6 +272,9 @@ export default function ApplicationsPage() {
           <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Đóng</Button>
         </DialogFooter>
       </Dialog>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
     </div>
   );
 }
