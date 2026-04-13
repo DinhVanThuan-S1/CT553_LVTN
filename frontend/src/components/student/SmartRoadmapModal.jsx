@@ -211,7 +211,7 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
                         <div className={cn(
                           'text-xl font-bold',
                           matchScore >= 70 ? 'text-green-600' :
-                          matchScore >= 45 ? 'text-blue-600' : 'text-amber-600'
+                            matchScore >= 45 ? 'text-blue-600' : 'text-amber-600'
                         )}>
                           {matchScore}%
                         </div>
