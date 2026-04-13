@@ -64,7 +64,9 @@ class JobSuggestionService {
       const analysis = this._analyzeJobMatch(job, academicProfile, careerPref, allSkills);
 
       const cbScore = analysis.totalScore;
-      const cfBonus = cfScores[job._id.toString()] || 0;
+      const cfData = cfScores[job._id.toString()];
+      const cfBonus = cfData?.score || 0;
+      const cfCount = cfData?.count || 0;
       const rawTotal = cbScore + cfBonus;
       const matchScore = Math.min(100, Math.round(rawTotal * (100 / 115)));
 
@@ -73,6 +75,7 @@ class JobSuggestionService {
         matchScore,
         cbScore,
         cfBonus,
+        cfCount, // Số SV tương tự đã ứng tuyển
         matchDetails: analysis.details,
         strengths: analysis.strengths,
         gaps: analysis.gaps,
@@ -88,7 +91,8 @@ class JobSuggestionService {
   }
 
   /**
-   * CF: Tìm SV tương tự → xem jobs họ đã apply → bonus score
+   * CF: Tìm SV tương tự → xem jobs họ đã apply → bonus score + info
+   * Returns: { [jobId]: { score, count } }
    */
   async _getCollaborativeScores(studentIdStr, myCareerPaths, mySkillSet) {
     try {
@@ -105,7 +109,7 @@ class JobSuggestionService {
         student: { $in: similarIds },
       }).select('student jobPosting').lean();
 
-      // Tính CF score
+      // Tính CF score + count
       const cfMap = {};
       for (const app of theirApps) {
         const jid = app.jobPosting.toString();
@@ -122,7 +126,10 @@ class JobSuggestionService {
       const maxWeight = Math.max(...Object.values(cfMap).map(v => v.totalWeight), 0.001);
       const cfScores = {};
       for (const [jid, val] of Object.entries(cfMap)) {
-        cfScores[jid] = Math.round((val.totalWeight / maxWeight) * 15);
+        cfScores[jid] = {
+          score: Math.round((val.totalWeight / maxWeight) * 15),
+          count: val.count,
+        };
       }
 
       return cfScores;
@@ -134,6 +141,7 @@ class JobSuggestionService {
 
   /**
    * Tìm SV tương tự theo Jaccard (career + skill)
+   * Optimized: batch-query tất cả skills thay vì N+1
    */
   async _findSimilarStudents(studentIdStr, myCareerPaths, mySkillSet) {
     if (myCareerPaths.length === 0 && mySkillSet.size === 0) return [];
@@ -142,8 +150,25 @@ class JobSuggestionService {
     const candidates = otherPrefs.filter(p => p.student.toString() !== studentIdStr);
     if (candidates.length === 0) return [];
 
+    // Batch-query tất cả skills 1 lần (tránh N+1)
+    const candidateIds = candidates.map(c => c.student);
+    let allCandidateSkills = [];
+    if (mySkillSet.size > 0) {
+      allCandidateSkills = await StudentSkill.find({ student: { $in: candidateIds } })
+        .select('student skill').populate('skill', 'name').lean();
+    }
+
+    // Group skills by student
+    const skillsByStudent = {};
+    for (const ss of allCandidateSkills) {
+      const sid = ss.student.toString();
+      if (!skillsByStudent[sid]) skillsByStudent[sid] = new Set();
+      if (ss.skill?.name) skillsByStudent[sid].add(ss.skill.name.toLowerCase());
+    }
+
     const similar = [];
     for (const pref of candidates) {
+      const sid = pref.student.toString();
       const theirPaths = (pref.careerPaths || []).map(p => p.toLowerCase());
       const careerOverlap = myCareerPaths.filter(cp => theirPaths.includes(cp)).length;
       const careerSim = myCareerPaths.length > 0
@@ -152,11 +177,7 @@ class JobSuggestionService {
 
       let skillSim = 0;
       if (mySkillSet.size > 0) {
-        const theirSkills = await StudentSkill.find({ student: pref.student })
-          .select('skill').populate('skill', 'name').lean();
-        const theirSkillNames = new Set(
-          theirSkills.map(ss => (ss.skill?.name || '').toLowerCase()).filter(Boolean)
-        );
+        const theirSkillNames = skillsByStudent[sid] || new Set();
         const intersection = [...mySkillSet].filter(s => theirSkillNames.has(s)).length;
         const union = new Set([...mySkillSet, ...theirSkillNames]).size;
         skillSim = union > 0 ? intersection / union : 0;
@@ -164,7 +185,7 @@ class JobSuggestionService {
 
       const totalSim = (careerSim * 0.6) + (skillSim * 0.4);
       if (totalSim >= 0.15) {
-        similar.push({ studentId: pref.student.toString(), similarityScore: totalSim });
+        similar.push({ studentId: sid, similarityScore: totalSim });
       }
     }
 

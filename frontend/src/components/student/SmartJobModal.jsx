@@ -130,7 +130,7 @@ export default function SmartJobModal({ isOpen, onClose }) {
               </div>
               <div>
                 <h2 className="text-base font-semibold">Gợi ý việc làm</h2>
-                <p className="text-xs text-muted-foreground">Phân tích kỹ năng & đối chiếu yêu cầu tuyển dụng</p>
+                <p className="text-xs text-muted-foreground">Hybrid: Lọc nội dung + Lọc cộng tác</p>
               </div>
             </div>
             <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
@@ -181,7 +181,7 @@ export default function SmartJobModal({ isOpen, onClose }) {
                 </p>
 
                 {suggestions.map((item, idx) => {
-                  const { job, matchScore, matchDetails, strengths, gaps } = item;
+                  const { job, matchScore, matchDetails, strengths, gaps, cfBonus, cfCount } = item;
                   const isExpanded = expandedId === job._id;
                   return (
                     <div
@@ -230,14 +230,19 @@ export default function SmartJobModal({ isOpen, onClose }) {
                         </div>
                       </div>
 
-                      {/* Meta */}
-                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                      {/* Meta + CF indicator */}
+                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
                         <span className="flex items-center gap-1">
                           <DollarSign className="w-3 h-3" /> {formatSalary(job.salaryRange)}
                         </span>
                         <span className="flex items-center gap-1">
                           <MapPin className="w-3 h-3" /> {job.locationText || 'Chưa rõ'}
                         </span>
+                        {cfCount > 0 && (
+                          <span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-medium">
+                            <Users className="w-3 h-3" /> {cfCount} SV tương tự đã ứng tuyển
+                          </span>
+                        )}
                       </div>
 
                       {/* Strengths & Gaps */}
@@ -268,6 +273,14 @@ export default function SmartJobModal({ isOpen, onClose }) {
                             <ScoreBar label="Khu vực" value={matchDetails.location || 0} max={10} icon={MapPin} />
                             <ScoreBar label="Học vấn" value={matchDetails.academic || 0} max={10} icon={BookOpen} />
                           </div>
+                          {cfBonus > 0 && (
+                            <div className="mt-2 pt-2 border-t border-border/40">
+                              <ScoreBar label="Cộng tác (CF)" value={cfBonus} max={15} icon={Users} />
+                              <p className="text-[10px] text-muted-foreground mt-1">
+                                {cfCount} sinh viên có sở thích tương tự đã ứng tuyển vị trí này
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -307,7 +320,7 @@ export default function SmartJobModal({ isOpen, onClose }) {
           <div className="px-6 py-3 border-t border-border/30 flex-shrink-0 flex items-center justify-between bg-muted/30">
             <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
               <Compass className="w-3 h-3" />
-              Phân tích tự động dựa trên kỹ năng & sở thích
+              Hybrid: Lọc nội dung (CB) + Lọc cộng tác (CF)
             </p>
             <Button variant="ghost" size="sm" onClick={() => { setSuggestions([]); fetchSuggestions(); }} className="h-7 text-xs gap-1.5" disabled={loading}>
               <TrendingUp className="w-3 h-3" /> Phân tích lại
