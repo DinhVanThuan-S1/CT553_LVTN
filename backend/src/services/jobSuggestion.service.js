@@ -213,11 +213,22 @@ class JobSuggestionService {
         careerScore = 30;
         strengths.push(`Phù hợp hướng nghề "${job.careerPath || job.title}"`);
       } else {
-        const keywords = this._extractKeywords(jobCareerPath + ' ' + jobTitle);
-        const matched = keywords.filter(kw =>
-          allCareerPaths.some(cp => cp.includes(kw) || kw.includes(cp.split(' ')[0]))
-        );
-        careerScore = Math.min(30, matched.length * 8);
+        // Fallback: group-based matching
+        let matchCount = 0;
+        const jobGroup = this._getCareerGroup(jobCareerPath);
+
+        for (const cp of allCareerPaths) {
+          const cpGroup = this._getCareerGroup(cp);
+          if (cpGroup && jobGroup && cpGroup === jobGroup) {
+            matchCount++;
+          } else {
+            const jobWords = this._extractKeywords(jobCareerPath + ' ' + jobTitle);
+            const cpWords = this._extractKeywords(cp);
+            if (jobWords.some(jw => cpWords.includes(jw))) matchCount++;
+          }
+        }
+
+        careerScore = Math.min(30, matchCount * 10);
         if (careerScore === 0) gaps.push('Không khớp hướng nghề nghiệp ưu tiên');
       }
     } else {
@@ -337,28 +348,90 @@ class JobSuggestionService {
     return { totalScore, details, strengths, gaps };
   }
 
+  // Bảng nhóm nghề — mỗi career path map về 1 nhóm duy nhất
+  static CAREER_GROUPS = {
+    'qa/tester': ['qa', 'tester', 'testing', 'quality assurance', 'kiểm thử', 'qa engineer', 'qa tester'],
+    'frontend developer': ['frontend', 'front-end', 'web frontend'],
+    'backend developer': ['backend', 'back-end', 'web backend'],
+    'full-stack developer': ['fullstack', 'full-stack', 'full stack'],
+    'mobile developer': ['mobile', 'react native', 'flutter', 'android developer', 'ios developer'],
+    'data engineer': ['data engineer', 'data engineering', 'etl', 'big data'],
+    'data scientist': ['data scientist', 'data science', 'data analytics'],
+    'ai/ml engineer': ['ai engineer', 'ml engineer', 'ai/ml', 'deep learning', 'artificial intelligence'],
+    'devops engineer': ['devops', 'sre', 'infrastructure'],
+    'ui/ux designer': ['ui/ux', 'ui designer', 'ux designer'],
+    'project manager': ['project management', 'scrum master', 'quản lý dự án'],
+    'business analyst': ['business analysis', 'phân tích nghiệp vụ'],
+    'cybersecurity engineer': ['cybersecurity', 'security engineer', 'bảo mật', 'infosec'],
+    'game developer': ['game development', 'game programmer', 'unity developer', 'unreal developer'],
+    'embedded systems': ['embedded engineer', 'embedded', 'iot engineer', 'nhúng', 'firmware'],
+    'java developer': ['java backend', 'spring boot developer'],
+    'python developer': ['python backend', 'django developer', 'flask developer'],
+    'ios developer': ['ios', 'swift developer'],
+    'android developer': ['android', 'kotlin developer'],
+  };
+
+  static IMPORTANT_SHORT_WORDS = new Set([
+    'qa', 'ai', 'ml', 'ui', 'ux', 'pm', 'ba', 'ci', 'cd', 'db', 'it', 'se',
+    'api', 'web', 'app', 'ios', 'sre', 'etl', 'nlp', 'iot',
+  ]);
+
+  _getCareerGroup(careerPath) {
+    const cp = careerPath.toLowerCase().trim();
+    for (const [groupKey, synonyms] of Object.entries(JobSuggestionService.CAREER_GROUPS)) {
+      if (cp === groupKey) return groupKey;
+      if (cp.includes(groupKey) || groupKey.includes(cp)) return groupKey;
+      if (synonyms.some(s => cp === s || cp.includes(s) || s.includes(cp))) return groupKey;
+    }
+    return null;
+  }
+
   _fuzzyMatch(a, b) {
     if (!a || !b) return false;
-    if (a === b) return true;
-    if (a.includes(b) || b.includes(a)) return true;
+    const la = a.toLowerCase().trim();
+    const lb = b.toLowerCase().trim();
+
+    if (la === lb) return true;
+    if (la.includes(lb) || lb.includes(la)) return true;
+
+    // Group-based match
+    const groupA = this._getCareerGroup(la);
+    const groupB = this._getCareerGroup(lb);
+    if (groupA && groupB && groupA === groupB) return true;
+
+    // Word overlap fallback
     const stopWords = new Set([
       'developer', 'engineer', 'senior', 'junior', 'intern', 'lead',
-      'manager', 'specialist', 'analyst', 'designer', 'consultant',
-      'architect', 'technician', 'officer', 'admin', 'expert',
+      'specialist', 'consultant', 'architect', 'technician', 'officer', 'expert',
+      'manager', 'analyst', 'designer',
     ]);
-    const wordsA = a.split(/[\s\-_]+/).filter(w => w.length > 2 && !stopWords.has(w));
-    const wordsB = b.split(/[\s\-_]+/).filter(w => w.length > 2 && !stopWords.has(w));
+    const wordsA = this._tokenize(la).filter(w => !stopWords.has(w));
+    const wordsB = this._tokenize(lb).filter(w => !stopWords.has(w));
     if (wordsA.length === 0 || wordsB.length === 0) return false;
-    return wordsA.filter(w => wordsB.includes(w)).length >= 1;
+    return wordsA.some(w => wordsB.includes(w));
+  }
+
+  _getSynonyms(careerPath) {
+    const cp = careerPath.toLowerCase();
+    const group = this._getCareerGroup(cp);
+    if (group) {
+      return [group, ...(JobSuggestionService.CAREER_GROUPS[group] || [])];
+    }
+    return [cp];
+  }
+
+  _tokenize(str) {
+    return (str || '').toLowerCase()
+      .split(/[\s\-_,\/()]+/)
+      .filter(w => w.length >= 2 && (w.length > 2 || JobSuggestionService.IMPORTANT_SHORT_WORDS.has(w)));
   }
 
   _extractKeywords(str) {
     const stopWords = new Set([
       'developer', 'engineer', 'senior', 'junior', 'intern', 'lead',
-      'manager', 'specialist', 'analyst', 'designer', 'consultant',
-      'architect', 'technician', 'officer', 'admin', 'expert',
+      'specialist', 'consultant', 'architect', 'technician', 'officer', 'expert',
     ]);
-    return (str || '').toLowerCase().split(/[\s\-_,\/()]+/).filter(w => w.length > 2 && !stopWords.has(w));
+    return this._tokenize(str).filter(w => !stopWords.has(w));
   }
 }
 

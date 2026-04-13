@@ -272,11 +272,23 @@ class RoadmapSuggestionService {
         careerScore = 30;
         strengths.push(`Hướng "${roadmap.careerPath}" khớp với sở thích nghề nghiệp`);
       } else {
-        const keywords = this._extractKeywords(roadmapCareerPath);
-        const matched = keywords.filter(kw =>
-          studentCareerPaths.some(cp => cp.includes(kw) || kw.includes(cp.split(' ')[0]))
-        );
-        careerScore = Math.min(30, matched.length * 8);
+        // Fallback: group-based matching — kiểm tra nhóm nghề
+        let matchCount = 0;
+        const roadmapGroup = this._getCareerGroup(roadmapCareerPath);
+
+        for (const cp of studentCareerPaths) {
+          const cpGroup = this._getCareerGroup(cp);
+          if (cpGroup && roadmapGroup && cpGroup === roadmapGroup) {
+            matchCount++;
+          } else {
+            // Word overlap cuối cùng
+            const roadmapWords = this._extractKeywords(roadmapCareerPath);
+            const cpWords = this._extractKeywords(cp);
+            if (roadmapWords.some(rw => cpWords.includes(rw))) matchCount++;
+          }
+        }
+
+        careerScore = Math.min(30, matchCount * 10);
         if (careerScore > 0) {
           strengths.push('Lộ trình liên quan đến lĩnh vực bạn quan tâm');
         } else {
@@ -471,28 +483,107 @@ class RoadmapSuggestionService {
       .toLowerCase();
   }
 
+  // Bảng nhóm nghề — mỗi career path map về 1 nhóm duy nhất
+  // Synonym chỉ dùng để NHẬN DIỆN nhóm, KHÔNG dùng để cross-match
+  static CAREER_GROUPS = {
+    'qa/tester': ['qa', 'tester', 'testing', 'quality assurance', 'kiểm thử', 'qa engineer', 'qa tester'],
+    'frontend developer': ['frontend', 'front-end', 'web frontend'],
+    'backend developer': ['backend', 'back-end', 'web backend'],
+    'full-stack developer': ['fullstack', 'full-stack', 'full stack'],
+    'mobile developer': ['mobile', 'react native', 'flutter', 'android developer', 'ios developer'],
+    'data engineer': ['data engineer', 'data engineering', 'etl', 'big data'],
+    'data scientist': ['data scientist', 'data science', 'data analytics'],
+    'ai/ml engineer': ['ai engineer', 'ml engineer', 'ai/ml', 'deep learning', 'artificial intelligence'],
+    'devops engineer': ['devops', 'sre', 'infrastructure'],
+    'ui/ux designer': ['ui/ux', 'ui designer', 'ux designer'],
+    'project manager': ['project management', 'scrum master', 'quản lý dự án'],
+    'business analyst': ['business analysis', 'phân tích nghiệp vụ'],
+    'cybersecurity engineer': ['cybersecurity', 'security engineer', 'bảo mật', 'infosec'],
+    'game developer': ['game development', 'game programmer', 'unity developer', 'unreal developer'],
+    'embedded systems': ['embedded engineer', 'embedded', 'iot engineer', 'nhúng', 'firmware'],
+    'java developer': ['java backend', 'spring boot developer'],
+    'python developer': ['python backend', 'django developer', 'flask developer'],
+    'ios developer': ['ios', 'swift developer'],
+    'android developer': ['android', 'kotlin developer'],
+  };
+
+  // Từ quan trọng ngắn — KHÔNG lọc bỏ khi tokenize
+  static IMPORTANT_SHORT_WORDS = new Set([
+    'qa', 'ai', 'ml', 'ui', 'ux', 'pm', 'ba', 'ci', 'cd', 'db', 'it', 'se',
+    'api', 'web', 'app', 'ios', 'sre', 'etl', 'nlp', 'iot',
+  ]);
+
+  /**
+   * Xác định nhóm nghề của 1 career path string
+   * Trả về group key hoặc null nếu không tìm thấy
+   */
+  _getCareerGroup(careerPath) {
+    const cp = careerPath.toLowerCase().trim();
+    for (const [groupKey, synonyms] of Object.entries(RoadmapSuggestionService.CAREER_GROUPS)) {
+      // Exact match với group key
+      if (cp === groupKey) return groupKey;
+      // Key chứa trong cp hoặc ngược lại
+      if (cp.includes(groupKey) || groupKey.includes(cp)) return groupKey;
+      // Exact match với bất kỳ synonym
+      if (synonyms.some(s => cp === s || cp.includes(s) || s.includes(cp))) return groupKey;
+    }
+    return null;
+  }
+
+  /**
+   * Fuzzy match — 2 career paths có cùng nhóm nghề không?
+   * KHÔNG cross-match giữa các nhóm (tránh QA match Mobile, AI match Data)
+   */
   _fuzzyMatch(a, b) {
     if (!a || !b) return false;
-    if (a === b) return true;
-    if (a.includes(b) || b.includes(a)) return true;
+    const la = a.toLowerCase().trim();
+    const lb = b.toLowerCase().trim();
+
+    // 1. Exact string match
+    if (la === lb) return true;
+    if (la.includes(lb) || lb.includes(la)) return true;
+
+    // 2. Group-based match — cùng nhóm nghề
+    const groupA = this._getCareerGroup(la);
+    const groupB = this._getCareerGroup(lb);
+    if (groupA && groupB && groupA === groupB) return true;
+
+    // 3. Word overlap fallback (tokenize, strict — chỉ meaningful words)
     const stopWords = new Set([
       'developer', 'engineer', 'senior', 'junior', 'intern', 'lead',
-      'manager', 'specialist', 'analyst', 'designer', 'consultant',
-      'architect', 'technician', 'officer', 'admin', 'expert',
+      'specialist', 'consultant', 'architect', 'technician', 'officer', 'expert',
+      'manager', 'analyst', 'designer',
     ]);
-    const wordsA = a.split(/[\s\-_]+/).filter(w => w.length > 2 && !stopWords.has(w));
-    const wordsB = b.split(/[\s\-_]+/).filter(w => w.length > 2 && !stopWords.has(w));
+    const wordsA = this._tokenize(la).filter(w => !stopWords.has(w));
+    const wordsB = this._tokenize(lb).filter(w => !stopWords.has(w));
     if (wordsA.length === 0 || wordsB.length === 0) return false;
-    return wordsA.filter(w => wordsB.includes(w)).length >= 1;
+    // Require EXACT word match, not substring
+    return wordsA.some(w => wordsB.includes(w));
+  }
+
+  // Giữ _getSynonyms cho backward compat nhưng dùng group-based
+  _getSynonyms(careerPath) {
+    const cp = careerPath.toLowerCase();
+    const group = this._getCareerGroup(cp);
+    if (group) {
+      return [group, ...(RoadmapSuggestionService.CAREER_GROUPS[group] || [])];
+    }
+    return [cp];
+  }
+
+  // Tokenize — split trên space, -, _, /, () + giữ lại từ ngắn quan trọng
+  _tokenize(str) {
+    return (str || '').toLowerCase()
+      .split(/[\s\-_,\/()]+/)
+      .filter(w => w.length >= 2 && (w.length > 2 || RoadmapSuggestionService.IMPORTANT_SHORT_WORDS.has(w)));
   }
 
   _extractKeywords(str) {
     const stopWords = new Set([
       'developer', 'engineer', 'senior', 'junior', 'intern', 'lead',
-      'manager', 'specialist', 'analyst', 'designer', 'consultant',
-      'architect', 'technician', 'officer', 'admin', 'expert',
+      'specialist', 'consultant', 'architect', 'technician', 'officer', 'expert',
     ]);
-    return (str || '').toLowerCase().split(/[\s\-_,\/()]+/).filter(w => w.length > 2 && !stopWords.has(w));
+    return this._tokenize(str).filter(w => !stopWords.has(w));
   }
 
   _extractCourseKeywords(courseGrades) {
@@ -503,10 +594,18 @@ class RoadmapSuggestionService {
       java: ['java', 'backend', 'spring', 'android'],
       'c++': ['c++', 'algorithm', 'embedded'],
       database: ['sql', 'database', 'mongodb', 'data'],
+      'cơ sở dữ liệu': ['sql', 'database', 'mongodb', 'data'],
       web: ['frontend', 'backend', 'fullstack', 'html', 'css'],
+      'phát triển ứng dụng web': ['frontend', 'backend', 'react', 'html', 'javascript'],
       network: ['network', 'cybersecurity', 'devops'],
+      'mạng máy tính': ['network', 'devops'],
       ai: ['ai', 'machine learning', 'deep learning'],
+      'trí tuệ nhân tạo': ['ai', 'machine learning', 'deep learning', 'python'],
       mobile: ['mobile', 'android', 'ios', 'flutter'],
+      'kiểm thử': ['testing', 'test', 'qa', 'quality', 'automation test'],
+      'đảm bảo chất lượng': ['testing', 'test', 'qa', 'quality'],
+      'quản lý dự án': ['project management', 'agile', 'scrum'],
+      'phân tích': ['business analyst', 'analysis', 'requirements'],
     };
     (courseGrades || []).forEach(cg => {
       const courseName = (cg.course?.name || '').toLowerCase();
