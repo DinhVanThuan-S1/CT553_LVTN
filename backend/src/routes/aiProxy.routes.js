@@ -31,15 +31,38 @@ router.post('/chat', async (req, res) => {
       studentId, req.user.fullName || req.user.email
     );
 
+    // Lấy thêm lộ trình đã đăng ký + tiến độ
+    const PersonalRoadmap = require('../models/PersonalRoadmap');
+    const enrolledRoadmaps = await PersonalRoadmap.find({
+      student: studentId, status: { $ne: 'cancelled' },
+    }).populate('roadmap', 'title careerPath').lean();
+
+    const enrolledNames = enrolledRoadmaps.map(pr => {
+      const title = pr.roadmap?.title || 'N/A';
+      const total = pr.sessions?.length || 0;
+      const done = (pr.sessions || []).filter(s => s.completed).length;
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+      return `${title} (${pct}% hoàn thành)`;
+    });
+
+    const totalSessions = enrolledRoadmaps.reduce((sum, pr) => sum + (pr.sessions?.length || 0), 0);
+    const doneSessions = enrolledRoadmaps.reduce((sum, pr) =>
+      sum + (pr.sessions || []).filter(s => s.completed).length, 0);
+
     const contextData = {
       studentProfile: {
         fullName: aiProfile.profileData?.fullName || req.user.fullName || req.user.email,
         gpa: aiProfile.profileData?.gpa || 0,
         completedCredits: aiProfile.profileData?.completedCredits || 0,
+        currentSemester: aiProfile.profileData?.currentSemester || 1,
       },
       careerSummary: aiProfile.careerSummary || '',
       skillsSummary: aiProfile.skillsSummary || '',
       academicSummary: aiProfile.academicSummary || '',
+      enrolledRoadmaps: enrolledNames.length > 0 ? enrolledNames.join(', ') : '',
+      progressSummary: totalSessions > 0
+        ? `${doneSessions}/${totalSessions} buổi (${Math.round((doneSessions / totalSessions) * 100)}%)`
+        : '',
     };
 
     const chatHistory = await ChatHistory.findOne({ student: studentId })
