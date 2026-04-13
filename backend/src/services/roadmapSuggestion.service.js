@@ -56,6 +56,28 @@ class RoadmapSuggestionService {
     const hasAcademic = (academicProfile?.gpa || 0) > 0 || (academicProfile?.completedCredits || 0) > 0;
     const hasData = hasCareer || hasSkills || hasAcademic;
 
+    // Auto-fix currentSemester nếu bị stale (= 1 nhưng có nhiều HK)
+    if (academicProfile && academicProfile.currentSemester <= 1 && academicProfile.courseGrades?.length > 0) {
+      try {
+        await academicProfile.populate('courseGrades.semester', 'order');
+        let maxOrder = 0;
+        for (const cg of academicProfile.courseGrades) {
+          const order = cg.semester?.order || 0;
+          if (order > maxOrder) maxOrder = order;
+        }
+        if (maxOrder > 1) {
+          academicProfile.currentSemester = maxOrder;
+          await AcademicProfile.updateOne(
+            { _id: academicProfile._id },
+            { currentSemester: maxOrder }
+          );
+          console.log(`[Suggest] Auto-fixed currentSemester → ${maxOrder} for student ${studentIdStr}`);
+        }
+      } catch (e) {
+        console.error('[Suggest] Failed to auto-fix currentSemester:', e.message);
+      }
+    }
+
     // === Collaborative Filtering ===
     const cfScores = await this._getCollaborativeScores(
       studentIdStr, studentCareerPaths, mySkillSet, allRoadmaps
@@ -423,16 +445,31 @@ class RoadmapSuggestionService {
     totalScore += marketScore;
 
     // === 5. DURATION FIT (10đ) ===
+    // Đánh giá thời lượng lộ trình có phù hợp giai đoạn học hiện tại không
     let durationScore = 0;
     const estimatedMonths = roadmap.estimatedMonths || 6;
     const currentSemester = academicProfile?.currentSemester || 1;
-    const preferredDuration = currentSemester <= 4 ? 12 : currentSemester <= 6 ? 9 : 6;
 
-    if (estimatedMonths <= preferredDuration) {
+    // SV năm cuối (HK7+) cần lộ trình ngắn, SV năm đầu chấp nhận dài hơn
+    // preferredMax = số tháng tối đa phù hợp nhất
+    const preferredMax = currentSemester <= 4 ? 12 : currentSemester <= 6 ? 9 : 6;
+
+    if (estimatedMonths <= preferredMax) {
       durationScore = 10;
-      strengths.push(`Thời lượng ${estimatedMonths} tháng phù hợp giai đoạn học`);
+      strengths.push(`Thời lượng ${estimatedMonths} tháng phù hợp giai đoạn HK${currentSemester}`);
     } else {
-      durationScore = 5;
+      // Tính tỉ lệ vượt quá → giảm điểm tỉ lệ
+      const overRatio = estimatedMonths / preferredMax; // vd: 12/6 = 2.0
+      if (overRatio <= 1.5) {
+        durationScore = 7; // Hơi dài nhưng chấp nhận được
+        gaps.push(`Thời lượng ${estimatedMonths} tháng hơi dài cho HK${currentSemester} (tối ưu ≤${preferredMax} tháng)`);
+      } else if (overRatio <= 2.0) {
+        durationScore = 4; // Dài đáng kể
+        gaps.push(`Thời lượng ${estimatedMonths} tháng khá dài cho HK${currentSemester} (nên ≤${preferredMax} tháng)`);
+      } else {
+        durationScore = 2; // Quá dài
+        gaps.push(`Thời lượng ${estimatedMonths} tháng quá dài cho giai đoạn sắp tốt nghiệp`);
+      }
     }
     details.duration = durationScore;
     totalScore += durationScore;

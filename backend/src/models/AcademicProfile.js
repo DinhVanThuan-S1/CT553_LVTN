@@ -136,6 +136,17 @@ academicProfileSchema.pre('save', async function () {
   // Tính completedCredits
   const completed = this.courseGrades.filter(cg => cg.grade && cg.grade !== '' && cg.grade !== 'F');
   this.completedCredits = completed.reduce((sum, cg) => sum + (cg.course?.credits || 0), 0);
+
+  // Auto-compute currentSemester từ max semester order có điểm
+  await this.populate('courseGrades.semester', 'order');
+  let maxOrder = 0;
+  for (const cg of this.courseGrades) {
+    const order = cg.semester?.order || 0;
+    if (order > maxOrder) maxOrder = order;
+  }
+  if (maxOrder > 0) {
+    this.currentSemester = maxOrder;
+  }
 });
 
 academicProfileSchema.statics.GRADE_POINTS = GRADE_POINTS;

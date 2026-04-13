@@ -46,6 +46,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [agreedTerms, setAgreedTerms] = useState(false);
 
   // Lỗi inline cho từng field
   const [errors, setErrors] = useState({
@@ -137,8 +138,12 @@ export default function RegisterPage() {
     }), {});
     setErrors(newErrors);
 
-    // Nếu có lỗi thì dừng
+    // Nếu có lỗi hoặc chưa đồng ý điều khoản thì dừng
     if (Object.values(newErrors).some(Boolean)) return;
+    if (!agreedTerms) {
+      toast.error('Vui lòng đồng ý với Điều khoản sử dụng để tiếp tục');
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -433,8 +438,26 @@ export default function RegisterPage() {
               )}
             </div>
 
+            {/* Điều khoản sử dụng */}
+            <div className="flex items-start gap-2.5 mt-1">
+              <input
+                type="checkbox"
+                id="agreeTerms"
+                checked={agreedTerms}
+                onChange={(e) => setAgreedTerms(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-border text-primary focus:ring-primary/30 cursor-pointer accent-primary"
+              />
+              <label htmlFor="agreeTerms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
+                Tôi đồng ý với{' '}
+                <button type="button" className="text-primary hover:underline font-medium" onClick={() => window.open('/terms', '_blank')}>Điều khoản sử dụng</button>
+                {' '}và{' '}
+                <button type="button" className="text-primary hover:underline font-medium" onClick={() => window.open('/privacy', '_blank')}>Chính sách bảo mật</button>
+                {' '}của EduPath
+              </label>
+            </div>
+
             {/* Nút Đăng ký */}
-            <Button type="submit" className="w-full h-11" disabled={isLoading}>
+            <Button type="submit" className="w-full h-11" disabled={isLoading || !agreedTerms}>
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
