@@ -149,13 +149,22 @@ def build_chat_context(context_data: dict) -> str:
     if context_data.get("progressSummary"):
         parts.append(f"- **Tiến độ**: {context_data['progressSummary']}")
 
+    # Dữ liệu hệ thống (read-only)
     if context_data.get("availableRoadmaps"):
         roadmaps = context_data["availableRoadmaps"]
-        names = ", ".join(r.get("title", "") for r in roadmaps[:5])
-        parts.append(f"- **Lộ trình có sẵn**: {names}")
+        # Nếu là string (đã join từ backend) thì dùng trực tiếp
+        if isinstance(roadmaps, str):
+            parts.append(f"\n**Lộ trình mẫu có sẵn trong hệ thống:**\n{roadmaps}")
+        elif isinstance(roadmaps, list):
+            names = ", ".join(r.get("title", "") for r in roadmaps[:10])
+            parts.append(f"- **Lộ trình có sẵn**: {names}")
 
-    if context_data.get("activeJobsCount"):
+    if context_data.get("activeJobs"):
+        jobs_text = context_data["activeJobs"]
+        count = context_data.get("activeJobsCount", 0)
+        parts.append(f"\n**Công việc đang tuyển ({count} tin):**\n{jobs_text}")
+    elif context_data.get("activeJobsCount"):
         parts.append(f"- **Việc làm đang tuyển**: {context_data['activeJobsCount']} tin")
 
-    parts.append("\n*Hãy sử dụng thông tin trên để tư vấn cá nhân hoá cho SV này.*\n---")
+    parts.append("\n*Hãy sử dụng thông tin trên để tư vấn cá nhân hoá. Khi SV hỏi về công việc/lộ trình, hãy liệt kê từ dữ liệu thực ở trên.*\n---")
     return "\n".join(parts)

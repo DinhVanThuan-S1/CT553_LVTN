@@ -25,15 +25,12 @@ function ChatMarkdown({ text }) {
   if (!text) return null;
 
   const renderInline = (line, key) => {
-    // Parse **bold** and `code` inline
     const parts = [];
     let remaining = line;
     let idx = 0;
 
     while (remaining.length > 0) {
-      // **bold**
       const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
-      // `code`
       const codeMatch = remaining.match(/`([^`]+)`/);
 
       let firstMatch = null;
@@ -60,7 +57,7 @@ function ChatMarkdown({ text }) {
         parts.push(<strong key={`${key}-${idx++}`} className="font-semibold">{firstMatch[1]}</strong>);
       } else {
         parts.push(
-          <code key={`${key}-${idx++}`} className="text-[12px] px-1 py-0.5 rounded bg-black/10 dark:bg-white/10 font-mono">
+          <code key={`${key}-${idx++}`} className="text-[11px] px-1 py-0.5 rounded bg-black/10 dark:bg-white/10 font-mono">
             {firstMatch[1]}
           </code>
         );
@@ -72,9 +69,48 @@ function ChatMarkdown({ text }) {
     return parts;
   };
 
+  // Detect and parse markdown tables
+  const parseTable = (tableLines, startKey) => {
+    const rows = tableLines
+      .filter(l => !l.match(/^\|?[\s-:|]+\|?$/))
+      .map(l => l.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim()));
+
+    if (rows.length < 1) return null;
+    const header = rows[0];
+    const body = rows.slice(1);
+
+    return (
+      <div key={startKey} className="my-2 overflow-x-auto rounded-lg border border-border/60">
+        <table className="w-full text-[11px] leading-snug">
+          <thead>
+            <tr className="bg-muted/60">
+              {header.map((h, i) => (
+                <th key={i} className="px-2 py-1.5 text-left font-semibold text-foreground whitespace-nowrap border-b border-border/40">
+                  {renderInline(h, `th-${startKey}-${i}`)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {body.map((row, ri) => (
+              <tr key={ri} className={ri % 2 === 0 ? '' : 'bg-muted/30'}>
+                {row.map((cell, ci) => (
+                  <td key={ci} className="px-2 py-1 border-b border-border/20 whitespace-nowrap">
+                    {renderInline(cell, `td-${startKey}-${ri}-${ci}`)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   const lines = text.split('\n');
   const elements = [];
   let bulletBuffer = [];
+  let tableBuffer = [];
   let key = 0;
 
   const flushBullets = () => {
@@ -93,20 +129,37 @@ function ChatMarkdown({ text }) {
     }
   };
 
+  const flushTable = () => {
+    if (tableBuffer.length >= 2) {
+      const table = parseTable(tableBuffer, key++);
+      if (table) elements.push(table);
+    }
+    tableBuffer = [];
+  };
+
   for (const line of lines) {
     const trimmed = line.trim();
-    if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
-      bulletBuffer.push(trimmed.slice(2));
-    } else {
+    const isTableLine = trimmed.includes('|') && (trimmed.startsWith('|') || trimmed.match(/^[^|]+\|/));
+
+    if (isTableLine) {
       flushBullets();
-      if (trimmed === '') {
-        elements.push(<div key={key++} className="h-1.5" />);
+      tableBuffer.push(trimmed);
+    } else {
+      flushTable();
+      if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+        bulletBuffer.push(trimmed.slice(2));
       } else {
-        elements.push(<p key={key++} className="my-0.5">{renderInline(trimmed, `p-${key}`)}</p>);
+        flushBullets();
+        if (trimmed === '') {
+          elements.push(<div key={key++} className="h-1.5" />);
+        } else {
+          elements.push(<p key={key++} className="my-0.5">{renderInline(trimmed, `p-${key}`)}</p>);
+        }
       }
     }
   }
   flushBullets();
+  flushTable();
 
   return <div className="space-y-0">{elements}</div>;
 }
@@ -251,7 +304,7 @@ export default function AIChatBubble() {
       {/* Chat Panel */}
       {open && (
         <div
-          className="fixed bottom-20 right-5 z-[9999] w-[400px] h-[560px] bg-background rounded-2xl shadow-2xl border flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200"
+          className="fixed bottom-20 right-5 z-[9999] w-[520px] h-[650px] bg-background rounded-2xl shadow-2xl border flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200"
           style={{ maxHeight: 'calc(100vh - 120px)' }}
         >
           {/* Header */}
@@ -310,9 +363,9 @@ export default function AIChatBubble() {
                     </div>
                   )}
                   <div
-                    className={`max-w-[80%] rounded-xl px-3 py-2 text-[13px] leading-relaxed ${msg.role === 'user'
-                        ? 'bg-emerald-600 text-white rounded-br-sm'
-                        : 'bg-muted/70 rounded-bl-sm'
+                    className={`rounded-xl px-3 py-2 text-[13px] leading-relaxed ${msg.role === 'user'
+                      ? 'max-w-[75%] bg-emerald-600 text-white rounded-br-sm'
+                      : 'max-w-[92%] bg-muted/70 rounded-bl-sm'
                       }`}
                   >
                     {msg.content ? (

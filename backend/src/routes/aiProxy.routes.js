@@ -33,9 +33,27 @@ router.post('/chat', async (req, res) => {
 
     // Lấy thêm lộ trình đã đăng ký + tiến độ
     const PersonalRoadmap = require('../models/PersonalRoadmap');
-    const enrolledRoadmaps = await PersonalRoadmap.find({
-      student: studentId, status: { $ne: 'cancelled' },
-    }).populate('roadmap', 'title careerPath').lean();
+    const JobPosting = require('../models/JobPosting');
+    const Roadmap = require('../models/Roadmap');
+
+    const [enrolledRoadmaps, activeJobs, availableRoadmaps] = await Promise.all([
+      PersonalRoadmap.find({
+        student: studentId, status: { $ne: 'cancelled' },
+      }).populate('roadmap', 'title careerPath').lean(),
+
+      // Lấy tất cả jobs đang tuyển (chỉ đọc, tóm tắt)
+      JobPosting.find({ status: 'approved', deadline: { $gte: new Date() } })
+        .populate('company', 'name')
+        .select('title careerPath jobType salaryRange locationText company')
+        .sort('-createdAt')
+        .limit(30)
+        .lean(),
+
+      // Lấy tất cả lộ trình mẫu
+      Roadmap.find({ isActive: true })
+        .select('title careerPath estimatedMonths')
+        .lean(),
+    ]);
 
     const enrolledNames = enrolledRoadmaps.map(pr => {
       const title = pr.roadmap?.title || 'N/A';
@@ -48,6 +66,21 @@ router.post('/chat', async (req, res) => {
     const totalSessions = enrolledRoadmaps.reduce((sum, pr) => sum + (pr.sessions?.length || 0), 0);
     const doneSessions = enrolledRoadmaps.reduce((sum, pr) =>
       sum + (pr.sessions || []).filter(s => s.completed).length, 0);
+
+    // Tóm tắt jobs cho chatbot
+    const jobsSummary = activeJobs.map(j => {
+      const salary = j.salaryRange?.isNegotiable
+        ? 'Thỏa thuận'
+        : (j.salaryRange?.min || j.salaryRange?.max)
+          ? `${j.salaryRange.min}-${j.salaryRange.max}tr`
+          : 'Thỏa thuận';
+      return `${j.title} (${j.company?.name || 'N/A'}) - ${j.careerPath || ''} - ${salary} - ${j.locationText || ''} - ${j.jobType}`;
+    });
+
+    // Tóm tắt roadmaps cho chatbot
+    const roadmapsSummary = availableRoadmaps.map(r =>
+      `${r.title} (${r.careerPath || ''}, ~${r.estimatedMonths || 6} tháng)`
+    );
 
     const contextData = {
       studentProfile: {
@@ -63,6 +96,10 @@ router.post('/chat', async (req, res) => {
       progressSummary: totalSessions > 0
         ? `${doneSessions}/${totalSessions} buổi (${Math.round((doneSessions / totalSessions) * 100)}%)`
         : '',
+      // Dữ liệu hệ thống (read-only)
+      activeJobs: jobsSummary.length > 0 ? jobsSummary.join('\n') : '',
+      activeJobsCount: activeJobs.length,
+      availableRoadmaps: roadmapsSummary.length > 0 ? roadmapsSummary.join('\n') : '',
     };
 
     const chatHistory = await ChatHistory.findOne({ student: studentId })
