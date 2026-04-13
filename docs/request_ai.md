@@ -1,5 +1,5 @@
 # Mô tả chức năng hệ thống gợi ý lộ trình học tập, việc làm và chatbot AI
-**Công nghệ dự kiến:** Python + Openrouter
+**Công nghệ dự kiến:** Python + Openrouter + Lọc nội dung + Lọc cộng tác
 
 ---
 
@@ -70,7 +70,7 @@ Hệ thống phân tích các kỹ năng sinh viên đã có để gợi ý các
 
 ### 1.2. Cơ chế tổng hợp và tạo lộ trình cá nhân hóa
 
-Sau khi thu thập và tổng hợp toàn bộ dữ liệu đầu vào, hệ thống sử dụng **Openrouter** hoặc một **thuật toán gợi ý** để sinh ra một lộ trình học tập hoàn toàn mới cho từng cá nhân.
+Sau khi thu thập và tổng hợp toàn bộ dữ liệu đầu vào, hệ thống xây dựng một **thuật toán gợi ý** để sinh ra một lộ trình học tập hoàn toàn mới cho từng cá nhân. Lưu lại -> sinh viên có thể đăng ký, học và theo dõi tiến độ được...
 
 Lộ trình được tạo ra dựa trên:
 - Lộ trình mẫu có sẵn trong hệ thống
