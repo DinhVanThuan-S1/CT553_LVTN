@@ -50,6 +50,14 @@ const sessionSchema = new mongoose.Schema({
   completedAt: { type: Date },
 }, { _id: true });
 
+// Schema điều chỉnh skill (dùng cho lộ trình AI-generated)
+const adjustmentSchema = new mongoose.Schema({
+  skillName: { type: String, required: true },
+  originalHours: { type: Number, required: true },
+  adjustedHours: { type: Number, required: true },
+  reason: { type: String, default: '' },
+}, { _id: false });
+
 const personalRoadmapSchema = new mongoose.Schema({
   student: {
     type: mongoose.Schema.Types.ObjectId,
@@ -62,6 +70,16 @@ const personalRoadmapSchema = new mongoose.Schema({
     ref: 'Roadmap',
     required: true,
   },
+  // Nguồn tạo lộ trình
+  source: {
+    type: String,
+    enum: ['manual', 'ai-generated'],
+    default: 'manual',
+  },
+  // Tên lộ trình gốc (lưu để reference khi roadmap mẫu thay đổi)
+  baseRoadmapTitle: { type: String, default: '' },
+  // Danh sách điều chỉnh giờ học (chỉ có khi source = 'ai-generated')
+  adjustments: [adjustmentSchema],
   // Thời gian học đã chọn (tháng) — tự tính từ số slot rảnh
   durationMonths: {
     type: Number,

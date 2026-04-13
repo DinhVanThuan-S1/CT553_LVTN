@@ -14,6 +14,7 @@ import { useToast } from '../../components/ui/Toast';
 import {
   ArrowLeft, Route, Clock, Users, Star, Target, CheckCircle2,
   BookOpen, Loader2, Calendar, MessageSquare, Send, Lock, Briefcase, Compass,
+  Sparkles, TrendingDown, TrendingUp,
 } from 'lucide-react';
 
 const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
@@ -130,8 +131,25 @@ export default function RoadmapDetailPage() {
     return freeSlots.some((s) => s.dayOfWeek === dayOfWeek && s.startTime === startTime);
   }
 
-  // Tự tính thời gian học
-  const totalHours = roadmap?.skills?.reduce((sum, s) => sum + (s.estimatedHours || 0), 0) || 0;
+  // Adjustments từ AI personalization
+  const adjustments = location.state?.adjustments || [];
+  const isPersonalized = location.state?.isPersonalized || false;
+  const adjMap = useMemo(() => {
+    const m = {};
+    adjustments.forEach(a => { m[a.skillName.toLowerCase()] = a; });
+    return m;
+  }, [adjustments]);
+
+  // Tự tính thời gian học (với adjusted hours nếu có)
+  const totalHours = useMemo(() => {
+    if (!roadmap?.skills) return 0;
+    return roadmap.skills.reduce((sum, s) => {
+      const key = (s.skill?.name || '').toLowerCase();
+      const adj = adjMap[key];
+      return sum + (adj ? adj.adjustedHours : (s.estimatedHours || 0));
+    }, 0);
+  }, [roadmap, adjMap]);
+  const originalTotalHours = roadmap?.skills?.reduce((sum, s) => sum + (s.estimatedHours || 0), 0) || 0;
   const hoursPerWeek = freeSlots.length * 2;
   const weeksNeeded = hoursPerWeek > 0 ? Math.ceil(totalHours / hoursPerWeek) : 0;
   const estimatedMonths = hoursPerWeek > 0 ? Math.max(1, Math.ceil(weeksNeeded / 4)) : 0;
@@ -144,10 +162,15 @@ export default function RoadmapDetailPage() {
     }
     setEnrolling(true);
     try {
-      await api.post('/student/my-roadmaps/enroll', {
+      const payload = {
         roadmapId: id,
         freeTimeSlots: freeSlots,
-      });
+      };
+      // Nếu enroll từ personalized → gửi adjustments
+      if (isPersonalized && adjustments.length > 0) {
+        payload.adjustments = adjustments;
+      }
+      await api.post('/student/my-roadmaps/enroll', payload);
       toast.success('Đăng ký lộ trình thành công!');
       setShowEnroll(false);
       navigate('/student/my-roadmap');
@@ -192,6 +215,26 @@ export default function RoadmapDetailPage() {
         </button>
       )}
       <div className="rounded-xl border bg-card overflow-hidden">
+        {/* Personalized banner */}
+        {isPersonalized && (
+          <div className="bg-gradient-to-r from-blue-500/10 via-cyan-500/10 to-emerald-500/10 border-b border-blue-200 dark:border-blue-800 px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Lộ trình cá nhân hóa</span>
+              {adjustments.length > 0 && (
+                <Badge variant="secondary" className="text-[10px]">
+                  {adjustments.length} kỹ năng được điều chỉnh
+                </Badge>
+              )}
+            </div>
+            {originalTotalHours !== totalHours && (
+              <span className="text-xs text-muted-foreground">
+                Giờ học: <span className="line-through">{originalTotalHours}h</span> → <span className="font-semibold text-blue-600">{totalHours}h</span>
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Hero */}
         <div className="h-36 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent flex items-center px-8">
           <div className="flex-1">
@@ -206,7 +249,7 @@ export default function RoadmapDetailPage() {
             </p>
           </div>
           <Button onClick={openEnrollDialog} className="gap-2 shrink-0">
-            <Calendar className="w-4 h-4" /> Đăng ký lộ trình
+            <Calendar className="w-4 h-4" /> {isPersonalized ? 'Đăng ký lộ trình cá nhân' : 'Đăng ký lộ trình'}
           </Button>
         </div>
 
@@ -272,13 +315,40 @@ export default function RoadmapDetailPage() {
                           <span className="font-medium">{s.skill?.name || 'N/A'}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">{s.estimatedHours}h</span>
+                          {(() => {
+                            const key = (s.skill?.name || '').toLowerCase();
+                            const adj = adjMap[key];
+                            if (adj) {
+                              const isReduced = adj.adjustedHours < adj.originalHours;
+                              return (
+                                <span className={`text-xs font-medium flex items-center gap-0.5 ${isReduced ? 'text-green-600' : 'text-amber-600'}`}>
+                                  {isReduced ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
+                                  <span className="line-through text-muted-foreground">{adj.originalHours}h</span>
+                                  <span>→ {adj.adjustedHours}h</span>
+                                </span>
+                              );
+                            }
+                            return <span className="text-xs text-muted-foreground">{s.estimatedHours}h</span>;
+                          })()}
                           <Badge variant="secondary" className="text-[10px]">{levelLabels[s.targetLevel]}</Badge>
                         </div>
                       </div>
                       {s.skill?.description && (
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{s.skill.description}</p>
                       )}
+                      {(() => {
+                        const key = (s.skill?.name || '').toLowerCase();
+                        const adj = adjMap[key];
+                        if (adj?.reason) {
+                          return (
+                            <p className={`text-[10px] mt-1 flex items-center gap-1 ${adj.adjustedHours < adj.originalHours ? 'text-green-600' : 'text-amber-600'}`}>
+                              <Sparkles className="w-3 h-3" />
+                              {adj.reason}
+                            </p>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
                 ))}
@@ -412,7 +482,7 @@ export default function RoadmapDetailPage() {
       {/* Enroll Dialog */}
       <Dialog open={showEnroll} onClose={() => setShowEnroll(false)} className="max-w-2xl">
         <DialogHeader onClose={() => setShowEnroll(false)}>
-          Đăng ký lộ trình: {roadmap.title}
+          {isPersonalized ? 'Đăng ký lộ trình cá nhân: ' : 'Đăng ký lộ trình: '}{roadmap.title}
         </DialogHeader>
         <form onSubmit={handleEnroll}>
           <DialogBody className="space-y-5">

@@ -47,12 +47,17 @@ exports.completeSession = async (req, res) => {
 
 /**
  * GET /api/student/roadmap-suggestions
- * Gợi ý lộ trình phù hợp dựa trên hồ sơ học tập + sở thích nghề nghiệp
+ * Gợi ý lộ trình phù hợp — Hybrid CB + CF
  */
 exports.getSuggestions = async (req, res) => {
   try {
-    const suggestions = await suggestionService.suggestRoadmaps(req.user._id);
-    res.json({ success: true, data: suggestions });
+    const result = await suggestionService.suggestRoadmaps(req.user._id);
+    res.json({
+      success: true,
+      data: result.suggestions,
+      hasData: result.hasData,
+      dataSources: result.dataSources,
+    });
   } catch (error) {
     console.error('getSuggestions error:', error);
     res.status(500).json({ success: false, message: 'Lỗi server khi gợi ý lộ trình' });
@@ -102,6 +107,23 @@ exports.getOccupiedSlots = async (req, res) => {
 exports.getCompletedSkills = async (req, res) => {
   try {
     const data = await prService.getCompletedSkills(req.user._id);
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * POST /api/student/my-roadmaps/generate-personalized
+ * Tính toán điều chỉnh giờ học cá nhân hóa (không tạo PersonalRoadmap)
+ */
+exports.generatePersonalized = async (req, res) => {
+  try {
+    const { baseRoadmapId } = req.body;
+    if (!baseRoadmapId) {
+      return res.status(400).json({ success: false, message: 'Thiếu baseRoadmapId' });
+    }
+    const data = await prService.calculatePersonalizedAdjustments(req.user._id, baseRoadmapId);
     res.json({ success: true, data });
   } catch (error) {
     res.status(error.status || 500).json({ success: false, message: error.message });

@@ -46,8 +46,11 @@ router.patch('/my-roadmaps/:id/resume', prCtrl.resumeRoadmap);
 router.get('/my-roadmaps-occupied-slots', prCtrl.getOccupiedSlots);
 router.get('/completed-skills', prCtrl.getCompletedSkills);
 
-// === Gợi ý lộ trình (AI Matching) ===
+// === Gợi ý lộ trình (Hybrid CB+CF) ===
 router.get('/roadmap-suggestions', prCtrl.getSuggestions);
+
+// === Tính toán điều chỉnh cá nhân hóa ===
+router.post('/my-roadmaps/generate-personalized', prCtrl.generatePersonalized);
 
 // === Buổi học & Bài test ===
 router.get('/my-roadmaps/:prId/sessions/:sessionId', learnCtrl.getSessionDetail);

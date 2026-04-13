@@ -9,12 +9,16 @@ const jobSuggestionService = require('../services/jobSuggestion.service');
 
 /**
  * GET /api/student/job-suggestions
- * Gợi ý công việc phù hợp cho sinh viên
+ * Gợi ý công việc — Hybrid CB + CF
  */
 exports.getJobSuggestions = async (req, res) => {
   try {
-    const suggestions = await jobSuggestionService.suggestJobs(req.user._id);
-    res.json({ success: true, data: suggestions });
+    const result = await jobSuggestionService.suggestJobs(req.user._id);
+    res.json({
+      success: true,
+      data: result.suggestions,
+      hasData: result.hasData,
+    });
   } catch (error) {
     console.error('getJobSuggestions error:', error);
     res.status(500).json({ success: false, message: 'Lỗi server khi gợi ý công việc' });

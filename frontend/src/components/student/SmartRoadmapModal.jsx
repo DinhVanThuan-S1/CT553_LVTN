@@ -1,7 +1,7 @@
 /**
- * SmartRoadmapModal — Gợi ý lộ trình bằng thuật toán (không AI)
- * Scoring: career, skills, academic, market, duration
- * Click "Xem chi tiết" → hiện phần trăm theo từng tiêu chí
+ * SmartRoadmapModal — Gợi ý lộ trình Hybrid CB + CF
+ * - Hiển thị % match, điểm từng tiêu chí, CF bonus
+ * - Nút "✨ Tạo lộ trình riêng cho tôi" → generate-personalized
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -11,9 +11,10 @@ import { Badge } from '../ui/Badge';
 import {
   Compass, X, ChevronRight, Route, Clock, CheckCircle2,
   AlertTriangle, Loader2, TrendingUp, Users, Zap, BarChart3,
-  BookOpen, Target, ChevronDown, ChevronUp, MapPin,
+  BookOpen, Target, ChevronDown, ChevronUp, Sparkles,
 } from 'lucide-react';
 import api from '../../lib/api';
+import { useToast } from '../ui/Toast';
 
 const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
 const difficultyColors = {
@@ -53,7 +54,10 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+  const [generating, setGenerating] = useState(null);
+  const [hasData, setHasData] = useState(true);
   const navigate = useNavigate();
+  const toast = useToast();
 
   useEffect(() => {
     if (isOpen && suggestions.length === 0) fetchSuggestions();
@@ -66,6 +70,7 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
       const { data } = await api.get('/student/roadmap-suggestions');
       if (data.success) {
         setSuggestions(data.data || []);
+        setHasData(data.hasData !== false);
       } else {
         setError(data.message || 'Không thể phân tích');
       }
@@ -73,6 +78,30 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
       setError(err.response?.data?.message || 'Lỗi kết nối. Vui lòng thử lại.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGenerate = async (roadmapId) => {
+    setGenerating(roadmapId);
+    try {
+      const { data } = await api.post('/student/my-roadmaps/generate-personalized', {
+        baseRoadmapId: roadmapId,
+      });
+      if (data.success) {
+        onClose();
+        // Navigate đến trang Chi tiết lộ trình với adjustments
+        navigate(`/roadmaps/${roadmapId}`, {
+          state: {
+            adjustments: data.data.adjustments,
+            isPersonalized: true,
+            from: 'smart-suggestion',
+          },
+        });
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Không thể phân tích. Thử lại!');
+    } finally {
+      setGenerating(null);
     }
   };
 
@@ -90,7 +119,7 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
             </div>
             <div>
               <h2 className="text-base font-semibold">Gợi ý lộ trình</h2>
-              <p className="text-xs text-muted-foreground">Phân tích tự động dựa trên hồ sơ, kỹ năng & thị trường</p>
+              <p className="text-xs text-muted-foreground">Phân tích tự động · Hybrid CB + Cộng tác</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
@@ -110,7 +139,7 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
               </div>
               <div className="text-center">
                 <p className="font-medium text-sm">Đang phân tích hồ sơ...</p>
-                <p className="text-xs text-muted-foreground mt-1">Kết hợp dữ liệu học tập, kỹ năng, thị trường việc làm</p>
+                <p className="text-xs text-muted-foreground mt-1">Kết hợp dữ liệu học tập, kỹ năng, thị trường & hành vi SV</p>
               </div>
               <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
             </div>
@@ -124,9 +153,22 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
             </div>
           ) : suggestions.length > 0 ? (
             <div className="p-5 space-y-4">
+              {!hasData && (
+                <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div className="text-xs space-y-1">
+                    <p className="font-medium text-amber-700 dark:text-amber-400">Hồ sơ chưa có dữ liệu</p>
+                    <p className="text-amber-600/80 dark:text-amber-300/70">
+                      Cập nhật Sở thích nghề nghiệp, Kỹ năng, Hồ sơ học tập để nhận gợi ý chính xác hơn.
+                      Điểm hiện tại chỉ mang tính tham khảo.
+                    </p>
+                  </div>
+                </div>
+              )}
               {suggestions.map((item, idx) => {
-                const { roadmap: rm, matchScore, matchDetails, strengths, gaps, isEnrolled } = item;
+                const { roadmap: rm, matchScore, cbScore, cfBonus, matchDetails, strengths, gaps, isEnrolled } = item;
                 const isExpanded = expandedId === rm._id;
+                const isGenerating = generating === rm._id;
                 return (
                   <div
                     key={rm._id}
@@ -138,7 +180,7 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
                     {/* Top */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           {idx === 0 && (
                             <span className="text-[10px] font-bold text-blue-600 bg-blue-100 dark:bg-blue-900/40 dark:text-blue-400 px-1.5 py-0.5 rounded-full">
                               Phù hợp nhất
@@ -151,6 +193,11 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
                             <Badge className="text-[10px] bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
                               Đã đăng ký
                             </Badge>
+                          )}
+                          {cfBonus > 0 && (
+                            <span className="text-[10px] flex items-center gap-0.5 text-indigo-600 dark:text-indigo-400">
+                              <Users className="w-2.5 h-2.5" /> +{cfBonus}đ CF
+                            </span>
                           )}
                         </div>
                         <h4 className="font-semibold text-sm">{rm.title}</h4>
@@ -201,11 +248,16 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
                           <ScoreBar label="Thị trường" value={matchDetails.marketFit || 0} max={15} icon={BarChart3} />
                           <ScoreBar label="Thời lượng" value={matchDetails.duration || 0} max={10} icon={Clock} />
                         </div>
+                        {cbScore !== undefined && cfBonus !== undefined && (
+                          <p className="text-[10px] text-muted-foreground pt-1 border-t border-border/30">
+                            CB: {cbScore}đ + CF bonus: {cfBonus}đ → {matchScore}% phù hợp
+                          </p>
+                        )}
                       </div>
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 pt-1">
+                    <div className="flex items-center gap-2 pt-1 flex-wrap">
                       <Button
                         size="sm"
                         variant="outline"
@@ -214,6 +266,24 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
                       >
                         Xem lộ trình <ChevronRight className="w-3 h-3" />
                       </Button>
+
+                      {/* Nút tạo lộ trình cá nhân hóa */}
+                      {!isEnrolled && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="h-7 text-xs gap-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 border-0 shadow-sm shadow-blue-500/20"
+                          onClick={() => handleGenerate(rm._id)}
+                          disabled={isGenerating || !!generating}
+                        >
+                          {isGenerating ? (
+                            <><Loader2 className="w-3 h-3 animate-spin" /> Đang tạo...</>
+                          ) : (
+                            <><Sparkles className="w-3 h-3" /> Tạo lộ trình riêng cho tôi</>
+                          )}
+                        </Button>
+                      )}
+
                       <Button
                         size="sm"
                         variant="ghost"
@@ -221,12 +291,13 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
                         onClick={() => setExpandedId(isExpanded ? null : rm._id)}
                       >
                         {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                        {isExpanded ? 'Thu gọn' : 'Xem chi tiết'}
+                        {isExpanded ? 'Thu gọn' : 'Chi tiết điểm'}
                       </Button>
+
                       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground ml-auto">
                         <Clock className="w-3 h-3" /> {rm.estimatedMonths} tháng
                         <span className="mx-0.5">•</span>
-                        <Users className="w-3 h-3" /> {rm.enrolledCount || 0}
+                        <Users className="w-3 h-3" /> {rm.enrollmentCount || 0}
                       </div>
                     </div>
                   </div>
@@ -246,9 +317,13 @@ export default function SmartRoadmapModal({ isOpen, onClose }) {
         <div className="px-6 py-3 border-t border-border/30 flex-shrink-0 flex items-center justify-between bg-muted/30">
           <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
             <Compass className="w-3 h-3" />
-            Phân tích tự động dựa trên dữ liệu hồ sơ & thị trường
+            Hybrid: Lọc nội dung + Lọc cộng tác
           </p>
-          <Button variant="ghost" size="sm" onClick={() => { setSuggestions([]); fetchSuggestions(); }} className="h-7 text-xs gap-1.5" disabled={loading}>
+          <Button
+            variant="ghost" size="sm"
+            onClick={() => { setSuggestions([]); fetchSuggestions(); }}
+            className="h-7 text-xs gap-1.5" disabled={loading}
+          >
             <TrendingUp className="w-3 h-3" /> Phân tích lại
           </Button>
         </div>

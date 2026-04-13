@@ -62,7 +62,7 @@ def generate_stream(system_prompt: str, messages: list, temperature: float = 0.7
             model=target_model,
             messages=full_messages,
             temperature=temperature,
-            max_tokens=1024,
+            max_tokens=800,  # Giảm từ 1024 → TTFT nhanh hơn
             stream=True,
         )
         print(f"[OK] generate_stream: {target_model}")

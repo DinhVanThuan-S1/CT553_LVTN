@@ -65,6 +65,7 @@ export default function SmartJobModal({ isOpen, onClose }) {
   const [cvs, setCvs] = useState([]);
   const [selectedCvId, setSelectedCvId] = useState('');
   const [applying, setApplying] = useState(false);
+  const [hasData, setHasData] = useState(true);
   const toast = useToast();
 
   useEffect(() => {
@@ -78,6 +79,7 @@ export default function SmartJobModal({ isOpen, onClose }) {
       const { data } = await api.get('/student/job-suggestions');
       if (data.success) {
         setSuggestions(data.data || []);
+        setHasData(data.hasData !== false);
       } else {
         setError(data.message || 'Không thể phân tích');
       }
@@ -162,6 +164,17 @@ export default function SmartJobModal({ isOpen, onClose }) {
               </div>
             ) : suggestions.length > 0 ? (
               <div className="p-5 space-y-3">
+                {!hasData && (
+                  <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 flex items-start gap-2.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <div className="text-xs space-y-1">
+                      <p className="font-medium text-amber-700 dark:text-amber-400">Hồ sơ chưa có dữ liệu</p>
+                      <p className="text-amber-600/80 dark:text-amber-300/70">
+                        Cập nhật Sở thích nghề nghiệp, Kỹ năng, Hồ sơ học tập để nhận gợi ý chính xác hơn.
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                   <Briefcase className="w-3.5 h-3.5" />
                   Công việc phù hợp ({suggestions.length})

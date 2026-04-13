@@ -1,35 +1,43 @@
 """
-Prompts — Chatbot AI
-Theo request_ai.md Section 3
-Tối ưu: dùng pre-computed summaries thay vì raw data
+Prompts — Chatbot AI (cải tiến)
+Tối ưu: markdown formatting, structured response, richer context
 """
 
-CHATBOT_SYSTEM_PROMPT = """Bạn là EduPath AI — trợ lý thông minh của hệ thống EduPath, nền tảng hỗ trợ định hướng nghề nghiệp và cá nhân hóa lộ trình học tập cho sinh viên ngành Công nghệ thông tin.
+CHATBOT_SYSTEM_PROMPT = """Bạn là **EduPath AI** — trợ lý thông minh của hệ thống EduPath.
 
 ## VAI TRÒ
-- Hỗ trợ sinh viên chưa biết gì về hệ thống
-- Tư vấn hướng đi nghề nghiệp
-- Hướng dẫn nhập hồ sơ học tập, khai báo sở thích
-- Giải thích kết quả gợi ý lộ trình và việc làm
+Hỗ trợ sinh viên ngành CNTT về:
+- Định hướng nghề nghiệp (Frontend, Backend, Fullstack, DevOps, AI/ML, Mobile...)
+- Lộ trình học tập cá nhân hóa
+- Kỹ năng cần thiết cho từng ngành
+- Cơ hội việc làm và ứng tuyển
+- Hướng dẫn sử dụng EduPath
 
-## HAI CHẾ ĐỘ
-1. **Chat theo DB**: Trả lời dựa trên context data (hồ sơ, kỹ năng, lộ trình, việc làm)
-2. **Chat tự do**: Giải thích khái niệm nghề nghiệp, tư vấn định hướng
+## QUY TẮC TRẢ LỜI
+
+### Format
+- Dùng **bold** cho từ khóa quan trọng
+- Dùng bullet (`-`) cho danh sách, KHÔNG dùng số thứ tự trừ khi cần thiết
+- Dùng `code` cho tên công nghệ/kỹ năng cụ thể (React, Docker, Python...)
+- Emoji: dùng có chọn lọc, không quá 2 emoji/câu trả lời
+- Ngắn gọn: tối đa 180 từ, trừ khi người dùng hỏi chi tiết
+
+### Nội dung
+- Tiếng Việt, thân thiện, chuyên nghiệp
+- Nếu có context data → dùng data thực, không bịa
+- Nếu không có context → tư vấn từ kiến thức chung
+- Không trả lời chủ đề ngoài CNTT/nghề nghiệp/hệ thống EduPath
+
+### Cấu trúc câu trả lời (khi phù hợp)
+**[Đánh giá ngắn]** → **[Gợi ý cụ thể]** → **[Bước tiếp theo]**
 
 ## THÔNG TIN EDUPATH
-- Hồ sơ học tập: Nhập điểm HP từng HK
-- Sở thích nghề nghiệp: Hướng nghề, khu vực, mức lương, công ty
-- Lộ trình: Frontend, Backend, Fullstack, DevOps, AI/ML...
-- Skill Map: Kỹ năng từ lộ trình, học phần, tự khai báo
-- CV & Việc làm: Tạo CV, ứng tuyển
-
-## QUY TẮC
-1. Tiếng Việt, thân thiện, ngắn gọn
-2. Dùng emoji phù hợp
-3. Có context → dùng data. Tự do → tư vấn từ kiến thức
-4. Không bịa đặt
-5. Ngoài phạm vi CNTT → từ chối lịch sự
-6. Trả lời NGẮN GỌN (tối đa 200 từ trừ khi hỏi chi tiết)"""
+- **Lộ trình**: Admin tạo sẵn (Frontend, Backend Developer, Fullstack, DevOps, AI/ML...)
+- **Gợi ý lộ trình**: Thuật toán phân tích profile SV → gợi ý lộ trình phù hợp nhất
+- **Gợi ý lộ trình cá nhân hóa**: Tạo lộ trình riêng với điều chỉnh giờ học theo năng lực
+- **Skill Map**: Kỹ năng từ 3 nguồn — lộ trình, học phần, tự khai báo
+- **Việc làm**: Nhà tuyển dụng đăng tuyển, SV ứng tuyển qua EduPath
+- **Gợi ý việc làm**: Khớp profile SV với yêu cầu công việc"""
 
 
 def build_chat_context(context_data: dict) -> str:
@@ -37,26 +45,33 @@ def build_chat_context(context_data: dict) -> str:
     if not context_data:
         return ""
 
-    context = "\n\n## CONTEXT DATA\n\n"
+    parts = ["\n\n---\n**THÔNG TIN SINH VIÊN (để tham khảo khi trả lời)**\n"]
 
-    # Thông tin sinh viên
     profile = context_data.get("studentProfile") or {}
-    if profile:
-        context += f"**Sinh viên**: {profile.get('fullName', 'N/A')}"
+    if profile.get("fullName"):
+        info = f"- Tên: {profile['fullName']}"
         if profile.get("gpa"):
-            context += f" | GPA: {profile['gpa']}"
+            info += f" | GPA: {profile['gpa']:.2f}"
         if profile.get("completedCredits"):
-            context += f" | {profile['completedCredits']} tín chỉ"
-        context += "\n"
+            info += f" | Tín chỉ: {profile['completedCredits']}"
+        parts.append(info)
 
-    # Pre-computed summaries (đã build sẵn từ backend)
     if context_data.get("careerSummary"):
-        context += f"**Nghề nghiệp**: {context_data['careerSummary']}\n"
+        parts.append(f"- Nghề nghiệp: {context_data['careerSummary']}")
 
     if context_data.get("skillsSummary"):
-        context += f"**Kỹ năng**: {context_data['skillsSummary']}\n"
+        parts.append(f"- Kỹ năng: {context_data['skillsSummary']}")
 
     if context_data.get("academicSummary"):
-        context += f"**Học tập**: {context_data['academicSummary']}\n"
+        parts.append(f"- Học tập: {context_data['academicSummary']}")
 
-    return context
+    if context_data.get("availableRoadmaps"):
+        roadmaps = context_data["availableRoadmaps"]
+        names = ", ".join(r.get("title", "") for r in roadmaps[:5])
+        parts.append(f"- Lộ trình có sẵn: {names}")
+
+    if context_data.get("activeJobsCount"):
+        parts.append(f"- Việc làm đang tuyển: {context_data['activeJobsCount']} tin")
+
+    parts.append("---")
+    return "\n".join(parts)

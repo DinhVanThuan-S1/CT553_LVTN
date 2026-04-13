@@ -11,11 +11,10 @@ import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Select';
 import { useToast } from '../../components/ui/Toast';
-import RoadmapSuggestionModal from '../../components/student/RoadmapSuggestionModal';
 import SmartRoadmapModal from '../../components/student/SmartRoadmapModal';
 import {
   Search, Route, Clock, Users, Star, ChevronRight,
-  Sparkles, Heart, Target, Compass,
+  Heart, Target, Compass,
 } from 'lucide-react';
 
 const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
@@ -31,7 +30,6 @@ export default function RoadmapListPage() {
   const [search, setSearch] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [favorites, setFavorites] = useState({});
-  const [showSuggestion, setShowSuggestion] = useState(false);
   const [showSmart, setShowSmart] = useState(false);
 
   const loadRoadmaps = useCallback(async () => {
@@ -90,25 +88,15 @@ export default function RoadmapListPage() {
     }
   }
 
-  function handleAISuggestion() {
-    if (!isAuthenticated) {
-      navigate(`/login?next=${encodeURIComponent(location.pathname)}`);
-      return;
-    }
-    setShowSuggestion(true);
-  }
-
   return (
     <div className="animate-fade-in space-y-6">
-      <RoadmapSuggestionModal isOpen={showSuggestion} onClose={() => setShowSuggestion(false)} />
       <SmartRoadmapModal isOpen={showSmart} onClose={() => setShowSmart(false)} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Danh Sách Lộ Trình</h1>
           <p className="text-muted-foreground text-sm mt-1">Khám phá các lộ trình học tập phù hợp</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
+        <Button
             variant="outline"
             size="sm"
             className="gap-1.5 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950/30 shadow-sm"
@@ -119,14 +107,6 @@ export default function RoadmapListPage() {
           >
             <Compass className="w-3.5 h-3.5" /> Gợi ý lộ trình
           </Button>
-          <Button
-            size="sm"
-            className="gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-md shadow-emerald-500/20 text-white"
-            onClick={handleAISuggestion}
-          >
-            <Sparkles className="w-3.5 h-3.5" /> Gợi ý lộ trình (AI)
-          </Button>
-        </div>
       </div>
 
       {/* Filters */}

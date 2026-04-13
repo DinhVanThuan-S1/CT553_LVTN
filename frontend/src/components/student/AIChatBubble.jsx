@@ -17,6 +17,100 @@ const SUGGESTED = [
   { icon: HelpCircle, text: 'EduPath hỗ trợ những gì?' },
 ];
 
+/**
+ * Lightweight markdown renderer cho chat messages
+ * Handles: **bold**, `code`, - bullets, paragraphs
+ */
+function ChatMarkdown({ text }) {
+  if (!text) return null;
+
+  const renderInline = (line, key) => {
+    // Parse **bold** and `code` inline
+    const parts = [];
+    let remaining = line;
+    let idx = 0;
+
+    while (remaining.length > 0) {
+      // **bold**
+      const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
+      // `code`
+      const codeMatch = remaining.match(/`([^`]+)`/);
+
+      let firstMatch = null;
+      let matchType = '';
+
+      if (boldMatch && (!codeMatch || boldMatch.index <= codeMatch.index)) {
+        firstMatch = boldMatch;
+        matchType = 'bold';
+      } else if (codeMatch) {
+        firstMatch = codeMatch;
+        matchType = 'code';
+      }
+
+      if (!firstMatch) {
+        parts.push(<span key={`${key}-${idx++}`}>{remaining}</span>);
+        break;
+      }
+
+      if (firstMatch.index > 0) {
+        parts.push(<span key={`${key}-${idx++}`}>{remaining.slice(0, firstMatch.index)}</span>);
+      }
+
+      if (matchType === 'bold') {
+        parts.push(<strong key={`${key}-${idx++}`} className="font-semibold">{firstMatch[1]}</strong>);
+      } else {
+        parts.push(
+          <code key={`${key}-${idx++}`} className="text-[12px] px-1 py-0.5 rounded bg-black/10 dark:bg-white/10 font-mono">
+            {firstMatch[1]}
+          </code>
+        );
+      }
+
+      remaining = remaining.slice(firstMatch.index + firstMatch[0].length);
+    }
+
+    return parts;
+  };
+
+  const lines = text.split('\n');
+  const elements = [];
+  let bulletBuffer = [];
+  let key = 0;
+
+  const flushBullets = () => {
+    if (bulletBuffer.length > 0) {
+      elements.push(
+        <ul key={key++} className="space-y-0.5 pl-3 my-1">
+          {bulletBuffer.map((b, i) => (
+            <li key={i} className="flex items-start gap-1.5">
+              <span className="text-emerald-500 mt-1 text-[10px]">●</span>
+              <span>{renderInline(b, `b-${key}-${i}`)}</span>
+            </li>
+          ))}
+        </ul>
+      );
+      bulletBuffer = [];
+    }
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+      bulletBuffer.push(trimmed.slice(2));
+    } else {
+      flushBullets();
+      if (trimmed === '') {
+        elements.push(<div key={key++} className="h-1.5" />);
+      } else {
+        elements.push(<p key={key++} className="my-0.5">{renderInline(trimmed, `p-${key}`)}</p>);
+      }
+    }
+  }
+  flushBullets();
+
+  return <div className="space-y-0">{elements}</div>;
+}
+
 export default function AIChatBubble() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -216,12 +310,16 @@ export default function AIChatBubble() {
                     </div>
                   )}
                   <div
-                    className={`max-w-[80%] rounded-xl px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap ${msg.role === 'user'
+                    className={`max-w-[80%] rounded-xl px-3 py-2 text-[13px] leading-relaxed ${msg.role === 'user'
                         ? 'bg-emerald-600 text-white rounded-br-sm'
                         : 'bg-muted/70 rounded-bl-sm'
                       }`}
                   >
-                    {msg.content || (loading && i === messages.length - 1 ? (
+                    {msg.content ? (
+                      msg.role === 'assistant'
+                        ? <ChatMarkdown text={msg.content} />
+                        : <span className="whitespace-pre-wrap">{msg.content}</span>
+                    ) : (loading && i === messages.length - 1 ? (
                       <span className="flex items-center gap-1.5 text-muted-foreground">
                         <span className="flex gap-0.5">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0ms' }} />
