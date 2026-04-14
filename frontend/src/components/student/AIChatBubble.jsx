@@ -71,12 +71,20 @@ function ChatMarkdown({ text }) {
 
   // Detect and parse markdown tables
   const parseTable = (tableLines, startKey) => {
+    // Filter separator rows (|---|---|) and empty rows
     const rows = tableLines
-      .filter(l => !l.match(/^\|?[\s-:|]+\|?$/))
-      .map(l => l.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim()));
+      .filter(l => {
+        const stripped = l.replace(/\|/g, '').replace(/[\s\-:]/g, '');
+        return stripped.length > 0; // Keep rows that have actual content
+      })
+      .map(l => {
+        const cleaned = l.replace(/^\|/, '').replace(/\|$/, '');
+        return cleaned.split('|').map(c => c.trim());
+      });
 
-    if (rows.length < 1) return null;
-    const header = rows[0];
+    if (rows.length < 2) return null; // Need at least header + 1 data row
+    const header = rows[0].filter(h => h.length > 0);
+    if (header.length === 0) return null;
     const body = rows.slice(1);
 
     return (
@@ -85,7 +93,7 @@ function ChatMarkdown({ text }) {
           <thead>
             <tr className="bg-muted/60">
               {header.map((h, i) => (
-                <th key={i} className="px-2 py-1.5 text-left font-semibold text-foreground whitespace-nowrap border-b border-border/40">
+                <th key={i} className="px-2 py-1.5 text-left font-semibold text-foreground border-b border-border/40">
                   {renderInline(h, `th-${startKey}-${i}`)}
                 </th>
               ))}
@@ -94,8 +102,8 @@ function ChatMarkdown({ text }) {
           <tbody>
             {body.map((row, ri) => (
               <tr key={ri} className={ri % 2 === 0 ? '' : 'bg-muted/30'}>
-                {row.map((cell, ci) => (
-                  <td key={ci} className="px-2 py-1 border-b border-border/20 whitespace-nowrap">
+                {row.slice(0, header.length).map((cell, ci) => (
+                  <td key={ci} className="px-2 py-1 border-b border-border/20">
                     {renderInline(cell, `td-${startKey}-${ri}-${ci}`)}
                   </td>
                 ))}
@@ -105,6 +113,12 @@ function ChatMarkdown({ text }) {
         </table>
       </div>
     );
+  };
+
+  // Any line starting with | is a potential table line (lenient for streaming)
+  const looksLikeTableLine = (line) => {
+    const t = line.trim();
+    return t.startsWith('|');
   };
 
   const lines = text.split('\n');
@@ -130,36 +144,77 @@ function ChatMarkdown({ text }) {
   };
 
   const flushTable = () => {
-    if (tableBuffer.length >= 2) {
+    if (tableBuffer.length === 0) return;
+    // Try to render as table: need rows with 2+ pipes (real table rows)
+    const realRows = tableBuffer.filter(l => (l.match(/\|/g) || []).length >= 3);
+    const contentRows = realRows.filter(l => {
+      const stripped = l.replace(/\|/g, '').replace(/[\s\-:]/g, '');
+      return stripped.length > 0;
+    });
+    if (contentRows.length >= 2) {
       const table = parseTable(tableBuffer, key++);
-      if (table) elements.push(table);
+      if (table) {
+        elements.push(table);
+        tableBuffer = [];
+        return;
+      }
+    }
+    // Not a valid table → render as normal text
+    for (const line of tableBuffer) {
+      elements.push(<p key={key++} className="my-0.5">{renderInline(line, `p-${key}`)}</p>);
     }
     tableBuffer = [];
   };
 
-  for (const line of lines) {
-    const trimmed = line.trim();
-    const isTableLine = trimmed.includes('|') && (trimmed.startsWith('|') || trimmed.match(/^[^|]+\|/));
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+    const isLastLine = i === lines.length - 1;
 
-    if (isTableLine) {
+    // Any line starting with | → buffer for table (handles partial streaming lines)
+    if (looksLikeTableLine(trimmed)) {
       flushBullets();
       tableBuffer.push(trimmed);
-    } else {
+      // If this is the last line in the text AND we're still streaming,
+      // keep buffering — don't flush yet (next render will have more data)
+      continue;
+    }
+
+    // Line doesn't start with | → flush table buffer if any
+    if (tableBuffer.length > 0) {
       flushTable();
-      if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
-        bulletBuffer.push(trimmed.slice(2));
+    }
+
+    // Handle other markdown elements
+    if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+      bulletBuffer.push(trimmed.slice(2));
+    } else if (/^\d+\.\s/.test(trimmed)) {
+      flushBullets();
+      const numText = trimmed.replace(/^\d+\.\s*/, '');
+      const num = trimmed.match(/^(\d+)\./)?.[1] || '•';
+      elements.push(
+        <div key={key++} className="flex items-start gap-1.5 my-0.5 pl-1">
+          <span className="text-emerald-600 font-semibold text-[11px] min-w-[16px]">{num}.</span>
+          <span>{renderInline(numText, `num-${key}`)}</span>
+        </div>
+      );
+    } else if (/^#{1,3}\s/.test(trimmed)) {
+      flushBullets();
+      const headingText = trimmed.replace(/^#{1,3}\s*/, '');
+      elements.push(
+        <p key={key++} className="font-bold text-[12px] mt-1.5 mb-0.5">{renderInline(headingText, `h-${key}`)}</p>
+      );
+    } else {
+      flushBullets();
+      if (trimmed === '' || trimmed === '---') {
+        elements.push(<div key={key++} className="h-1.5" />);
       } else {
-        flushBullets();
-        if (trimmed === '') {
-          elements.push(<div key={key++} className="h-1.5" />);
-        } else {
-          elements.push(<p key={key++} className="my-0.5">{renderInline(trimmed, `p-${key}`)}</p>);
-        }
+        elements.push(<p key={key++} className="my-0.5">{renderInline(trimmed, `p-${key}`)}</p>);
       }
     }
   }
   flushBullets();
-  flushTable();
+  // Flush remaining table buffer (e.g., table at end of text after streaming completes)
+  if (tableBuffer.length > 0) flushTable();
 
   return <div className="space-y-0">{elements}</div>;
 }
