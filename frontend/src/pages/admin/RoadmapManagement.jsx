@@ -2,7 +2,7 @@
  * RoadmapManagement - QL Lộ trình mẫu (Admin)
  * CRUD lộ trình mẫu, chọn kỹ năng, gắn công việc liên quan
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -15,12 +15,26 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import {
   Search, Plus, Pencil, Trash2, Eye, Route,
   ChevronLeft, ChevronRight, Clock, Users, Star,
-  GripVertical, X, ArrowUp, ArrowDown,
+  GripVertical, X, ArrowUp, ArrowDown, SlidersHorizontal, ChevronDown,
 } from 'lucide-react';
 
 const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
-const difficultyColors = { beginner: 'success', intermediate: 'warning', advanced: 'danger' };
+const difficultyColors = {
+  beginner: { bg: 'bg-emerald-500/10', text: 'text-emerald-600', border: 'border-emerald-400/20' },
+  intermediate: { bg: 'bg-amber-500/10', text: 'text-amber-600', border: 'border-amber-400/20' },
+  advanced: { bg: 'bg-red-500/10', text: 'text-red-600', border: 'border-red-400/20' },
+};
 const levelLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
+
+function DifficultyBadge({ difficulty }) {
+  const label = difficultyLabels[difficulty] || difficulty;
+  const c = difficultyColors[difficulty] || difficultyColors.intermediate;
+  return (
+    <span className={`inline-flex text-[10px] font-semibold px-2.5 py-0.5 rounded-full border ${c.bg} ${c.text} ${c.border}`}>
+      {label}
+    </span>
+  );
+}
 
 const initialForm = {
   title: '', description: '', careerPath: '', thumbnail: '',
@@ -42,6 +56,16 @@ export default function RoadmapManagement() {
   const [detailRoadmap, setDetailRoadmap] = useState(null);
   const [allSkills, setAllSkills] = useState([]);
   const [confirmState, setConfirmState] = useState(null);
+  const [showDiffMenu, setShowDiffMenu] = useState(false);
+  const diffMenuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (diffMenuRef.current && !diffMenuRef.current.contains(e.target)) setShowDiffMenu(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadRoadmaps = useCallback(async () => {
     setLoading(true);
@@ -189,24 +213,36 @@ export default function RoadmapManagement() {
   const totalHours = formData.skills.reduce((sum, s) => sum + Number(s.estimatedHours || 0), 0);
 
   return (
-    <div className="animate-fade-in space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Quản Lý Lộ Trình Mẫu</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Tổng {pagination.total} lộ trình
-          </p>
+    <div className="animate-fade-in space-y-5">
+
+      {/* ── Hero Header ── */}
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 md:p-8">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-primary/8 to-transparent rounded-full translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+        <div className="relative flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Route className="w-5 h-5 text-primary" />
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Quản Lý Lộ Trình Mẫu</span>
+            </div>
+            <p className="text-muted-foreground text-sm mt-1.5">
+              Tổng <strong className="text-foreground">{pagination.total}</strong> lộ trình đào tạo
+            </p>
+          </div>
+          <Button onClick={openCreate} className="gap-2 shrink-0">
+            <Plus className="w-4 h-4" /> Thêm lộ trình
+          </Button>
         </div>
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="w-4 h-4" /> Thêm lộ trình
-        </Button>
       </div>
 
-      {/* Filters */}
-      <div className="rounded-xl border bg-card p-4 flex flex-wrap items-center gap-3">
+      {/* ── Filters ── */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground shrink-0">
+          <SlidersHorizontal className="w-3.5 h-3.5" /> Lọc
+        </div>
+        {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Tìm lộ trình..."
             value={search}
@@ -214,89 +250,139 @@ export default function RoadmapManagement() {
             className="pl-9"
           />
         </div>
-        <Select
-          value={filterDifficulty}
-          onChange={(e) => { setFilterDifficulty(e.target.value); setPagination((p) => ({ ...p, page: 1 })); }}
-          className="w-44"
-        >
-          <option value="">Tất cả mức độ</option>
-          {Object.entries(difficultyLabels).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
-          ))}
-        </Select>
+        {/* Mức độ dropdown */}
+        <div className="relative shrink-0" ref={diffMenuRef}>
+          <button
+            type="button"
+            onClick={() => setShowDiffMenu(v => !v)}
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all min-w-[160px] ${showDiffMenu
+              ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
+              : 'border-input bg-background text-foreground hover:border-primary/60'}`}
+          >
+            <span className="flex-1 text-left truncate">
+              {filterDifficulty === '' ? 'Tất cả mức độ' : difficultyLabels[filterDifficulty] || filterDifficulty}
+            </span>
+            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${showDiffMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'}`} />
+          </button>
+          {showDiffMenu && (
+            <div className="absolute left-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-48 animate-fade-in">
+              <div className="py-1.5">
+                {[{ value: '', label: 'Tất cả mức độ' }, ...Object.entries(difficultyLabels).map(([k, v]) => ({ value: k, label: v }))].map(({ value, label }) => (
+                  <button key={value} type="button"
+                    onClick={() => { setFilterDifficulty(value); setPagination((p) => ({ ...p, page: 1 })); setShowDiffMenu(false); }}
+                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${filterDifficulty === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'}`}
+                  >
+                    {filterDifficulty === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+                    <span className={filterDifficulty === value ? '' : 'ml-3.5'}>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Table */}
+      {/* ── Table ── */}
       <div className="rounded-xl border bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Lộ Trình</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Hướng Nghề Nghiệp</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Mức Độ</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Kỹ Năng</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Thời Gian</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Đánh Giá</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Đăng Ký</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Thao Tác</th>
+                <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Lộ Trình</th>
+                <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Hướng Nghề</th>
+                <th className="text-center px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-28">Mức Độ</th>
+                <th className="text-center px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-24">Kỹ Năng</th>
+                <th className="text-center px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-26">Thời Gian</th>
+                <th className="text-center px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-22">Đánh Giá</th>
+                <th className="text-center px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-22">Đăng Ký</th>
+                <th className="text-right px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-28">Thao Tác</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i} className="border-b">
-                    {Array.from({ length: 8 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3"><div className="h-4 w-16 skeleton" /></td>
-                    ))}
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 skeleton rounded-lg shrink-0" />
+                        <div className="h-4 w-36 skeleton rounded" />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3.5"><div className="h-4 w-28 skeleton rounded" /></td>
+                    <td className="px-4 py-3.5 text-center"><div className="h-5 w-20 skeleton rounded-full mx-auto" /></td>
+                    <td className="px-4 py-3.5 text-center"><div className="h-6 w-7 skeleton rounded-full mx-auto" /></td>
+                    <td className="px-4 py-3.5 text-center"><div className="h-4 w-16 skeleton rounded mx-auto" /></td>
+                    <td className="px-4 py-3.5 text-center"><div className="h-4 w-10 skeleton rounded mx-auto" /></td>
+                    <td className="px-4 py-3.5 text-center"><div className="h-4 w-8 skeleton rounded mx-auto" /></td>
+                    <td className="px-4 py-3.5"><div className="h-7 w-20 skeleton rounded-lg ml-auto" /></td>
                   </tr>
                 ))
               ) : roadmaps.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
-                    Chưa có lộ trình nào
+                  <td colSpan={8} className="px-4 py-16 text-center">
+                    <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                      <Route className="w-6 h-6 text-muted-foreground/30" />
+                    </div>
+                    <p className="text-sm font-medium text-muted-foreground">Chưa có lộ trình nào</p>
+                    <p className="text-xs text-muted-foreground mt-1">Thử thay đổi bộ lọc hoặc thêm lộ trình mới</p>
                   </td>
                 </tr>
               ) : (
                 roadmaps.map((rm) => (
-                  <tr key={rm._id} className="border-b hover:bg-muted/20 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Route className="w-4 h-4 text-primary shrink-0" />
-                        <span className="font-medium">{rm.title}</span>
+                  <tr key={rm._id} className="border-b hover:bg-muted/20 transition-colors group">
+                    {/* Lộ trình */}
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-primary/8 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+                          <Route className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                        <span className="font-medium group-hover:text-primary transition-colors">{rm.title}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{rm.careerPath}</td>
-                    <td className="px-4 py-3 text-center">
-                      <Badge variant={difficultyColors[rm.difficulty]}>
-                        {difficultyLabels[rm.difficulty]}
-                      </Badge>
+                    {/* Hướng nghề */}
+                    <td className="px-4 py-3.5 text-muted-foreground text-sm">{rm.careerPath}</td>
+                    {/* Mức độ */}
+                    <td className="px-4 py-3.5 text-center">
+                      <DifficultyBadge difficulty={rm.difficulty} />
                     </td>
-                    <td className="px-4 py-3 text-center">{rm.skills?.length || 0}</td>
-                    <td className="px-4 py-3 text-center text-muted-foreground">{rm.estimatedMonths} tháng</td>
-                    <td className="px-4 py-3 text-center">
+                    {/* Kỹ năng */}
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/8 text-primary text-xs font-bold">
+                        {rm.skills?.length || 0}
+                      </span>
+                    </td>
+                    {/* Thời gian */}
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+                        <Clock className="w-3 h-3" />{rm.estimatedMonths} tháng
+                      </span>
+                    </td>
+                    {/* Đánh giá */}
+                    <td className="px-4 py-3.5 text-center">
                       <span className="flex items-center justify-center gap-1">
                         <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                        <span className="text-xs">{rm.averageRating?.toFixed(1) || '0.0'}</span>
+                        <span className="text-xs font-medium">{rm.averageRating?.toFixed(1) || '0.0'}</span>
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="flex items-center justify-center gap-1 text-muted-foreground">
-                        <Users className="w-3.5 h-3.5" /> {rm.enrollmentCount || 0}
+                    {/* Đăng ký */}
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="inline-flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                        <Users className="w-3.5 h-3.5" />{rm.enrollmentCount || 0}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    {/* Actions */}
+                    <td className="px-4 py-3.5">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => openDetail(rm)}
-                          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                          className="p-1.5 rounded-lg hover:bg-primary/10 transition-colors text-muted-foreground hover:text-primary" title="Xem chi tiết">
                           <Eye className="w-4 h-4" />
                         </button>
                         <button onClick={() => openEdit(rm)}
-                          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Chỉnh sửa">
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button onClick={() => handleDelete(rm)}
-                          className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors">
+                          className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors" title="Xóa">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -309,15 +395,16 @@ export default function RoadmapManagement() {
         </div>
 
         {pagination.pages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/10">
+          <div className="flex items-center justify-between px-5 py-3 border-t bg-muted/10">
             <p className="text-xs text-muted-foreground">
-              Trang {pagination.page}/{pagination.pages} • Tổng {pagination.total}
+              <strong className="text-foreground">{pagination.total}</strong> lộ trình • Trang {pagination.page}/{pagination.pages}
             </p>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="sm" disabled={pagination.page <= 1}
                 onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
+              <span className="text-xs px-2 font-medium">{pagination.page}</span>
               <Button variant="ghost" size="sm" disabled={pagination.page >= pagination.pages}
                 onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}>
                 <ChevronRight className="w-4 h-4" />
@@ -332,38 +419,43 @@ export default function RoadmapManagement() {
         <DialogHeader onClose={() => setShowDetail(false)}>Chi tiết Lộ trình</DialogHeader>
         {detailRoadmap && (
           <DialogBody className="space-y-5">
-            <div>
-              <h3 className="font-semibold text-lg">{detailRoadmap.title}</h3>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant={difficultyColors[detailRoadmap.difficulty]}>
-                  {difficultyLabels[detailRoadmap.difficulty]}
-                </Badge>
-                <span className="text-xs text-muted-foreground">{detailRoadmap.careerPath}</span>
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" /> {detailRoadmap.estimatedMonths} tháng
-                </span>
+            {/* Hero card */}
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-muted/20">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Route className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-lg leading-snug">{detailRoadmap.title}</h3>
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <DifficultyBadge difficulty={detailRoadmap.difficulty} />
+                  <span className="text-xs text-muted-foreground">{detailRoadmap.careerPath}</span>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" /> {detailRoadmap.estimatedMonths} tháng
+                  </span>
+                </div>
+                {detailRoadmap.description && (
+                  <p className="text-sm text-muted-foreground mt-2">{detailRoadmap.description}</p>
+                )}
               </div>
             </div>
-            {detailRoadmap.description && (
-              <p className="text-sm text-muted-foreground">{detailRoadmap.description}</p>
-            )}
+            {/* Skills */}
             <div>
-              <h4 className="font-medium text-sm mb-2">Kỹ năng ({detailRoadmap.skills?.length || 0})</h4>
+              <h4 className="font-semibold text-sm mb-2.5">Kỹ năng ({detailRoadmap.skills?.length || 0})</h4>
               <div className="space-y-2">
                 {(detailRoadmap.skills || [])
                   .sort((a, b) => a.order - b.order)
                   .map((s, i) => (
-                    <div key={i} className="flex items-center gap-3 rounded-lg border p-3">
-                      <span className="text-xs font-bold text-primary w-6 text-center">{s.order}</span>
-                      <div className="flex-1">
+                    <div key={i} className="flex items-center gap-3 rounded-xl border bg-card/50 p-3">
+                      <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">{s.order}</span>
+                      <div className="flex-1 min-w-0">
                         <span className="font-medium text-sm">{s.skill?.name || 'N/A'}</span>
                         <span className="text-xs text-muted-foreground ml-2">{s.estimatedHours}h</span>
                       </div>
-                      <Badge variant="secondary">{levelLabels[s.targetLevel]}</Badge>
+                      <DifficultyBadge difficulty={s.targetLevel} />
                     </div>
                   ))}
                 {(!detailRoadmap.skills || detailRoadmap.skills.length === 0) && (
-                  <p className="text-sm text-muted-foreground">Chưa có kỹ năng</p>
+                  <p className="text-sm text-muted-foreground py-4 text-center">Chưa có kỹ năng</p>
                 )}
               </div>
             </div>
