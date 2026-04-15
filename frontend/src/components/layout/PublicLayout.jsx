@@ -28,7 +28,7 @@ export default function PublicLayout() {
               onClick={() => navigate(-1)}
               className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" /> Quay lại
+              <ArrowLeft className="w-4 h-4" />
             </button>
             <div className="h-5 w-px bg-border" />
             <Link to="/" className="flex items-center gap-2">
