@@ -2,7 +2,7 @@
  * CourseManagement - QL Học phần
  * CRUD + Chi tiết + Loại + Phân loại + Điều kiện + GPA flags
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -14,6 +14,7 @@ import { useToast } from '../../components/ui/Toast';
 import {
   Search, Plus, Pencil, Trash2, Eye, BookOpen,
   ChevronLeft, ChevronRight, AlertCircle, Info,
+  SlidersHorizontal, ChevronDown,
 } from 'lucide-react';
 
 // === Labels & Badge maps ===
@@ -61,6 +62,19 @@ export default function CourseManagement() {
   const [detailCourse, setDetailCourse] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [showTypeMenu, setShowTypeMenu] = useState(false);
+  const [showCatMenu, setShowCatMenu] = useState(false);
+  const typeMenuRef = useRef(null);
+  const catMenuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (typeMenuRef.current && !typeMenuRef.current.contains(e.target)) setShowTypeMenu(false);
+      if (catMenuRef.current && !catMenuRef.current.contains(e.target)) setShowCatMenu(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadCourses = useCallback(async () => {
     setLoading(true);
@@ -155,24 +169,37 @@ export default function CourseManagement() {
   }
 
   return (
-    <div className="animate-fade-in space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Quản Lý Học Phần</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Tổng {pagination.total} học phần trong hệ thống
-          </p>
+    <div className="animate-fade-in space-y-5">
+
+      {/* ── Hero Header ── */}
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 md:p-8">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-primary/8 to-transparent rounded-full translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+        <div className="relative flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <BookOpen className="w-5 h-5 text-primary" />
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Quản Lý Học Phần</span>
+            </div>
+            <p className="text-muted-foreground text-sm mt-1.5">
+              Tổng <strong className="text-foreground">{pagination.total}</strong> học phần trong hệ thống
+            </p>
+          </div>
+          <Button onClick={openCreate} className="gap-2 shrink-0">
+            <Plus className="w-4 h-4" /> Thêm học phần
+          </Button>
         </div>
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="w-4 h-4" /> Thêm học phần
-        </Button>
       </div>
 
-      {/* Filters */}
-      <div className="rounded-xl border bg-card p-4 flex flex-wrap items-center gap-3">
+      {/* ── Filters ── */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground shrink-0">
+          <SlidersHorizontal className="w-3.5 h-3.5" /> Lọc
+        </div>
+
+        {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Tìm mã HP, tên HP..."
             value={search}
@@ -180,113 +207,173 @@ export default function CourseManagement() {
             className="pl-9"
           />
         </div>
-        <Select
-          value={filterType}
-          onChange={(e) => { setFilterType(e.target.value); setPagination((p) => ({ ...p, page: 1 })); }}
-          className="w-36"
-        >
-          <option value="">Tất cả Loại</option>
-          {Object.entries(courseTypeLabels).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
-          ))}
-        </Select>
-        <Select
-          value={filterCategory}
-          onChange={(e) => { setFilterCategory(e.target.value); setPagination((p) => ({ ...p, page: 1 })); }}
-          className="w-40"
-        >
-          <option value="">Tất cả Phân Loại</option>
-          {Object.entries(courseCategoryLabels).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
-          ))}
-        </Select>
+
+        {/* Loại dropdown */}
+        <div className="relative shrink-0" ref={typeMenuRef}>
+          <button
+            type="button"
+            onClick={() => { setShowTypeMenu(v => !v); setShowCatMenu(false); }}
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all min-w-[140px] ${
+              showTypeMenu ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
+                : 'border-input bg-background text-foreground hover:border-primary/60'
+            }`}
+          >
+            <span className="flex-1 text-left truncate">
+              {filterType === '' ? 'Tất cả Loại' : courseTypeLabels[filterType]}
+            </span>
+            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${showTypeMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'}`} />
+          </button>
+          {showTypeMenu && (
+            <div className="absolute left-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-44 animate-fade-in">
+              <div className="py-1.5">
+                {[{ value: '', label: 'Tất cả Loại' }, ...Object.entries(courseTypeLabels).map(([k, v]) => ({ value: k, label: v }))].map(({ value, label }) => (
+                  <button key={value} type="button"
+                    onClick={() => { setFilterType(value); setPagination((p) => ({ ...p, page: 1 })); setShowTypeMenu(false); }}
+                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
+                      filterType === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
+                    }`}>
+                    {filterType === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+                    <span className={filterType === value ? '' : 'ml-3.5'}>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Phân loại dropdown */}
+        <div className="relative shrink-0" ref={catMenuRef}>
+          <button
+            type="button"
+            onClick={() => { setShowCatMenu(v => !v); setShowTypeMenu(false); }}
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all min-w-[160px] ${
+              showCatMenu ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
+                : 'border-input bg-background text-foreground hover:border-primary/60'
+            }`}
+          >
+            <span className="flex-1 text-left truncate">
+              {filterCategory === '' ? 'Tất cả Phân Loại' : courseCategoryLabels[filterCategory]}
+            </span>
+            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${showCatMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'}`} />
+          </button>
+          {showCatMenu && (
+            <div className="absolute left-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-48 animate-fade-in">
+              <div className="py-1.5">
+                {[{ value: '', label: 'Tất cả Phân Loại' }, ...Object.entries(courseCategoryLabels).map(([k, v]) => ({ value: k, label: v }))].map(({ value, label }) => (
+                  <button key={value} type="button"
+                    onClick={() => { setFilterCategory(value); setPagination((p) => ({ ...p, page: 1 })); setShowCatMenu(false); }}
+                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
+                      filterCategory === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
+                    }`}>
+                    {filterCategory === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+                    <span className={filterCategory === value ? '' : 'ml-3.5'}>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Table */}
+      {/* ── Table ── */}
       <div className="rounded-xl border bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground w-20">Mã HP</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground w-70">Tên Học Phần</th>
-                <th className="text-center px-3 py-3 font-medium text-muted-foreground w-10">TC</th>
-                <th className="text-center px-3 py-3 font-medium text-muted-foreground w-24">Loại</th>
-                <th className="text-center px-3 py-3 font-medium text-muted-foreground w-36">Phân Loại</th>
-                <th className="text-center px-3 py-3 font-medium text-muted-foreground w-28">TQ / SH</th>
-                <th className="text-center px-3 py-3 font-medium text-muted-foreground w-32">Điều Kiện</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground w-28">Thao Tác</th>
+                <th className="text-center px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-20">Mã HP</th>
+                <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Tên Học Phần</th>
+                <th className="text-center px-3 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-12">TC</th>
+                <th className="text-center px-3 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-28">Loại</th>
+                <th className="text-center px-3 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-36">Phân Loại</th>
+                <th className="text-center px-3 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-28">TQ / SH</th>
+                <th className="text-center px-3 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-32">Điều Kiện</th>
+                <th className="text-right px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-28">Thao Tác</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i} className="border-b">
-                    <td className="px-4 py-3"><div className="h-4 w-14 skeleton" /></td>
-                    <td className="px-4 py-3"><div className="h-4 w-36 skeleton" /></td>
-                    <td className="px-3 py-3 text-center"><div className="h-4 w-6 skeleton mx-auto" /></td>
-                    <td className="px-3 py-3"><div className="h-4 w-14 skeleton" /></td>
-                    <td className="px-3 py-3"><div className="h-4 w-18 skeleton" /></td>
-                    <td className="px-3 py-3"><div className="h-4 w-14 skeleton" /></td>
-                    <td className="px-3 py-3"><div className="h-4 w-20 skeleton" /></td>
-                    <td className="px-4 py-3"><div className="h-4 w-16 skeleton ml-auto" /></td>
+                    <td className="px-4 py-3.5 text-center"><div className="h-4 w-14 skeleton mx-auto rounded" /></td>
+                    <td className="px-4 py-3.5"><div className="h-4 w-44 skeleton rounded" /></td>
+                    <td className="px-3 py-3.5 text-center"><div className="h-4 w-6 skeleton mx-auto rounded" /></td>
+                    <td className="px-3 py-3.5 text-center"><div className="h-5 w-16 skeleton mx-auto rounded-full" /></td>
+                    <td className="px-3 py-3.5 text-center"><div className="h-5 w-20 skeleton mx-auto rounded-full" /></td>
+                    <td className="px-3 py-3.5 text-center"><div className="h-4 w-14 skeleton mx-auto rounded" /></td>
+                    <td className="px-3 py-3.5 text-center"><div className="h-4 w-20 skeleton mx-auto rounded" /></td>
+                    <td className="px-4 py-3.5"><div className="h-7 w-20 skeleton rounded-lg ml-auto" /></td>
                   </tr>
                 ))
               ) : courses.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
-                    Không có học phần nào
+                  <td colSpan={8} className="px-4 py-16 text-center">
+                    <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                      <BookOpen className="w-6 h-6 text-muted-foreground/30" />
+                    </div>
+                    <p className="text-sm font-medium text-muted-foreground">Không có học phần nào</p>
+                    <p className="text-xs text-muted-foreground mt-1">Thử thay đổi bộ lọc</p>
                   </td>
                 </tr>
               ) : (
                 courses.map((course) => (
-                  <tr key={course._id} className="border-b hover:bg-muted/20 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs font-bold text-primary text-center">{course.code}</td>
-                    <td className="px-4 py-3 font-medium" style={{ maxWidth: '176px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={course.name}>
+                  <tr key={course._id} className="border-b hover:bg-muted/20 transition-colors group">
+                    {/* Mã HP */}
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{course.code}</span>
+                    </td>
+                    {/* Tên */}
+                    <td className="px-4 py-3.5 font-medium max-w-[200px] truncate group-hover:text-primary transition-colors" title={course.name}>
                       {course.name}
                     </td>
-                    <td className="px-3 py-3 text-center">{course.credits}</td>
-                    <td className="px-3 py-3 text-center">
-                      <Badge variant={courseTypeBadge[course.courseType]}>
-                        {courseTypeLabels[course.courseType] || course.courseType}
-                      </Badge>
+                    {/* TC */}
+                    <td className="px-3 py-3.5 text-center">
+                      <span className="text-xs font-bold text-muted-foreground">{course.credits}</span>
                     </td>
-                    <td className="px-3 py-3 text-center">
-                      <Badge variant={courseCategoryBadge[course.courseCategory]}>
-                        {courseCategoryLabels[course.courseCategory] || '—'}
-                      </Badge>
+                    {/* Loại */}
+                    <td className="px-3 py-3.5 text-center">
+                      {course.courseType === 'required' ? (
+                        <span className="inline-flex text-xs font-medium px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">Bắt buộc</span>
+                      ) : (
+                        <span className="inline-flex text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-400/20">Tự chọn</span>
+                      )}
                     </td>
-                    <td className="px-3 py-3 text-xs text-muted-foreground text-center">
+                    {/* Phân loại */}
+                    <td className="px-3 py-3.5 text-center">
+                      {course.courseCategory === 'general' && (
+                        <span className="inline-flex text-xs font-medium px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground border">Đại cương</span>
+                      )}
+                      {course.courseCategory === 'foundation' && (
+                        <span className="inline-flex text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 border border-blue-400/20">Cơ sở ngành</span>
+                      )}
+                      {course.courseCategory === 'specialized' && (
+                        <span className="inline-flex text-xs font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-400/20">Chuyên ngành</span>
+                      )}
+                      {!course.courseCategory && <span className="text-muted-foreground">—</span>}
+                    </td>
+                    {/* TQ / SH */}
+                    <td className="px-3 py-3.5 text-xs text-muted-foreground text-center">
                       {[...(course.prerequisites || []), ...(course.corequisites || [])].length > 0
-                        ? [course.prerequisites?.join(', '), course.corequisites?.join(', ')]
-                          .filter(Boolean)
-                          .join(' / ')
-                        : '—'}
+                        ? [course.prerequisites?.join(', '), course.corequisites?.join(', ')].filter(Boolean).join(' / ')
+                        : <span>—</span>}
                     </td>
-                    <td className="px-3 py-3 text-xs text-muted-foreground text-center truncate" style={{ maxWidth: '130px' }} title={course.condition}>
-                      {course.condition || '—'}
+                    {/* Điều kiện */}
+                    <td className="px-3 py-3.5 text-xs text-muted-foreground text-center">
+                      <span className="truncate block max-w-[120px] mx-auto" title={course.condition}>{course.condition || '—'}</span>
                     </td>
-                    <td className="px-4 py-3">
+                    {/* Actions */}
+                    <td className="px-4 py-3.5">
                       <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => openDetail(course)}
-                          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                          title="Xem chi tiết"
-                        >
+                        <button onClick={() => openDetail(course)}
+                          className="p-1.5 rounded-lg hover:bg-primary/10 transition-colors text-muted-foreground hover:text-primary" title="Xem chi tiết">
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => openEdit(course)}
-                          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                          title="Chỉnh sửa"
-                        >
+                        <button onClick={() => openEdit(course)}
+                          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Chỉnh sửa">
                           <Pencil className="w-4 h-4" />
                         </button>
-                         <button
-                          onClick={() => setDeleteConfirmId(course._id)}
-                          className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors"
-                          title="Xóa"
-                        >
+                        <button onClick={() => setDeleteConfirmId(course._id)}
+                          className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors" title="Xóa">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -300,15 +387,16 @@ export default function CourseManagement() {
 
         {/* Pagination */}
         {pagination.pages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/10">
+          <div className="flex items-center justify-between px-5 py-3 border-t bg-muted/10">
             <p className="text-xs text-muted-foreground">
-              Trang {pagination.page}/{pagination.pages} • Tổng {pagination.total}
+              <strong className="text-foreground">{pagination.total}</strong> học phần • Trang {pagination.page}/{pagination.pages}
             </p>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="sm" disabled={pagination.page <= 1}
                 onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
+              <span className="text-xs px-2 font-medium">{pagination.page}</span>
               <Button variant="ghost" size="sm" disabled={pagination.page >= pagination.pages}
                 onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}>
                 <ChevronRight className="w-4 h-4" />
