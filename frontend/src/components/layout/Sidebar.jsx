@@ -41,7 +41,6 @@ const menuConfig = {
     { label: 'Danh Sách Công Việc', path: '/student/jobs', icon: Briefcase },
     { label: 'CVs', path: '/student/cv', icon: FileText },
     { label: 'Đơn Ứng Tuyển', path: '/student/applications', icon: ClipboardList },
-    { label: 'Yêu Thích', path: '/student/favorites', icon: Heart },
   ],
   employer: [
     { label: 'Tổng Quan', path: '/employer', icon: LayoutDashboard },

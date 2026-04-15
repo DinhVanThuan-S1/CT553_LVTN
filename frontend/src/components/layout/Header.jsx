@@ -19,6 +19,7 @@ import {
   Sun,
   MessageSquare,
   X,
+  Heart,
 } from 'lucide-react';
 import { connectSocket, disconnectSocket } from '../../lib/socket';
 import api from '../../lib/api';
@@ -192,6 +193,14 @@ export default function Header({ user, onLogout, sidebarCollapsed }) {
               >
                 <User className="w-4 h-4 text-muted-foreground" /> Thông tin cá nhân
               </button>
+              {!isAdmin && (
+                <button
+                  onClick={() => { navigate('/student/favorites'); setShowUserMenu(false); }}
+                  className="flex items-center gap-2.5 w-full px-3 py-2 text-sm hover:bg-muted/60 transition-colors"
+                >
+                  <Heart className="w-4 h-4 text-muted-foreground" /> Yêu Thích
+                </button>
+              )}
               <button
                 onClick={() => { navigate(`/${user?.role}/settings`); setShowUserMenu(false); }}
                 className="flex items-center gap-2.5 w-full px-3 py-2 text-sm hover:bg-muted/60 transition-colors"
