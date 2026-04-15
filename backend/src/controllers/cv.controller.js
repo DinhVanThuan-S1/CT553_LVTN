@@ -21,6 +21,15 @@ exports.getCVById = async (req, res) => {
   }
 };
 
+exports.getApplicantCV = async (req, res) => {
+  try {
+    const data = await cvService.getCVForEmployer(req.params.cvId);
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
+
 exports.createCV = async (req, res) => {
   try {
     const data = await cvService.createCV(req.user._id, req.body);

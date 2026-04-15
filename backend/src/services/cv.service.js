@@ -20,6 +20,15 @@ class CVService {
     return cv;
   }
 
+  /** Employer xem CV ứng viên (không cần check studentId) */
+  async getCVForEmployer(cvId) {
+    const cv = await CV.findById(cvId)
+      .populate('skills', 'name icon category estimatedHours')
+      .populate('student', 'fullName email');
+    if (!cv) throw { status: 404, message: 'Không tìm thấy CV' };
+    return cv;
+  }
+
   /** Tạo CV mới */
   async createCV(studentId, data) {
     // Nếu là CV đầu tiên, auto set default

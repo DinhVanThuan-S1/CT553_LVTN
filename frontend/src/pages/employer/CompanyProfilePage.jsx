@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { useToast } from '../../components/ui/Toast';
 import {
   Building2, Globe, Loader2, Save, Plus, X, MapPin,
@@ -196,9 +197,11 @@ export default function CompanyProfilePage() {
               </div>
               <div>
                 <FieldLabel>Quy mô nhân sự</FieldLabel>
-                <Select value={form.size} onChange={(e) => setForm((f) => ({ ...f, size: e.target.value }))}>
-                  {sizeOptions.map((s) => <option key={s} value={s}>{s} nhân viên</option>)}
-                </Select>
+                <CustomSelect
+                  value={form.size}
+                  onChange={(v) => setForm((f) => ({ ...f, size: v }))}
+                  options={sizeOptions.map((s) => ({ value: s, label: `${s} nhân viên` }))}
+                />
               </div>
             </div>
 

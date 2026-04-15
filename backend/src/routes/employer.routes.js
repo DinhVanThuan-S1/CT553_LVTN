@@ -9,6 +9,7 @@ const { protect, authorize } = require('../middleware/auth');
 const companyCtrl = require('../controllers/company.controller');
 const jobCtrl = require('../controllers/jobPosting.controller');
 const appCtrl = require('../controllers/application.controller');
+const cvCtrl = require('../controllers/cv.controller');
 
 router.use(protect, authorize('employer'));
 
@@ -24,5 +25,6 @@ router.put('/job-postings/:id', jobCtrl.updateJob);
 // === Ứng viên ===
 router.get('/job-postings/:jobId/applicants', appCtrl.getApplicationsByJob);
 router.patch('/applications/:id/status', appCtrl.updateApplicationStatus);
+router.get('/applicant-cv/:cvId', cvCtrl.getApplicantCV);
 
 module.exports = router;

@@ -2,11 +2,12 @@
  * EmployerJobPostingsPage - Quản lý tin tuyển dụng
  * CRUD tin + gửi duyệt + xem chi tiết + bộ lọc trạng thái
  */
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
 import {
@@ -84,62 +85,6 @@ function FormSection({ icon: Icon, title, children }) {
   );
 }
 
-// ─── Custom dropdown (SkillMap style) ────────────────
-function CustomSelect({ value, onChange, options }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    function onClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    }
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
-  }, []);
-
-  const selected = options.find(o => o.value === value);
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen(v => !v)}
-        className={`w-full h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all ${
-          open
-            ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
-            : 'border-input bg-background text-foreground hover:border-primary/60'
-        }`}
-      >
-        <span className="flex-1 text-left truncate">{selected?.label ?? value}</span>
-        <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
-          open ? 'rotate-180 text-primary' : 'text-muted-foreground'
-        }`} />
-      </button>
-
-      {open && (
-        <div className="absolute left-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-full animate-fade-in">
-          <div className="py-1.5">
-            {options.map(({ value: v, label }) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => { onChange(v); setOpen(false); }}
-                className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
-                  value === v
-                    ? 'bg-primary/10 text-primary font-semibold'
-                    : 'text-foreground hover:bg-muted/50'
-                }`}
-              >
-                {value === v && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
-                <span className={value === v ? '' : 'ml-3.5'}>{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function EmployerJobPostingsPage() {
   const toast = useToast();
