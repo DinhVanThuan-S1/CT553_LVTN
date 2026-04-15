@@ -371,16 +371,9 @@ export default function ApplicantsPage() {
         </div>
       ) : (
         <>
-          {/* Job selector */}
-          <div className="rounded-2xl border bg-card overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-3 border-b bg-muted/20">
-              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Briefcase className="w-3.5 h-3.5 text-primary" />
-              </div>
-              <span className="text-sm font-semibold">Chọn tin tuyển dụng</span>
-              <span className="ml-auto text-xs text-muted-foreground">{jobs.length} tin đã duyệt</span>
-            </div>
-            <div className="p-4">
+          {/* Job selector + Status filter - same bar */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="min-w-[220px] max-w-xs shrink-0">
               <CustomSelect
                 value={selectedJobId}
                 onChange={(v) => { setSelectedJobId(v); setFilterStatus('all'); }}
@@ -390,21 +383,18 @@ export default function ApplicantsPage() {
                 ]}
               />
             </div>
-          </div>
-
-          {/* Status filter tabs */}
-          {applicants.length > 0 && (
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+            <div className="flex items-center gap-1.5 overflow-x-auto flex-1">
               {FILTER_TABS.map(({ key, label }) => {
                 const count = statusCounts[key] || 0;
                 const active = filterStatus === key;
                 if (key !== 'all' && count === 0) return null;
                 return (
                   <button key={key} onClick={() => setFilterStatus(key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${active
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                      active
                         ? 'bg-primary text-primary-foreground shadow-sm'
                         : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
-                      }`}>
+                    }`}>
                     {key !== 'all' && STATUS_CONFIG[key] && (
                       <div className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG[key].dot}`} />
                     )}
@@ -416,7 +406,7 @@ export default function ApplicantsPage() {
                 );
               })}
             </div>
-          )}
+          </div>
 
           {/* Applicants list */}
           {appLoading ? (
