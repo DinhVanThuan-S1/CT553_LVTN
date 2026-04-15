@@ -71,16 +71,27 @@ export default function ProgressPage() {
 
   // Flatten all sessions across active/completed roadmaps only (exclude paused/cancelled)
   const allSessions = useMemo(() => {
+    const now = new Date();
     const sessions = [];
     roadmaps
       .filter((pr) => pr.status === 'active' || pr.status === 'completed')
       .forEach((pr) => {
         (pr.sessions || []).forEach((s) => {
+          const sessionDate = new Date(s.date);
+          // Derive missed on frontend: upcoming + past end time → missed
+          let status = s.status;
+          if (s.status === 'upcoming') {
+            const [endH, endM] = (s.endTime || '23:59').split(':').map(Number);
+            const endDateTime = new Date(sessionDate);
+            endDateTime.setHours(endH, endM, 0, 0);
+            if (endDateTime < now) status = 'missed';
+          }
           sessions.push({
             ...s,
+            status,
             roadmapId: pr._id,
             roadmapTitle: pr.roadmap?.title || '',
-            date: new Date(s.date),
+            date: sessionDate,
           });
         });
       });
@@ -135,22 +146,37 @@ export default function ProgressPage() {
 
   if (loading) {
     return (
-      <div className="animate-fade-in flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="animate-fade-in space-y-6">
+        <div className="h-32 skeleton rounded-2xl" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-24 skeleton rounded-xl" />)}
+        </div>
+        <div className="h-64 skeleton rounded-xl" />
       </div>
     );
   }
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Tiến Độ Học Tập</h1>
-        <p className="text-muted-foreground text-sm mt-1">Tổng quan quá trình học và rèn luyện kỹ năng</p>
+
+      {/* ── Hero Header ── */}
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-teal-500/8 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            <span className="text-xs font-medium text-primary uppercase tracking-wider">Học tập</span>
+          </div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Tiến Độ Học Tập</h1>
+          <p className="text-muted-foreground text-sm mt-1.5">Tổng quan quá trình học và rèn luyện kỹ năng</p>
+        </div>
       </div>
 
       {totalRoadmaps === 0 ? (
         <div className="rounded-xl border bg-card p-16 text-center">
-          <BarChart3 className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
+          <div className="w-16 h-16 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-4">
+            <BarChart3 className="w-8 h-8 text-muted-foreground/40" />
+          </div>
           <h3 className="font-semibold text-lg mb-1">Chưa có dữ liệu</h3>
           <p className="text-sm text-muted-foreground">
             Đăng ký một lộ trình để bắt đầu theo dõi tiến độ
@@ -159,15 +185,31 @@ export default function ProgressPage() {
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <StatCard icon={<Route className="w-5 h-5 text-primary" />}
-              value={`${activeRoadmaps}/${totalRoadmaps}`} label="Lộ trình đang học" />
-            <StatCard icon={<Clock className="w-5 h-5 text-amber-500" />}
-              value={`${totalHours}h`} label="Tổng giờ đã học" />
-            <StatCard icon={<CheckCircle2 className="w-5 h-5 text-emerald-500" />}
-              value={`${completedSessions}/${totalSessions}`} label="Buổi hoàn thành" />
-            <StatCard icon={<Target className="w-5 h-5 text-blue-500" />}
-              value={`${avgProgress}%`} label="Tiến độ TB" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <StatCard
+              icon={<Route className="w-5 h-5" />}
+              value={`${activeRoadmaps}/${totalRoadmaps}`}
+              label="Lộ trình đang học"
+              color="primary"
+            />
+            <StatCard
+              icon={<Clock className="w-5 h-5" />}
+              value={`${totalHours}h`}
+              label="Tổng giờ đã học"
+              color="amber"
+            />
+            <StatCard
+              icon={<CheckCircle2 className="w-5 h-5" />}
+              value={`${completedSessions}/${totalSessions}`}
+              label="Buổi hoàn thành"
+              color="emerald"
+            />
+            <StatCard
+              icon={<Target className="w-5 h-5" />}
+              value={`${avgProgress}%`}
+              label="Tiến độ TB"
+              color="sky"
+            />
           </div>
 
           {/* Calendar Section */}
@@ -244,61 +286,71 @@ export default function ProgressPage() {
 
           {/* Roadmap Progress Cards */}
           <div>
-            <h2 className="font-semibold text-lg mb-3 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" /> Chi tiết từng lộ trình
+            <h2 className="font-semibold mb-3 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" /> Chi tiết từng lộ trình
             </h2>
-            <div className="space-y-3">
-              {visibleRoadmaps.map((pr) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {visibleRoadmaps.map(pr => {
                 const sessions = pr.sessions || [];
-                const done = sessions.filter((s) => s.status === 'completed').length;
+                const done = sessions.filter(s => s.status === 'completed').length;
                 const total = sessions.length;
                 const pct = pr.progress || 0;
+                const rmColor = roadmapColorMap[pr._id];
 
-                const badgeVariant = pr.status === 'active' ? 'success'
-                  : pr.status === 'completed' ? 'default'
-                    : pr.status === 'cancelled' ? 'danger'
-                      : 'warning';
-                const badgeLabel = pr.status === 'active' ? 'Đang học'
-                  : pr.status === 'completed' ? 'Hoàn thành'
-                    : pr.status === 'cancelled' ? 'Đã hủy'
-                      : 'Tạm dừng';
+                const STATUS_MAP = {
+                  active: { label: 'Đang học', cls: 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' },
+                  completed: { label: 'Hoàn thành', cls: 'bg-primary/10    text-primary    border border-primary/20' },
+                  paused: { label: 'Tạm dừng', cls: 'bg-amber-500/10  text-amber-600  border border-amber-500/20' },
+                  cancelled: { label: 'Đã hủy', cls: 'bg-red-500/10    text-red-600    border border-red-500/20' },
+                };
+                const st = STATUS_MAP[pr.status] || STATUS_MAP.cancelled;
+                const progressBar = pct === 100 ? 'bg-emerald-500' : pct > 50 ? 'bg-primary' : 'bg-amber-500';
 
                 return (
-                  <div key={pr._id} className="rounded-xl border bg-card p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h3 className="font-semibold">{pr.roadmap?.title}</h3>
-                        <p className="text-xs text-muted-foreground">{pr.roadmap?.careerPath}</p>
-                      </div>
-                      <Badge variant={badgeVariant}>{badgeLabel}</Badge>
-                    </div>
-
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                        <span>{done} / {total} buổi</span>
-                        <span className="font-medium text-foreground">{pct}%</span>
-                      </div>
-                      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-700 ${pct === 100 ? 'bg-emerald-500' : pct > 50 ? 'bg-primary' : 'bg-amber-500'
-                            }`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-5 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" /> {pr.totalHoursLearned || 0}h đã học
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" /> {pr.durationMonths} tháng
-                      </span>
-                      {pr.readinessScore > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Award className="w-3.5 h-3.5" /> Sẵn sàng: {pr.readinessScore}%
+                  <div key={pr._id} className="rounded-xl border bg-card overflow-hidden">
+                    {/* Color strip */}
+                    <div className={`h-1.5 ${rmColor?.dot || 'bg-primary'}`}
+                      style={{ width: '100%', background: undefined }}
+                    />
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-3 gap-2">
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-sm leading-snug truncate">{pr.roadmap?.title}</h3>
+                          <p className="text-xs text-muted-foreground mt-0.5">{pr.roadmap?.careerPath}</p>
+                        </div>
+                        <span className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full shrink-0 ${st.cls}`}>
+                          {st.label}
                         </span>
-                      )}
+                      </div>
+
+                      {/* Progress */}
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1.5">
+                          <span>{done} / {total} buổi hoàn thành</span>
+                          <span className="font-bold text-foreground">{pct}%</span>
+                        </div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ${progressBar}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Stats */}
+                      <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" /> {pr.totalHoursLearned || 0}h đã học
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5" /> {pr.durationMonths} tháng
+                        </span>
+                        {pr.readinessScore > 0 && (
+                          <span className="flex items-center gap-1 text-emerald-600">
+                            <Award className="w-3.5 h-3.5" /> Sẵn sàng: {pr.readinessScore}%
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -436,7 +488,7 @@ function MonthView({ referenceDate, sessions, roadmapColorMap }) {
       <div className="grid grid-cols-7 gap-1">
         {calendarDays.map((day, i) => {
           if (!day) {
-            return <div key={`empty-${i}`} className="h-20 rounded" />;
+            return <div key={`empty-${i}`} className="min-h-[120px] rounded" />;
           }
 
           const isToday = isSameDay(day, today);
@@ -446,7 +498,7 @@ function MonthView({ referenceDate, sessions, roadmapColorMap }) {
           const total = daySessions.length;
 
           return (
-            <div key={i} className={`h-20 rounded-lg border p-1.5 transition-colors relative group ${isToday ? 'border-primary bg-primary/[0.03] ring-1 ring-primary/20' : 'bg-card hover:bg-muted/20'
+            <div key={i} className={`min-h-[120px] rounded-lg border p-1.5 transition-colors relative group ${isToday ? 'border-primary bg-primary/[0.03] ring-1 ring-primary/20' : 'bg-card hover:bg-muted/20'
               }`}>
               <span className={`text-xs font-medium ${isToday ? 'text-primary font-bold' : ''}`}>
                 {day.getDate()}
@@ -454,22 +506,23 @@ function MonthView({ referenceDate, sessions, roadmapColorMap }) {
 
               {total > 0 && (
                 <div className="mt-0.5 space-y-0.5">
-                  {daySessions.slice(0, 2).map((s) => {
+                  {daySessions.map((s) => {
                     const rmColor = roadmapColorMap?.[s.roadmapId];
                     const statusClass = s.status === 'completed'
-                        ? 'bg-emerald-500/15 text-emerald-700'
-                        : s.status === 'missed'
-                          ? 'bg-red-400/15 text-red-600'
-                          : 'bg-primary/10 text-primary';
+                      ? 'bg-emerald-500/15 text-emerald-700'
+                      : s.status === 'missed'
+                        ? 'bg-red-400/15 text-red-600'
+                        : 'bg-primary/10 text-primary';
                     return (
-                      <div key={s._id} className={`text-[9px] px-1 py-0.5 rounded truncate border-l-[2px] ${statusClass} ${rmColor?.border || ''}`}>
-                        {s.skill?.icon || '📘'} {s.skill?.name || 'Kỹ năng'}
-                      </div>
+                      <Link
+                        key={s._id}
+                        to={`/student/my-roadmap/${s.roadmapId}/session/${s._id}`}
+                        className={`block text-[9px] px-1 py-0.5 rounded truncate border-l-[2px] hover:opacity-80 transition-opacity cursor-pointer ${statusClass} ${rmColor?.border || ''}`}
+                      >
+                        {s.skill?.name || 'Kỹ năng'}
+                      </Link>
                     );
                   })}
-                  {total > 2 && (
-                    <span className="text-[9px] text-muted-foreground">+{total - 2} khác</span>
-                  )}
                 </div>
               )}
 
@@ -535,12 +588,23 @@ function SessionChip({ session, roadmapColorMap }) {
 }
 
 /* ---------- Stat Card ---------- */
-function StatCard({ icon, value, label }) {
+function StatCard({ icon, value, label, color }) {
+  const colorMap = {
+    primary: { bg: 'bg-primary/10', text: 'text-primary', icon: 'text-primary' },
+    amber: { bg: 'bg-amber-500/10', text: 'text-amber-600', icon: 'text-amber-500' },
+    emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-600', icon: 'text-emerald-500' },
+    sky: { bg: 'bg-sky-500/10', text: 'text-sky-600', icon: 'text-sky-500' },
+  };
+  const c = colorMap[color] || colorMap.primary;
   return (
-    <div className="rounded-xl border bg-card p-4">
-      <div className="flex items-center gap-2 mb-2">{icon}</div>
-      <p className="text-2xl font-bold">{value}</p>
-      <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+    <div className="rounded-xl border bg-card p-4 flex flex-col gap-3">
+      <div className={`w-9 h-9 rounded-lg ${c.bg} ${c.icon} flex items-center justify-center`}>
+        {icon}
+      </div>
+      <div>
+        <p className={`text-2xl font-bold ${c.text}`}>{value}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+      </div>
     </div>
   );
 }
