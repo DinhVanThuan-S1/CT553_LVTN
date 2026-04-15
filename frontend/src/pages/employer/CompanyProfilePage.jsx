@@ -7,13 +7,38 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
-import { Badge } from '../../components/ui/Badge';
 import { useToast } from '../../components/ui/Toast';
 import {
-  Building2, Globe, Loader2, Save, Plus, X, MapPin, CheckCircle2,
+  Building2, Globe, Loader2, Save, Plus, X, MapPin,
+  CheckCircle2, Image, Users, FileText,
 } from 'lucide-react';
 
 const sizeOptions = ['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'];
+
+// ─── Field label ───────────────────────────────
+function FieldLabel({ children, required }) {
+  return (
+    <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 block">
+      {children}{required && <span className="text-red-500 ml-0.5">*</span>}
+    </label>
+  );
+}
+
+// ─── Section card header ───────────────────────
+function SectionHeader({ icon: Icon, iconCls, title, subtitle, action }) {
+  return (
+    <div className="flex items-center gap-3 px-5 py-4 border-b bg-muted/20">
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${iconCls}`}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div className="flex-1">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
 
 export default function CompanyProfilePage() {
   const toast = useToast();
@@ -40,7 +65,9 @@ export default function CompanyProfilePage() {
           logo: c.logo || '',
           size: c.size || '1-10',
           addresses: (c.addresses || []).map((a) => ({
-            label: a.label || '', fullAddress: a.fullAddress || '', city: a.city || '', district: a.district || '', isHeadquarter: a.isHeadquarter || false,
+            label: a.label || '', fullAddress: a.fullAddress || '',
+            city: a.city || '', district: a.district || '',
+            isHeadquarter: a.isHeadquarter || false,
           })),
         });
       }
@@ -84,104 +111,227 @@ export default function CompanyProfilePage() {
 
   if (loading) {
     return (
-      <div className="animate-fade-in flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="animate-fade-in space-y-5 max-w-3xl">
+        <div className="h-32 skeleton rounded-2xl" />
+        <div className="h-64 skeleton rounded-2xl" />
+        <div className="h-48 skeleton rounded-2xl" />
       </div>
     );
   }
 
+  const hasLogo = !!form.logo;
+
   return (
-    <div className="animate-fade-in space-y-6 max-w-3xl">
-      <div>
-        <h1 className="text-2xl font-bold">Hồ Sơ Công Ty</h1>
-        <p className="text-muted-foreground text-sm mt-1">Thông tin công ty hiển thị trong tin tuyển dụng</p>
+    <div className="animate-fade-in space-y-5 max-w-3xl">
+
+      {/* ── Hero Header ── */}
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-teal-500/8 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+        <div className="relative flex items-start gap-4">
+          {/* Logo preview */}
+          <div className="w-14 h-14 rounded-xl border-2 border-white/20 bg-card/50 flex items-center justify-center shrink-0 overflow-hidden shadow-md">
+            {hasLogo
+              ? <img src={form.logo} alt="Logo" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+              : <Building2 className="w-7 h-7 text-muted-foreground/40" />
+            }
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <Building2 className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-medium text-primary uppercase tracking-wider">Hồ sơ công ty</span>
+            </div>
+            <h1 className="text-xl font-bold truncate">{form.name || 'Chưa thiết lập tên công ty'}</h1>
+            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
+              {form.industry && <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> {form.industry}</span>}
+              {form.size && <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {form.size} nhân viên</span>}
+              {form.website && (
+                <a href={form.website} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-primary hover:underline">
+                  <Globe className="w-3 h-3" /> {form.website.replace(/^https?:\/\//, '')}
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-6">
-        {/* Basic Info */}
-        <div className="rounded-xl border bg-card p-5 space-y-4">
-          <h3 className="font-medium text-sm flex items-center gap-1.5">
-            <Building2 className="w-4 h-4 text-primary" /> Thông tin cơ bản
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm font-medium mb-1 block">Tên công ty *</label>
-              <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="VD: FPT Software" />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Ngành nghề</label>
-              <Input value={form.industry} onChange={(e) => setForm((f) => ({ ...f, industry: e.target.value }))}
-                placeholder="VD: Công nghệ thông tin" />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Website</label>
-              <Input value={form.website} onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
-                placeholder="https://..." />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Quy mô</label>
-              <Select value={form.size} onChange={(e) => setForm((f) => ({ ...f, size: e.target.value }))}>
-                {sizeOptions.map((s) => <option key={s} value={s}>{s} nhân viên</option>)}
-              </Select>
-            </div>
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Logo URL</label>
-            <Input value={form.logo} onChange={(e) => setForm((f) => ({ ...f, logo: e.target.value }))}
-              placeholder="URL ảnh logo" />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Giới thiệu công ty</label>
-            <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              rows={4} placeholder="Mô tả về công ty, văn hóa, sản phẩm..." />
-          </div>
-        </div>
+      <form onSubmit={handleSave} className="space-y-5">
 
-        {/* Addresses */}
-        <div className="rounded-xl border bg-card p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-sm flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-primary" /> Địa chỉ ({form.addresses.length})
-            </h3>
-            <Button type="button" variant="outline" size="sm" onClick={addAddress} className="text-xs gap-1">
-              <Plus className="w-3 h-3" /> Thêm
-            </Button>
-          </div>
-          {form.addresses.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Chưa có địa chỉ nào</p>
-          ) : (
-            form.addresses.map((addr, i) => (
-              <div key={i} className="border rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted-foreground">Địa chỉ #{i + 1}</span>
-                    {addr.isHeadquarter && <Badge variant="success" className="text-[10px]">Trụ sở chính</Badge>}
-                  </div>
-                  <button type="button" onClick={() => removeAddress(i)} className="text-red-400 hover:text-red-600">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input value={addr.label} onChange={(e) => updateAddress(i, 'label', e.target.value)}
-                    placeholder="Tên (VD: Trụ sở chính)" />
-                  <Input value={addr.city} onChange={(e) => updateAddress(i, 'city', e.target.value)}
-                    placeholder="Thành phố" />
-                </div>
-                <Input value={addr.fullAddress} onChange={(e) => updateAddress(i, 'fullAddress', e.target.value)}
-                  placeholder="Địa chỉ đầy đủ" />
-                <label className="flex items-center gap-2 text-xs">
-                  <input type="checkbox" checked={addr.isHeadquarter}
-                    onChange={(e) => updateAddress(i, 'isHeadquarter', e.target.checked)} />
-                  Trụ sở chính
-                </label>
+        {/* ── Basic Info ── */}
+        <div className="rounded-2xl border bg-card overflow-hidden">
+          <SectionHeader
+            icon={Building2} iconCls="bg-primary/10 text-primary"
+            title="Thông tin cơ bản"
+            subtitle="Tên, ngành nghề, quy mô công ty"
+          />
+          <div className="p-5 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <FieldLabel required>Tên công ty</FieldLabel>
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="VD: FPT Software"
+                />
               </div>
-            ))
-          )}
+              <div>
+                <FieldLabel>Ngành nghề</FieldLabel>
+                <Input
+                  value={form.industry}
+                  onChange={(e) => setForm((f) => ({ ...f, industry: e.target.value }))}
+                  placeholder="VD: Công nghệ thông tin"
+                />
+              </div>
+              <div>
+                <FieldLabel>Website</FieldLabel>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50" />
+                  <Input
+                    className="pl-8"
+                    value={form.website}
+                    onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+              <div>
+                <FieldLabel>Quy mô nhân sự</FieldLabel>
+                <Select value={form.size} onChange={(e) => setForm((f) => ({ ...f, size: e.target.value }))}>
+                  {sizeOptions.map((s) => <option key={s} value={s}>{s} nhân viên</option>)}
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <FieldLabel>Logo URL</FieldLabel>
+              <div className="relative">
+                <Image className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50" />
+                <Input
+                  className="pl-8"
+                  value={form.logo}
+                  onChange={(e) => setForm((f) => ({ ...f, logo: e.target.value }))}
+                  placeholder="https://... (URL ảnh logo)"
+                />
+              </div>
+            </div>
+
+            <div>
+              <FieldLabel>Giới thiệu công ty</FieldLabel>
+              <Textarea
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                rows={4}
+                placeholder="Mô tả về công ty, văn hóa làm việc, sản phẩm/dịch vụ..."
+                className="resize-none"
+              />
+              <p className="text-xs text-muted-foreground mt-1">{form.description.length} ký tự</p>
+            </div>
+          </div>
         </div>
 
-        <Button type="submit" disabled={saving} className="gap-2 w-full">
-          <Save className="w-4 h-4" /> {saving ? 'Đang lưu...' : 'Lưu hồ sơ công ty'}
+        {/* ── Addresses ── */}
+        <div className="rounded-2xl border bg-card overflow-hidden">
+          <SectionHeader
+            icon={MapPin} iconCls="bg-emerald-500/10 text-emerald-600"
+            title={`Địa Chỉ [ ${form.addresses.length} ]`}
+            subtitle="Trụ sở chính, chi nhánh công ty..."
+            action={
+              <Button type="button" variant="outline" size="sm" onClick={addAddress} className="gap-1.5 h-7 text-xs">
+                <Plus className="w-3 h-3" /> Thêm địa chỉ
+              </Button>
+            }
+          />
+          <div className="p-4">
+            {form.addresses.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                  <MapPin className="w-6 h-6 text-muted-foreground/30" />
+                </div>
+                <p className="text-sm text-muted-foreground">Chưa có địa chỉ nào</p>
+                <button
+                  type="button"
+                  onClick={addAddress}
+                  className="mt-2 text-xs text-primary hover:underline font-medium"
+                >
+                  + Thêm địa chỉ đầu tiên
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {form.addresses.map((addr, i) => (
+                  <div key={i} className={`rounded-xl border p-4 space-y-3 ${addr.isHeadquarter ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-border/60'}`}>
+                    {/* Row header */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-muted-foreground">Địa chỉ #{i + 1}</span>
+                        {addr.isHeadquarter && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                            <CheckCircle2 className="w-2.5 h-2.5" /> Trụ sở chính
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeAddress(i)}
+                        className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Fields */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <FieldLabel>Tên địa chỉ</FieldLabel>
+                        <Input
+                          value={addr.label}
+                          onChange={(e) => updateAddress(i, 'label', e.target.value)}
+                          placeholder="VD: Trụ sở A"
+                        />
+                      </div>
+                      <div>
+                        <FieldLabel>Thành phố</FieldLabel>
+                        <Input
+                          value={addr.city}
+                          onChange={(e) => updateAddress(i, 'city', e.target.value)}
+                          placeholder="VD: Cần Thơ"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <FieldLabel>Địa chỉ đầy đủ</FieldLabel>
+                      <Input
+                        value={addr.fullAddress}
+                        onChange={(e) => updateAddress(i, 'fullAddress', e.target.value)}
+                        placeholder="Số nhà, đường, phường, quận..."
+                      />
+                    </div>
+
+                    {/* Headquarter toggle */}
+                    <label className="flex items-center gap-2.5 cursor-pointer group w-fit">
+                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${addr.isHeadquarter ? 'bg-emerald-500 border-emerald-500' : 'border-border group-hover:border-emerald-400'
+                        }`}>
+                        {addr.isHeadquarter && <CheckCircle2 className="w-3 h-3 text-white" />}
+                      </div>
+                      <input type="checkbox" className="sr-only" checked={addr.isHeadquarter}
+                        onChange={(e) => updateAddress(i, 'isHeadquarter', e.target.checked)} />
+                      <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                        Đánh dấu là trụ sở chính
+                      </span>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Save Button ── */}
+        <Button type="submit" disabled={saving} className="gap-2 w-full h-11 text-sm font-semibold shadow-md">
+          {saving
+            ? <><Loader2 className="w-4 h-4 animate-spin" /> Đang lưu...</>
+            : <><Save className="w-4 h-4" /> Lưu hồ sơ công ty</>
+          }
         </Button>
       </form>
     </div>
