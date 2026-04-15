@@ -188,7 +188,7 @@ export default function ProgressPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <StatCard
               icon={<Route className="w-5 h-5" />}
-              value={`${activeRoadmaps}/${totalRoadmaps}`}
+              value={`${activeRoadmaps} / ${totalRoadmaps}`}
               label="Lộ trình đang học"
               color="primary"
             />
@@ -200,7 +200,7 @@ export default function ProgressPage() {
             />
             <StatCard
               icon={<CheckCircle2 className="w-5 h-5" />}
-              value={`${completedSessions}/${totalSessions}`}
+              value={`${completedSessions} / ${totalSessions}`}
               label="Buổi hoàn thành"
               color="emerald"
             />

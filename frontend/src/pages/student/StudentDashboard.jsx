@@ -14,9 +14,9 @@ import {
 
 function getGreeting() {
   const h = new Date().getHours();
-  if (h < 12) return { text: 'Chào buổi sáng', emoji: '☀️' };
-  if (h < 18) return { text: 'Chào buổi chiều', emoji: '🌤️' };
-  return { text: 'Chào buổi tối', emoji: '🌙' };
+  if (h < 12) return { text: 'Chào buổi Sáng', emoji: '☀️' };
+  if (h < 18) return { text: 'Chào buổi Chiều', emoji: '🌤️' };
+  return { text: 'Chào buổi Tối', emoji: '🌙' };
 }
 
 function getDayLabel(date) {

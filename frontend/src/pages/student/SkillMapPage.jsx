@@ -13,7 +13,7 @@ import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components
 import { useToast } from '../../components/ui/Toast';
 import {
   Search, Loader2, Zap, BookOpen, ExternalLink, FileText,
-  Clock, BarChart3, ChevronRight, Play, HelpCircle, X,
+  Clock, BarChart3, ChevronRight, ChevronDown, Play, HelpCircle, X,
   Plus, Shield, GraduationCap, Route, User, RefreshCw, Trash2,
   CheckCircle2, Star,
 } from 'lucide-react';
@@ -70,6 +70,8 @@ export default function SkillMapPage() {
   const [selectedToAdd, setSelectedToAdd] = useState([]);
   const [adding, setAdding] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [showMyDetails, setShowMyDetails] = useState(true);
 
   useEffect(() => { loadData(); }, []);
 
@@ -177,16 +179,21 @@ export default function SkillMapPage() {
     }
   }
 
-  // Group by category
-  const filtered = skills.filter((s) =>
-    !search || s.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Group by category (với filter)
+  const filtered = skills.filter((s) => {
+    const matchSearch = !search || s.name.toLowerCase().includes(search.toLowerCase());
+    const matchCat = categoryFilter === 'all' || s.category === categoryFilter;
+    return matchSearch && matchCat;
+  });
   const grouped = {};
   for (const skill of filtered) {
     const cat = skill.category || 'other';
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push(skill);
   }
+
+  // All categories in skills list
+  const allCategories = [...new Set(skills.map(s => s.category).filter(Boolean))];
 
   // Stats
   const totalSkills = skills.length;
@@ -225,139 +232,48 @@ export default function SkillMapPage() {
 
   if (loading) {
     return (
-      <div className="animate-fade-in flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="animate-fade-in space-y-4">
+        <div className="h-32 skeleton rounded-2xl" />
+        <div className="h-12 skeleton rounded-xl" />
+        <div className="h-48 skeleton rounded-xl" />
+        <div className="h-64 skeleton rounded-xl" />
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Skill Map</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Tổng quan {totalSkills} kỹ năng • {mySkills.length} kỹ năng của tôi
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleSyncAcademic} disabled={syncing}>
-            {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-            Sync từ HSHT
-          </Button>
-          <Button size="sm" className="gap-1.5 text-xs" onClick={() => setShowAddSkill(true)}>
-            <Plus className="w-3.5 h-3.5" /> Thêm kỹ năng
-          </Button>
+    <div className="animate-fade-in space-y-5">
+
+      {/* ── Hero Header ── */}
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-500/8 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+        <div className="relative flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Zap className="w-5 h-5 text-primary" />
+              <span className="text-xs font-medium text-primary uppercase tracking-wider">Kỹ năng</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Skill Map</h1>
+            <p className="text-muted-foreground text-sm mt-1.5">
+              Tổng quan {totalSkills} kỹ năng &bull; {mySkills.length} kỹ năng của tôi
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleSyncAcademic} disabled={syncing}>
+              {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              Sync từ HSHT
+            </Button>
+            <Button size="sm" className="gap-1.5 text-xs" onClick={() => setShowAddSkill(true)}>
+              <Plus className="w-3.5 h-3.5" /> Thêm kỹ năng
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* My Skills Summary */}
-      {mySkills.length > 0 && (
-        <div className="rounded-xl border bg-card overflow-hidden">
-          <div className="flex items-center gap-2 px-5 py-3 bg-muted/20 border-b">
-            <Shield className="w-4 h-4 text-primary" />
-            <h3 className="font-semibold text-sm">Kỹ năng của tôi</h3>
-            <span className="text-xs text-muted-foreground ml-auto">
-              {verifiedSkills.length} xác thực • {selfSkills.length} tự khai báo
-            </span>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 p-4 border-b">
-            <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/20 p-3 text-center">
-              <div className="flex items-center justify-center gap-1 mb-1"><Route className="w-3.5 h-3.5 text-emerald-600" /><span className="text-xs font-medium text-emerald-600">Lộ trình</span></div>
-              <p className="text-xl font-bold text-emerald-600">{roadmapSkills.length}</p>
-            </div>
-            <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 text-center">
-              <div className="flex items-center justify-center gap-1 mb-1"><GraduationCap className="w-3.5 h-3.5 text-amber-600" /><span className="text-xs font-medium text-amber-600">Học phần</span></div>
-              <p className="text-xl font-bold text-amber-600">{academicSkills.length}</p>
-            </div>
-            <div className="rounded-lg bg-muted/30 border p-3 text-center">
-              <div className="flex items-center justify-center gap-1 mb-1"><User className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-xs font-medium text-muted-foreground">Tự khai báo</span></div>
-              <p className="text-xl font-bold">{selfSkills.length}</p>
-            </div>
-          </div>
-
-          {/* Skill pills */}
-          <div className="p-4">
-            <div className="flex flex-wrap gap-1.5">
-              {mySkills.map((ms) => {
-                const skill = ms.skill;
-                if (!skill) return null;
-                const primary = ms.sources?.[0] || 'self';
-                const SrcIcon = sourceIcons[primary];
-                return (
-                  <div key={skill._id + primary}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border transition-all ${sourceColors[primary]}`}>
-                    <SrcIcon className="w-3 h-3" />
-                    <span>{skill.icon} {skill.name}</span>
-                    {ms.isVerified && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
-                    {primary === 'self' && (
-                      <button onClick={(e) => { e.stopPropagation(); handleRemoveSelfSkill(skill._id); }}
-                        className="hover:text-red-500 transition-colors ml-0.5">
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Biểu đồ kỹ năng */}
-      {chartSkills.length > 0 && (
-        <div className="rounded-xl border bg-card overflow-hidden">
-          <div className="flex items-center gap-2 px-5 py-3 bg-muted/20 border-b">
-            <BarChart3 className="w-4 h-4 text-primary" />
-            <h3 className="font-semibold text-sm">Tiến độ kỹ năng</h3>
-            <span className="text-xs text-muted-foreground ml-auto">Top {chartSkills.length} kỹ năng đang học</span>
-          </div>
-          <div className="p-5 space-y-3">
-            {chartSkills.map(skill => {
-              const prog = skillProgress[skill._id];
-              const pct = skill.percent;
-              return (
-                <button
-                  key={skill._id}
-                  onClick={() => openSkillDetail(skill)}
-                  className="w-full flex items-center gap-3 group hover:bg-muted/20 rounded-lg px-2 py-1.5 -mx-2 transition-colors text-left"
-                >
-                  <span className="text-lg shrink-0">{skill.icon || '📘'}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium truncate group-hover:text-primary transition-colors">
-                        {skill.name}
-                      </span>
-                      <span className={`text-xs font-semibold ml-2 ${pct === 100 ? 'text-emerald-500' : 'text-muted-foreground'}`}>
-                        {pct}%
-                      </span>
-                    </div>
-                    <div className="h-2 bg-muted/40 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${getProgressColor(pct)}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between mt-0.5">
-                      <span className="text-[10px] text-muted-foreground">
-                        {prog.completed}/{prog.total} buổi học
-                      </span>
-                      <ChevronRight className="w-3 h-3 text-muted-foreground/40 group-hover:text-primary transition-colors" />
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Search */}
-      <div className="rounded-xl border bg-card p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      {/* ── Search + Category Filter ── */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Tìm kỹ năng..."
             value={search}
@@ -365,7 +281,163 @@ export default function SkillMapPage() {
             className="pl-9"
           />
         </div>
+        <div className="relative shrink-0">
+          <select
+            value={categoryFilter}
+            onChange={e => setCategoryFilter(e.target.value)}
+            className="h-9 appearance-none pl-3 pr-8 rounded-md border bg-background text-sm font-medium
+              focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
+              text-foreground cursor-pointer transition-colors hover:border-primary/50 min-w-[160px]"
+          >
+            <option value="all">Tất cả danh mục</option>
+            {allCategories.map(cat => (
+              <option key={cat} value={cat}>
+                {categoryLabels[cat] || cat}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+        </div>
       </div>
+
+      {/* ── Chi tiết kỹ năng (collapsible) ── */}
+      {(mySkills.length > 0 || chartSkills.length > 0) && (
+        <div className="rounded-xl border bg-card overflow-hidden">
+
+          {/* Toggle header */}
+          <button
+            onClick={() => setShowMyDetails(v => !v)}
+            className="w-full flex items-center gap-3 px-5 py-4 hover:bg-muted/20 transition-colors text-left group"
+          >
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
+              <Shield className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">Skill Detail</p>
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/8 text-primary">
+                  <Shield className="w-2.5 h-2.5" /> {mySkills.length} kỹ năng
+                </span>
+                {verifiedSkills.length > 0 && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">
+                    <CheckCircle2 className="w-2.5 h-2.5" /> {verifiedSkills.length} xác thực
+                  </span>
+                )}
+                {chartSkills.length > 0 && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
+                    <BarChart3 className="w-2.5 h-2.5" /> {chartSkills.length} đang học
+                  </span>
+                )}
+              </div>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-300 shrink-0 ${showMyDetails ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showMyDetails && (
+            <div className="border-t">
+
+              {/* ── Kỹ năng của tôi ── */}
+              {mySkills.length > 0 && (
+                <div className="p-5 space-y-4 border-b border-border/50">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kỹ năng của tôi</span>
+                  </div>
+
+                  {/* Stats 3 cột */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 p-3 text-center">
+                      <Route className="w-5 h-5 text-emerald-500/20 absolute -bottom-1 -right-1" />
+                      <span className="text-[11px] font-medium text-emerald-600 block mb-1">Lộ trình</span>
+                      <p className="text-2xl font-bold text-emerald-600">{roadmapSkills.length}</p>
+                    </div>
+                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 p-3 text-center">
+                      <GraduationCap className="w-5 h-5 text-amber-500/20 absolute -bottom-1 -right-1" />
+                      <span className="text-[11px] font-medium text-amber-600 block mb-1">Học phần</span>
+                      <p className="text-2xl font-bold text-amber-600">{academicSkills.length}</p>
+                    </div>
+                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-muted/60 to-muted/20 border p-3 text-center">
+                      <User className="w-5 h-5 text-muted-foreground/20 absolute -bottom-1 -right-1" />
+                      <span className="text-[11px] font-medium text-muted-foreground block mb-1">Tự khai báo</span>
+                      <p className="text-2xl font-bold">{selfSkills.length}</p>
+                    </div>
+                  </div>
+
+                  {/* Skill pills */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {mySkills.map(ms => {
+                      const skill = ms.skill;
+                      if (!skill) return null;
+                      const primary = ms.sources?.[0] || 'self';
+                      const SrcIcon = sourceIcons[primary];
+                      return (
+                        <div key={skill._id + primary}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-all hover:shadow-sm ${sourceColors[primary]}`}>
+                          <SrcIcon className="w-2.5 h-2.5" />
+                          <span>{skill.icon} {skill.name}</span>
+                          {ms.isVerified && <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500" />}
+                          {primary === 'self' && (
+                            <button onClick={e => { e.stopPropagation(); handleRemoveSelfSkill(skill._id); }}
+                              className="hover:text-red-500 transition-colors ml-0.5 rounded-full hover:bg-red-500/10 p-0.5 -mr-0.5">
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Tiến độ kỹ năng ── */}
+              {chartSkills.length > 0 && (
+                <div className="p-5 space-y-1">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tiến độ kỹ năng</span>
+                    <span className="ml-auto text-[10px] font-normal text-muted-foreground">Top {chartSkills.length}</span>
+                  </div>
+                  {chartSkills.map((skill, idx) => {
+                    const prog = skillProgress[skill._id];
+                    const pct = skill.percent;
+                    const rankColor = idx === 0 ? 'bg-amber-400 text-white' : idx === 1 ? 'bg-slate-400 text-white' : idx === 2 ? 'bg-orange-400 text-white' : 'bg-muted text-muted-foreground';
+                    return (
+                      <button
+                        key={skill._id}
+                        onClick={() => openSkillDetail(skill)}
+                        className="w-full flex items-center gap-3 group hover:bg-muted/20 rounded-xl px-3 py-2.5 transition-colors text-left"
+                      >
+                        <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${rankColor}`}>
+                          {idx + 1}
+                        </span>
+                        <span className="text-base shrink-0">{skill.icon || '📘'}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="text-xs font-medium truncate group-hover:text-primary transition-colors">
+                              {skill.name}
+                            </span>
+                            <span className={`text-[10px] font-bold shrink-0 ${pct === 100 ? 'text-emerald-500' : 'text-muted-foreground'}`}>
+                              {pct}%
+                            </span>
+                          </div>
+                          <div className="h-1.5 bg-muted/40 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-700 ${getProgressColor(pct)}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">{prog.completed}/{prog.total} buổi</span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary shrink-0 transition-colors" />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Skill Groups */}
       <div className="space-y-4">
@@ -429,9 +501,8 @@ export default function SkillMapPage() {
                         )}
 
                         <span className="text-2xl block mb-1">{skill.icon || '📘'}</span>
-                        <p className={`text-xs font-medium truncate group-hover:text-primary transition-colors ${
-                          isOwned && ms.isVerified ? 'text-emerald-600' : isOwned ? 'text-primary' : ''
-                        }`}>
+                        <p className={`text-xs font-medium truncate group-hover:text-primary transition-colors ${isOwned && ms.isVerified ? 'text-emerald-600' : isOwned ? 'text-primary' : ''
+                          }`}>
                           {skill.name}
                         </p>
                         <p className="text-[10px] text-muted-foreground mt-0.5">{skill.estimatedHours}h</p>
@@ -487,11 +558,10 @@ export default function SkillMapPage() {
                     ? prev.filter(id => id !== skill._id)
                     : [...prev, skill._id]
                 )}
-                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                  selectedToAdd.includes(skill._id)
-                    ? 'bg-primary text-white border-primary'
-                    : 'bg-muted/30 text-muted-foreground border-transparent hover:bg-muted/60'
-                }`}>
+                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${selectedToAdd.includes(skill._id)
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-muted/30 text-muted-foreground border-transparent hover:bg-muted/60'
+                  }`}>
                 {skill.icon} {skill.name}
               </button>
             ))}
