@@ -285,9 +285,9 @@ export default function SkillMapPage() {
           <select
             value={categoryFilter}
             onChange={e => setCategoryFilter(e.target.value)}
-            className="h-9 appearance-none pl-3 pr-8 rounded-md border bg-background text-sm font-medium
+            className="h-9 appearance-none pl-3 pr-8 rounded-md border border-border/50 bg-muted/30 text-sm font-medium
               focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
-              text-foreground cursor-pointer transition-colors hover:border-primary/50 min-w-[160px]"
+              text-foreground cursor-pointer transition-colors hover:border-primary/40 min-w-[160px]"
           >
             <option value="all">Tất cả danh mục</option>
             {allCategories.map(cat => (

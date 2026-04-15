@@ -32,6 +32,7 @@ export default function ApplicationsPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -88,6 +89,17 @@ export default function ApplicationsPage() {
   const interviews = apps.filter(a => a.status === 'interview_scheduled').length;
   const accepted   = apps.filter(a => a.status === 'accepted').length;
 
+  // Client-side status filter
+  const filtered = statusFilter === 'all' ? apps : apps.filter(a => a.status === statusFilter);
+
+  // Only show tabs for statuses that have data
+  const activeTabs = [
+    { key: 'all', label: 'Tất cả', count: apps.length },
+    ...Object.entries(statusConfig)
+      .filter(([status]) => apps.some(a => a.status === status))
+      .map(([status, cfg]) => ({ key: status, label: cfg.label, count: apps.filter(a => a.status === status).length })),
+  ];
+
   if (loading) {
     return (
       <div className="animate-fade-in space-y-4">
@@ -112,26 +124,53 @@ export default function ApplicationsPage() {
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Đơn Ứng Tuyển</h1>
             <p className="text-muted-foreground text-sm mt-1.5">{apps.length} đơn đã gửi</p>
           </div>
-          {/* Stat pills */}
+          {/* Stat pills — clickable to filter */}
           <div className="flex flex-wrap gap-2">
             {pending > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-300/40 text-amber-700 text-xs font-medium">
+              <button onClick={() => setStatusFilter(f => f === 'pending' ? 'all' : 'pending')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${statusFilter === 'pending' ? 'bg-amber-500 text-white border-amber-500 shadow-sm' : 'bg-amber-500/10 border-amber-300/40 text-amber-700 hover:bg-amber-500/20'}`}>
                 <Clock className="w-3.5 h-3.5" /> {pending} chờ xét
-              </div>
+              </button>
             )}
             {interviews > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
+              <button onClick={() => setStatusFilter(f => f === 'interview_scheduled' ? 'all' : 'interview_scheduled')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${statusFilter === 'interview_scheduled' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-primary/10 border-primary/20 text-primary hover:bg-primary/20'}`}>
                 <Calendar className="w-3.5 h-3.5" /> {interviews} phỏng vấn
-              </div>
+              </button>
             )}
             {accepted > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-300/40 text-emerald-700 text-xs font-medium">
+              <button onClick={() => setStatusFilter(f => f === 'accepted' ? 'all' : 'accepted')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${statusFilter === 'accepted' ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm' : 'bg-emerald-500/10 border-emerald-300/40 text-emerald-700 hover:bg-emerald-500/20'}`}>
                 <CheckCircle2 className="w-3.5 h-3.5" /> {accepted} được nhận
-              </div>
+              </button>
             )}
           </div>
         </div>
       </div>
+
+      {/* ── Status Filter Tabs ── */}
+      {apps.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {activeTabs.map(({ key, label, count }) => {
+            const cfg = statusConfig[key];
+            const isActive = statusFilter === key;
+            return (
+              <button key={key} onClick={() => setStatusFilter(key)}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                  isActive
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                    : 'border-border text-muted-foreground hover:border-primary/40 hover:bg-muted/50'
+                }`}>
+                {cfg && <cfg.icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : cfg.text}`} />}
+                {label}
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                  isActive ? 'bg-white/25 text-white' : 'bg-muted text-muted-foreground'
+                }`}>{count}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* ── Application List ── */}
       {apps.length === 0 ? (
@@ -142,9 +181,15 @@ export default function ApplicationsPage() {
           <h3 className="font-semibold text-lg mb-1">Chưa ứng tuyển</h3>
           <p className="text-sm text-muted-foreground">Tìm công việc phù hợp và gửi đơn ứng tuyển</p>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl border bg-card p-10 text-center">
+          <ClipboardList className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">Không có đơn nào với trạng thái này</p>
+          <button onClick={() => setStatusFilter('all')} className="mt-2 text-xs text-primary hover:underline">Xem tất cả</button>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {apps.map(app => {
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filtered.map(app => {
             const cfg = statusConfig[app.status] || statusConfig.pending;
             const Icon = cfg.icon;
             const isInterview = app.status === 'interview_scheduled';
