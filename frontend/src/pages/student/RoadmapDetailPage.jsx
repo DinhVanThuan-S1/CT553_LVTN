@@ -296,9 +296,8 @@ export default function RoadmapDetailPage() {
                   <div key={s._id} className="flex items-stretch group">
                     {/* Timeline connector */}
                     <div className="flex flex-col items-center mr-4 w-8">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                        i === 0 ? 'bg-primary text-white' : 'bg-muted text-muted-foreground border'
-                      }`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${i === 0 ? 'bg-primary text-white' : 'bg-muted text-muted-foreground border'
+                        }`}>
                         {s.order}
                       </div>
                       {i < roadmap.skills.length - 1 && (
@@ -306,9 +305,8 @@ export default function RoadmapDetailPage() {
                       )}
                     </div>
                     {/* Content */}
-                    <div className={`flex-1 rounded-lg border p-3 mb-2 group-hover:border-primary/30 transition-colors ${
-                      i === 0 ? 'border-primary/20 bg-primary/[0.02]' : ''
-                    }`}>
+                    <div className={`flex-1 rounded-lg border p-3 mb-2 group-hover:border-primary/30 transition-colors ${i === 0 ? 'border-primary/20 bg-primary/[0.02]' : ''
+                      }`}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="text-lg">{s.skill?.icon || '📘'}</span>
@@ -424,11 +422,10 @@ export default function RoadmapDetailPage() {
                 onMouseLeave={() => setHoverStar(0)}
                 onClick={() => setReviewRating(star)}
                 className="p-0.5 transition-transform hover:scale-110">
-                <Star className={`w-6 h-6 ${
-                  (hoverStar || reviewRating) >= star
+                <Star className={`w-6 h-6 ${(hoverStar || reviewRating) >= star
                     ? 'text-amber-500 fill-amber-500'
                     : 'text-muted-foreground/30'
-                }`} />
+                  }`} />
               </button>
             ))}
             {reviewRating > 0 && (
@@ -462,9 +459,8 @@ export default function RoadmapDetailPage() {
                     <span className="text-sm font-medium">{r.student?.fullName || 'Ẩn danh'}</span>
                     <div className="flex items-center gap-0.5">
                       {[1, 2, 3, 4, 5].map((s) => (
-                        <Star key={s} className={`w-3 h-3 ${
-                          r.rating >= s ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground/20'
-                        }`} />
+                        <Star key={s} className={`w-3 h-3 ${r.rating >= s ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground/20'
+                          }`} />
                       ))}
                     </div>
                   </div>
@@ -547,13 +543,12 @@ export default function RoadmapDetailPage() {
                                 type="button"
                                 onClick={() => toggleSlot(day, time)}
                                 disabled={occupied}
-                                className={`w-full py-1.5 rounded text-[10px] font-medium transition-all ${
-                                  occupied
+                                className={`w-full py-1.5 rounded text-[10px] font-medium transition-all ${occupied
                                     ? 'bg-amber-500/15 text-amber-600 cursor-not-allowed border border-amber-500/20'
                                     : selected
                                       ? 'bg-primary text-white shadow-sm'
                                       : 'bg-muted/30 text-muted-foreground hover:bg-primary/10'
-                                }`}
+                                  }`}
                               >
                                 {occupied ? '🔒' : selected ? '✓' : '—'}
                               </button>
