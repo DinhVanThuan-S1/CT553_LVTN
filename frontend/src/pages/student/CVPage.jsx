@@ -174,7 +174,7 @@ export default function CVPage() {
             </div>
             {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">CV Của Tôi</h1> */}
             <p className="text-muted-foreground text-sm mt-1.5">
-              {cvs.length} CV - Hãy chọn CVs phù hợp để ứng tuyển
+              {cvs.length} CV - Hãy chọn CV phù hợp để ứng tuyển
             </p>
           </div>
           <Button onClick={openCreate} className="gap-2 shadow-md">
