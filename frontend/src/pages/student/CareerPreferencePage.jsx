@@ -151,8 +151,8 @@ export default function CareerPreferencePage() {
       </div>
 
       {/* ── Hướng nghề nghiệp ── */}
-      <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="px-6 py-4 border-b bg-muted/20 flex items-center justify-between">
+      <div className="rounded-xl border bg-card overflow-hidden border-l-4 border-l-primary/60">
+        <div className="px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-transparent flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Target className="w-4 h-4 text-primary" />
@@ -191,8 +191,8 @@ export default function CareerPreferencePage() {
       </div>
 
       {/* ── Khu vực làm việc ── */}
-      <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="px-6 py-4 border-b bg-muted/20 flex items-center justify-between">
+      <div className="rounded-xl border bg-card overflow-hidden border-l-4 border-l-emerald-500/60">
+        <div className="px-6 py-4 border-b bg-gradient-to-r from-emerald-500/5 to-transparent flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
               <MapPin className="w-4 h-4 text-emerald-500" />
@@ -231,8 +231,8 @@ export default function CareerPreferencePage() {
       </div>
 
       {/* ── Mức lương mong muốn ── */}
-      <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="px-6 py-4 border-b bg-muted/20">
+      <div className="rounded-xl border bg-card overflow-hidden border-l-4 border-l-amber-500/60">
+        <div className="px-6 py-4 border-b bg-gradient-to-r from-amber-500/5 to-transparent">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
               <DollarSign className="w-4 h-4 text-amber-500" />
@@ -281,8 +281,8 @@ export default function CareerPreferencePage() {
       </div>
 
       {/* ── Loại hình công việc ── */}
-      <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="px-6 py-4 border-b bg-muted/20 flex items-center justify-between">
+      <div className="rounded-xl border bg-card overflow-hidden border-l-4 border-l-sky-500/60">
+        <div className="px-6 py-4 border-b bg-gradient-to-r from-sky-500/5 to-transparent flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center">
               <Briefcase className="w-4 h-4 text-sky-500" />
@@ -327,8 +327,8 @@ export default function CareerPreferencePage() {
       </div>
 
       {/* ── Công ty quan tâm ── */}
-      <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="px-6 py-4 border-b bg-muted/20">
+      <div className="rounded-xl border bg-card overflow-hidden border-l-4 border-l-rose-500/60">
+        <div className="px-6 py-4 border-b bg-gradient-to-r from-rose-500/5 to-transparent">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center">
               <Building2 className="w-4 h-4 text-rose-500" />
@@ -377,8 +377,8 @@ export default function CareerPreferencePage() {
       </div>
 
       {/* ── Ghi chú ── */}
-      <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="px-6 py-4 border-b bg-muted/20">
+      <div className="rounded-xl border bg-card overflow-hidden border-l-4 border-l-violet-500/60">
+        <div className="px-6 py-4 border-b bg-gradient-to-r from-violet-500/5 to-transparent">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
               <StickyNote className="w-4 h-4 text-violet-500" />
