@@ -114,7 +114,7 @@ export default function StudentDashboard() {
           <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1">
             <span className="text-base">{greeting.emoji}</span> {greeting.text}!
           </p>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Tổng Quan Học Tập</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Tổng Quan</h1>
           <p className="text-muted-foreground text-sm mt-1.5 max-w-lg">
             Theo dõi tiến độ, lộ trình và các buổi học sắp tới của bạn.
           </p>
@@ -246,11 +246,10 @@ export default function StudentDashboard() {
                       to={`/student/my-roadmap/${session._prId}/session/${session._id}`}
                       className="flex items-center gap-3 p-3 rounded-lg border border-transparent hover:border-primary/20 hover:bg-primary/[0.03] transition-all group"
                     >
-                      <div className={`w-11 h-11 rounded-xl flex flex-col items-center justify-center text-sm font-bold shrink-0 transition-transform group-hover:scale-105 ${
-                        isToday
-                          ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25'
-                          : 'bg-primary/10 text-primary'
-                      }`}>
+                      <div className={`w-11 h-11 rounded-xl flex flex-col items-center justify-center text-sm font-bold shrink-0 transition-transform group-hover:scale-105 ${isToday
+                        ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25'
+                        : 'bg-primary/10 text-primary'
+                        }`}>
                         <span className="text-base leading-none">{dayNum}</span>
                       </div>
                       <div className="flex-1 min-w-0">
