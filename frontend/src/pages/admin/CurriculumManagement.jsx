@@ -15,6 +15,7 @@ import { useToast } from '../../components/ui/Toast';
 import {
   Search, Plus, Pencil, Trash2, Eye, BookOpen, Calendar,
   ChevronDown, ChevronRight, Settings, X, GripVertical,
+  GraduationCap, SlidersHorizontal,
 } from 'lucide-react';
 
 /* ══════════════════════════════════════════
@@ -363,85 +364,139 @@ export default function CurriculumManagement() {
   const totalCourses = activeSems.reduce((s, sem) => s + sem.courses.length, 0);
 
   return (
-    <div className="animate-fade-in space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Quản Lý Chương Trình Đào Tạo</h1>
-          <p className="text-muted-foreground text-sm mt-1">Quản lý CTĐT mẫu, học kỳ và học phần</p>
-        </div>
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="w-4 h-4" /> Thêm CTĐT
-        </Button>
-      </div>
+    <div className="animate-fade-in space-y-5">
 
-      {/* Search */}
-      <div className="rounded-xl border bg-card p-4">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Tìm mã, tên CTĐT..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9"
-          />
+      {/* ── Hero Header ── */}
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 md:p-8">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-primary/8 to-transparent rounded-full translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+        <div className="relative flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <GraduationCap className="w-5 h-5 text-primary" />
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Quản Lý CTDT</span>
+            </div>
+            <p className="text-muted-foreground text-sm mt-1.5">
+              Quản lý <strong className="text-foreground">{programs.length}</strong> chương trình đào tạo &bull; Học kỳ và học phần
+            </p>
+          </div>
+          <Button onClick={openCreate} className="gap-2 shrink-0">
+            <Plus className="w-4 h-4" /> Thêm CTĐT
+          </Button>
         </div>
       </div>
 
-      {/* Programs Grid */}
+      {/* ── Search ── */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <Input
+          placeholder="Tìm mã, tên CTĐT..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
+      {/* ── Programs Grid ── */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[1, 2].map(i => (
-            <div key={i} className="rounded-xl border bg-card p-6">
-              <div className="h-5 w-40 skeleton mb-2" />
-              <div className="h-4 w-60 skeleton mb-4" />
-              <div className="h-3 w-32 skeleton" />
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="rounded-xl border bg-card p-5 flex flex-col gap-3">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2 flex-1">
+                  <div className="flex gap-2">
+                    <div className="h-5 w-24 skeleton rounded-full" />
+                    <div className="h-5 w-14 skeleton rounded-full" />
+                  </div>
+                  <div className="h-5 w-48 skeleton rounded" />
+                </div>
+                <div className="flex gap-1">
+                  <div className="h-7 w-7 skeleton rounded-lg" />
+                  <div className="h-7 w-7 skeleton rounded-lg" />
+                  <div className="h-7 w-7 skeleton rounded-lg" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <div className="h-3.5 w-40 skeleton rounded" />
+                <div className="h-3.5 w-32 skeleton rounded" />
+              </div>
+              <div className="h-3.5 w-24 skeleton rounded" />
             </div>
           ))}
         </div>
       ) : programs.length === 0 ? (
-        <div className="rounded-xl border bg-card p-12 text-center text-muted-foreground">
-          Chưa có CTĐT nào
+        <div className="rounded-xl border bg-card p-16 text-center">
+          <div className="w-14 h-14 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
+            <GraduationCap className="w-7 h-7 text-muted-foreground/30" />
+          </div>
+          <p className="text-sm font-medium text-muted-foreground">Chưa có chương trình đào tạo nào</p>
+          <p className="text-xs text-muted-foreground mt-1 mb-4">Bắt đầu bằng cách tạo CTĐT đầu tiên</p>
+          <Button size="sm" onClick={openCreate} className="gap-1.5">
+            <Plus className="w-3.5 h-3.5" /> Tạo CTĐT
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {programs.map(program => (
-            <div key={program._id} className="rounded-xl border bg-card p-5 card-hover group">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="default">{program.code}</Badge>
-                    <Badge variant="secondary">{program.totalCredits} TC</Badge>
+          {programs.map(program => {
+            const isCustom = program.code?.startsWith('CUSTOM');
+            return (
+              <div key={program._id}
+                className="rounded-xl border bg-card overflow-hidden group hover:shadow-md transition-all duration-200 border-l-4 border-l-primary/40 hover:border-l-primary">
+                <div className="p-5">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                          {program.code}
+                        </span>
+                        <span className="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
+                          {program.totalCredits} TC
+                        </span>
+                        {isCustom && (
+                          <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-400/20">
+                            Tùy chỉnh
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="font-semibold text-base leading-snug group-hover:text-primary transition-colors truncate" title={program.name}>
+                        {program.name}
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-0.5 ml-2 shrink-0">
+                      <button onClick={() => openDetail(program)}
+                        className="p-1.5 rounded-lg hover:bg-primary/10 transition-colors text-muted-foreground hover:text-primary" title="Xem">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => openEdit(program)}
+                        className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Sửa">
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => setDeleteConfirmId(program._id)}
+                        className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors" title="Xóa">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
-                    {program.name}
-                  </h3>
+
+                  <div className="text-xs text-muted-foreground space-y-0.5 mb-3">
+                    {program.department && <p className="truncate">{program.department}</p>}
+                    <p className="truncate">{program.university}</p>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2.5 border-t border-border/50">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {program.semesters?.length || 0} học kỳ
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <BookOpen className="w-3.5 h-3.5" />
+                      {program.totalCredits} tín chỉ
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => openDetail(program)}
-                    className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Xem">
-                    <Eye className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => openEdit(program)}
-                    className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Sửa">
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => setDeleteConfirmId(program._id)}
-                    className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors" title="Xóa">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
               </div>
-              <div className="text-sm text-muted-foreground space-y-0.5">
-                {program.department && <p>{program.department}</p>}
-                <p>{program.university}</p>
-              </div>
-              <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                <Calendar className="w-3.5 h-3.5" />
-                {program.semesters?.length || 0} học kỳ
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
