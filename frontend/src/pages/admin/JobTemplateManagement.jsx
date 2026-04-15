@@ -14,10 +14,25 @@ import { useToast } from '../../components/ui/Toast';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import {
   Search, Plus, Pencil, Trash2, Eye, Briefcase,
-  ChevronLeft, ChevronRight, Banknote, X,
+  ChevronLeft, ChevronRight, Banknote, X, SlidersHorizontal,
 } from 'lucide-react';
 
 const levelLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
+const levelStyles = {
+  beginner: { bg: 'bg-emerald-500/10', text: 'text-emerald-600', border: 'border-emerald-400/20' },
+  intermediate: { bg: 'bg-amber-500/10', text: 'text-amber-600', border: 'border-amber-400/20' },
+  advanced: { bg: 'bg-red-500/10', text: 'text-red-600', border: 'border-red-400/20' },
+};
+
+function LevelBadge({ level }) {
+  const label = levelLabels[level] || level;
+  const c = levelStyles[level] || levelStyles.intermediate;
+  return (
+    <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full border ${c.bg} ${c.text} ${c.border}`}>
+      {label}
+    </span>
+  );
+}
 
 const initialForm = {
   title: '', description: '', careerPath: '',
@@ -160,24 +175,35 @@ export default function JobTemplateManagement() {
   }
 
   return (
-    <div className="animate-fade-in space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Quản Lý Công Việc Mẫu</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Tổng {pagination.total} mẫu : Phục vụ gợi ý & so khớp kỹ năng
-          </p>
+    <div className="animate-fade-in space-y-5">
+
+      {/* ── Hero Header ── */}
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 md:p-8">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-primary/8 to-transparent rounded-full translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+        <div className="relative flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Briefcase className="w-5 h-5 text-primary" />
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Quản Lý Công Việc Mẫu</span>
+            </div>
+            <p className="text-muted-foreground text-sm mt-1.5">
+              Tổng <strong className="text-foreground">{pagination.total}</strong> mẫu - Phục vụ gợi ý &amp; so khớp kỹ năng
+            </p>
+          </div>
+          <Button onClick={openCreate} className="gap-2 shrink-0">
+            <Plus className="w-4 h-4" /> Thêm mẫu
+          </Button>
         </div>
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="w-4 h-4" /> Thêm mẫu
-        </Button>
       </div>
 
-      {/* Filters */}
-      <div className="rounded-xl border bg-card p-4 flex flex-wrap items-center gap-3">
+      {/* ── Filter (search only) ── */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground shrink-0">
+          <SlidersHorizontal className="w-3.5 h-3.5" /> Tìm kiếm
+        </div>
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Tìm công việc mẫu..."
             value={search}
@@ -187,62 +213,88 @@ export default function JobTemplateManagement() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* ── Table ── */}
       <div className="rounded-xl border bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Công Việc</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Hướng Nghề Nghiệp</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Kỹ Năng</th>
-                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Mức Lương</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Thao Tác</th>
+                <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Công Việc</th>
+                <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Hướng Nghề</th>
+                <th className="text-center px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-24">Kỹ Năng</th>
+                <th className="text-center px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-30">Mức Lương</th>
+                <th className="text-right px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground w-28">Thao Tác</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i} className="border-b">
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3"><div className="h-4 w-16 skeleton" /></td>
-                    ))}
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 skeleton rounded-lg shrink-0" />
+                        <div className="h-4 w-36 skeleton rounded" />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3.5"><div className="h-4 w-28 skeleton rounded" /></td>
+                    <td className="px-4 py-3.5 text-center"><div className="h-6 w-7 skeleton rounded-full mx-auto" /></td>
+                    <td className="px-4 py-3.5 text-center"><div className="h-4 w-20 skeleton rounded mx-auto" /></td>
+                    <td className="px-4 py-3.5"><div className="h-7 w-20 skeleton rounded-lg ml-auto" /></td>
                   </tr>
                 ))
               ) : templates.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
-                    Chưa có mẫu công việc nào
+                  <td colSpan={5} className="px-4 py-16 text-center">
+                    <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                      <Briefcase className="w-6 h-6 text-muted-foreground/30" />
+                    </div>
+                    <p className="text-sm font-medium text-muted-foreground">Chưa có mẫu công việc nào</p>
+                    <p className="text-xs text-muted-foreground mt-1">Nhấn "Thêm mẫu" để bắt đầu</p>
                   </td>
                 </tr>
               ) : (
                 templates.map((tpl) => (
-                  <tr key={tpl._id} className="border-b hover:bg-muted/20 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="w-4 h-4 text-primary shrink-0" />
-                        <span className="font-medium">{tpl.title}</span>
+                  <tr key={tpl._id} className="border-b hover:bg-muted/20 transition-colors group">
+                    {/* Công việc */}
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-primary/8 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+                          <Briefcase className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                        <span className="font-medium group-hover:text-primary transition-colors">{tpl.title}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{tpl.careerPath}</td>
-                    <td className="px-4 py-3 text-center">{tpl.requiredSkills?.length || 0}</td>
-                    <td className="px-4 py-3 text-center text-muted-foreground">
-                      {tpl.salaryRange?.min && tpl.salaryRange?.max
-                        ? `${tpl.salaryRange.min}-${tpl.salaryRange.max}M`
-                        : '—'}
+                    {/* Hướng nghề */}
+                    <td className="px-4 py-3.5 text-muted-foreground text-sm">{tpl.careerPath}</td>
+                    {/* Kỹ năng */}
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/8 text-primary text-xs font-bold">
+                        {tpl.requiredSkills?.length || 0}
+                      </span>
                     </td>
-                    <td className="px-4 py-3">
+                    {/* Mức lương */}
+                    <td className="px-4 py-3.5 text-center">
+                      {tpl.salaryRange?.min && tpl.salaryRange?.max ? (
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {tpl.salaryRange.min}-{tpl.salaryRange.max}M
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/40">—</span>
+                      )}
+                    </td>
+                    {/* Actions */}
+                    <td className="px-4 py-3.5">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => openDetail(tpl)}
-                          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                          className="p-1.5 rounded-lg hover:bg-primary/10 transition-colors text-muted-foreground hover:text-primary" title="Xem chi tiết">
                           <Eye className="w-4 h-4" />
                         </button>
                         <button onClick={() => openEdit(tpl)}
-                          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Chỉnh sửa">
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button onClick={() => handleDelete(tpl)}
-                          className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors">
+                          className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors" title="Xóa">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -255,15 +307,16 @@ export default function JobTemplateManagement() {
         </div>
 
         {pagination.pages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/10">
+          <div className="flex items-center justify-between px-5 py-3 border-t bg-muted/10">
             <p className="text-xs text-muted-foreground">
-              Trang {pagination.page}/{pagination.pages} • Tổng {pagination.total}
+              <strong className="text-foreground">{pagination.total}</strong> mẫu công việc • Trang {pagination.page}/{pagination.pages}
             </p>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="sm" disabled={pagination.page <= 1}
                 onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
+              <span className="text-xs px-2 font-medium">{pagination.page}</span>
               <Button variant="ghost" size="sm" disabled={pagination.page >= pagination.pages}
                 onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}>
                 <ChevronRight className="w-4 h-4" />
@@ -278,27 +331,41 @@ export default function JobTemplateManagement() {
         <DialogHeader onClose={() => setShowDetail(false)}>Chi tiết Mẫu công việc</DialogHeader>
         {detailTemplate && (
           <DialogBody className="space-y-4">
-            <div>
-              <h3 className="font-semibold text-lg">{detailTemplate.title}</h3>
-              <p className="text-sm text-muted-foreground mt-1">{detailTemplate.careerPath}</p>
+            {/* Hero card */}
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-muted/20">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Briefcase className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-lg leading-snug">{detailTemplate.title}</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">{detailTemplate.careerPath}</p>
+                <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground">
+                  <Banknote className="w-3.5 h-3.5" />
+                  <span>
+                    {detailTemplate.salaryRange?.min && detailTemplate.salaryRange?.max
+                      ? `${detailTemplate.salaryRange.min} - ${detailTemplate.salaryRange.max} triệu VNĐ/tháng`
+                      : 'Chưa cập nhật'}
+                  </span>
+                </div>
+              </div>
             </div>
+
             {detailTemplate.description && (
-              <p className="text-sm text-muted-foreground">{detailTemplate.description}</p>
+              <div>
+                <h4 className="font-semibold text-sm mb-1">Mô tả</h4>
+                <p className="text-sm text-muted-foreground">{detailTemplate.description}</p>
+              </div>
             )}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Banknote className="w-4 h-4" />
-              {detailTemplate.salaryRange?.min && detailTemplate.salaryRange?.max
-                ? `${detailTemplate.salaryRange.min} - ${detailTemplate.salaryRange.max} triệu VNĐ/tháng`
-                : 'Chưa cập nhật'}
-            </div>
+
             {detailTemplate.requiredSkills?.length > 0 && (
               <div>
-                <h4 className="font-medium text-sm mb-2">Kỹ năng yêu cầu</h4>
-                <div className="flex flex-wrap gap-2">
+                <h4 className="font-semibold text-sm mb-2">Kỹ năng yêu cầu ({detailTemplate.requiredSkills.length})</h4>
+                <div className="space-y-1.5">
                   {detailTemplate.requiredSkills.map((rs, i) => (
-                    <Badge key={i} variant="secondary">
-                      {rs.skill?.name || 'N/A'} — {levelLabels[rs.level]}
-                    </Badge>
+                    <div key={i} className="flex items-center justify-between rounded-lg bg-muted/20 px-3 py-1.5">
+                      <span className="text-sm font-medium">{rs.skill?.name || 'N/A'}</span>
+                      <LevelBadge level={rs.level} />
+                    </div>
                   ))}
                 </div>
               </div>
