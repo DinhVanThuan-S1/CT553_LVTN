@@ -16,6 +16,13 @@ import {
   ExternalLink, FileText, HelpCircle, Briefcase,
 } from 'lucide-react';
 
+const STATUS = {
+  active:    { label: 'Đang học',   cls: 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/25' },
+  completed: { label: 'Hoàn thành', cls: 'bg-primary/10    text-primary    border border-primary/25' },
+  paused:    { label: 'Tạm dừng',  cls: 'bg-amber-500/10  text-amber-600  border border-amber-500/25' },
+  cancelled: { label: 'Đã hủy',    cls: 'bg-red-500/10    text-red-600    border border-red-500/25' },
+};
+// Keep legacy maps for dialogs that use Badge component
 const statusLabels = { active: 'Đang học', completed: 'Hoàn thành', paused: 'Tạm dừng', cancelled: 'Đã hủy' };
 const statusColors = { active: 'success', completed: 'default', paused: 'warning', cancelled: 'danger' };
 
@@ -156,39 +163,70 @@ export default function MyRoadmapPage() {
 
   if (loading) {
     return (
-      <div className="animate-fade-in flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="animate-fade-in space-y-6">
+        <div className="h-32 skeleton rounded-2xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="rounded-xl border bg-card overflow-hidden">
+              <div className="h-1.5 bg-muted" />
+              <div className="p-5 space-y-3">
+                <div className="h-5 w-48 skeleton" />
+                <div className="h-3 w-32 skeleton" />
+                <div className="grid grid-cols-3 gap-3 mt-4">
+                  {[1,2,3].map(j => <div key={j} className="h-16 skeleton rounded-lg" />)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
-  // Upcoming sessions across all active roadmaps
-  const upcomingSessions = roadmaps
-    .filter((pr) => pr.status === 'active')
-    .map((pr) => pr._id);
+  const activeCount    = roadmaps.filter(r => r.status === 'active').length;
+  const completedCount = roadmaps.filter(r => r.status === 'completed').length;
+  const pausedCount    = roadmaps.filter(r => r.status === 'paused').length;
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Lộ Trình Của Tôi</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {roadmaps.length === 0 ? 'Chưa đăng ký lộ trình nào' : `${roadmaps.length} lộ trình`}
-          </p>
+
+      {/* ── Hero Header ── */}
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-500/8 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+        <div className="relative flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Route className="w-5 h-5 text-primary" />
+              <span className="text-xs font-medium text-primary uppercase tracking-wider">Của tôi</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Lộ Trình Của Tôi</h1>
+            <p className="text-muted-foreground text-sm mt-1.5">
+              {roadmaps.length === 0 ? 'Chưa đăng ký lộ trình nào' : `${roadmaps.length} lộ trình`}
+            </p>
+            {roadmaps.length > 0 && (
+              <div className="flex items-center gap-2 mt-3 flex-wrap">
+                {activeCount > 0    && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">{activeCount} đang học</span>}
+                {pausedCount > 0    && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10  text-amber-600" >{pausedCount} tạm dừng</span>}
+                {completedCount > 0 && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-primary/10     text-primary"   >{completedCount} hoàn thành</span>}
+              </div>
+            )}
+          </div>
+          <Link to="/student/roadmaps">
+            <Button variant="outline" className="gap-2">
+              <Route className="w-4 h-4" /> Khám phá lộ trình
+            </Button>
+          </Link>
         </div>
-        <Link to="/student/roadmaps">
-          <Button variant="outline" className="gap-2">
-            <Route className="w-4 h-4" /> Khám phá lộ trình
-          </Button>
-        </Link>
       </div>
 
       {roadmaps.length === 0 ? (
         <div className="rounded-xl border bg-card p-16 text-center">
-          <Route className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
+          <div className="w-16 h-16 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-4">
+            <Route className="w-8 h-8 text-muted-foreground/40" />
+          </div>
           <h3 className="font-semibold text-lg mb-1">Chưa có lộ trình nào</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Hãy khám phá và đăng ký một lộ trình phù hợp với mục tiêu nghề nghiệp của bạn
+          <p className="text-sm text-muted-foreground mb-5">
+            Hãy khám phá và đăng ký một lộ trình phù hợp với mục tiêu nghề nghiệp
           </p>
           <Link to="/student/roadmaps">
             <Button className="gap-2">
@@ -198,83 +236,142 @@ export default function MyRoadmapPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {roadmaps.map((pr) => {
+          {roadmaps.map(pr => {
             const isActive = pr.status === 'active';
-            return (
-              <div key={pr._id}
-                className={`rounded-xl border bg-card overflow-hidden transition-all ${isActive ? 'card-hover' : 'opacity-75'
-                  }`}>
-                {/* Progress bar on top */}
-                <div className="h-1 bg-muted">
-                  <div
-                    className={`h-full transition-all duration-500 ${pr.progress === 100 ? 'bg-emerald-500' : 'bg-primary'
-                      }`}
-                    style={{ width: `${pr.progress || 0}%` }}
-                  />
-                </div>
+            const isPaused = pr.status === 'paused';
+            const isDone   = pr.status === 'completed';
+            const st = STATUS[pr.status] || STATUS.cancelled;
+            const progressColor = isDone ? 'bg-emerald-500' : isActive ? 'bg-primary' : 'bg-muted-foreground/30';
 
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold text-lg">{pr.roadmap?.title || 'Lộ trình'}</h3>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Target className="w-3.5 h-3.5" /> {pr.roadmap?.careerPath}
-                      </p>
-                    </div>
-                    <Badge variant={statusColors[pr.status]}>{statusLabels[pr.status]}</Badge>
+            const gradBg  = isDone ? 'from-emerald-500/80 to-emerald-600/60'
+                          : isActive ? 'from-primary/80 to-primary/60'
+                          : isPaused ? 'from-amber-500/60 to-amber-600/40'
+                          : 'from-muted-foreground/30 to-muted-foreground/20';
+            const ringColor = isDone ? 'text-emerald-300' : isActive ? 'text-white/90' : 'text-amber-300';
+
+            return (
+              <div
+                key={pr._id}
+                className={`rounded-xl border bg-card overflow-hidden transition-all duration-200 flex flex-col ${
+                  isActive ? 'hover:shadow-lg hover:-translate-y-0.5' : 'opacity-75'
+                }`}
+              >
+                {/* ── Thumbnail strip ── */}
+                <div className={`relative h-24 bg-gradient-to-br ${gradBg} flex items-center justify-between px-5`}>
+                  {/* Circular progress */}
+                  <div className="relative w-14 h-14 shrink-0">
+                    <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="15.5"
+                        fill="none" stroke="currentColor" strokeWidth="2.5"
+                        className="text-black/10" />
+                      <circle cx="18" cy="18" r="15.5"
+                        fill="none" stroke="currentColor" strokeWidth="2.5"
+                        strokeLinecap="round"
+                        className={ringColor}
+                        style={{ strokeDasharray: `${((pr.progress || 0) / 100) * 97.4} 97.4` }}
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white drop-shadow">
+                      {pr.progress || 0}%
+                    </span>
                   </div>
 
+                  {/* Title + career path */}
+                  <div className="flex-1 min-w-0 mx-4">
+                    <h3 className="font-bold text-sm text-white leading-snug line-clamp-2 drop-shadow-sm">
+                      {pr.roadmap?.title || 'Lộ trình'}
+                    </h3>
+                    <p className="text-[11px] text-white/70 flex items-center gap-1 mt-0.5">
+                      <Target className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{pr.roadmap?.careerPath}</span>
+                    </p>
+                  </div>
+
+                  {/* Status badge */}
+                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 backdrop-blur-sm ${st.cls}`}>
+                    {st.label}
+                  </span>
+                </div>
+
+                {/* ── Body ── */}
+                <div className="p-4 flex-1 flex flex-col">
                   {/* Stats row */}
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    <div className="rounded-lg bg-muted/30 p-2.5 text-center">
-                      <p className="text-xl font-bold text-primary">{pr.progress || 0}%</p>
-                      <p className="text-[10px] text-muted-foreground">Tiến độ</p>
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div className="rounded-lg bg-muted/30 p-2 text-center">
+                      <p className="text-base font-bold">{pr.totalHoursLearned || 0}h</p>
+                      <p className="text-[10px] text-muted-foreground">/ {pr.totalHoursPlanned || (pr.sessions?.length || 0) * 2}h</p>
                     </div>
-                    <div className="rounded-lg bg-muted/30 p-2.5 text-center">
-                      <p className="text-xl font-bold">{pr.totalHoursLearned || 0}h</p>
-                      <p className="text-[10px] text-muted-foreground">/ {pr.totalHoursPlanned || (pr.sessions?.length || 0) * 2}h tổng</p>
-                    </div>
-                    <div className="rounded-lg bg-muted/30 p-2.5 text-center">
-                      <p className="text-xl font-bold">{pr.durationMonths}</p>
+                    <div className="rounded-lg bg-muted/30 p-2 text-center">
+                      <p className="text-base font-bold">{pr.durationMonths}</p>
                       <p className="text-[10px] text-muted-foreground">tháng</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/30 p-2 text-center">
+                      <p className="text-base font-bold">{(pr.sessions || []).filter(s => s.status === 'completed').length}</p>
+                      <p className="text-[10px] text-muted-foreground">/{pr.sessions?.length || 0} buổi</p>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+                      <span>Tiến độ</span>
+                      <span className="font-semibold">{pr.progress || 0}%</span>
+                    </div>
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${isDone ? 'bg-emerald-500' : isActive ? 'bg-primary' : 'bg-muted-foreground/40'}`}
+                        style={{ width: `${pr.progress || 0}%` }}
+                      />
                     </div>
                   </div>
 
                   {/* Dates */}
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
+                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground mb-3 flex-wrap">
                     <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" />
-                      Bắt đầu: {new Date(pr.startDate).toLocaleDateString('vi-VN')}
+                      <Calendar className="w-3 h-3" />
+                      {new Date(pr.startDate).toLocaleDateString('vi-VN')}
                     </span>
                     {pr.expectedEndDate && (
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        Dự kiến: {new Date(pr.expectedEndDate).toLocaleDateString('vi-VN')}
+                        <Clock className="w-3 h-3" />
+                        DK: {new Date(pr.expectedEndDate).toLocaleDateString('vi-VN')}
                       </span>
                     )}
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" className="gap-1 flex-1"
-                      onClick={() => openDetail(pr)}>
+                  <div className="flex items-center gap-2 mt-auto pt-3 border-t border-border/50">
+                    <Button
+                      size="sm" variant="outline" className="gap-1.5 flex-1 text-xs"
+                      onClick={() => openDetail(pr)}
+                    >
                       <BookOpen className="w-3.5 h-3.5" /> Xem chi tiết
                     </Button>
-                    {pr.status === 'active' && pr.progress < 100 && (
-                      <Button size="sm" variant="outline" className="gap-1 text-amber-600 border-amber-500/30 hover:bg-amber-500/10"
-                        onClick={() => pauseRoadmap(pr._id)}>
-                        <Pause className="w-3.5 h-3.5" /> Tạm dừng
+                    {isActive && pr.progress < 100 && (
+                      <Button
+                        size="sm" variant="outline"
+                        className="gap-1 text-xs text-amber-600 border-amber-500/30 hover:bg-amber-500/10"
+                        onClick={() => pauseRoadmap(pr._id)}
+                      >
+                        <Pause className="w-3 h-3" /> Tạm dừng
                       </Button>
                     )}
-                    {pr.status === 'paused' && (
-                      <Button size="sm" variant="outline" className="gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
-                        onClick={() => resumeRoadmap(pr._id)}>
-                        <RotateCcw className="w-3.5 h-3.5" /> Tiếp tục
+                    {isPaused && (
+                      <Button
+                        size="sm" variant="outline"
+                        className="gap-1 text-xs text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
+                        onClick={() => resumeRoadmap(pr._id)}
+                      >
+                        <RotateCcw className="w-3 h-3" /> Tiếp tục
                       </Button>
                     )}
-                    {(pr.status === 'active' || pr.status === 'paused') && pr.status !== 'completed' && (
-                      <Button size="sm" variant="outline" className="gap-1 text-red-500 border-red-500/30 hover:bg-red-500/10"
-                        onClick={() => setCancelTarget(pr._id)}>
+                    {(isActive || isPaused) && !isDone && (
+                      <Button
+                        size="sm" variant="outline"
+                        className="text-red-500 border-red-500/30 hover:bg-red-500/10 px-2"
+                        onClick={() => setCancelTarget(pr._id)}
+                        title="Hủy lộ trình"
+                      >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     )}
