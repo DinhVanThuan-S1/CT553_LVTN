@@ -5,39 +5,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../components/ui/Toast';
 import {
   ClipboardList, Loader2, Eye, Building2, Calendar,
-  Briefcase, MapPin, XCircle, Clock, CheckCircle2,
-  AlertTriangle, Users,
+  XCircle, Clock, CheckCircle2, AlertTriangle, Send,
+  MapPin, FileText, ChevronRight,
 } from 'lucide-react';
 
-const statusLabels = {
-  pending: 'Chờ xét duyệt',
-  reviewed: 'Đã xem',
-  interview_scheduled: 'Hẹn phỏng vấn',
-  accepted: 'Được nhận',
-  rejected: 'Từ chối',
-  withdrawn: 'Đã rút',
-};
-const statusColors = {
-  pending: 'warning',
-  reviewed: 'default',
-  interview_scheduled: 'default',
-  accepted: 'success',
-  rejected: 'danger',
-  withdrawn: 'secondary',
-};
-const statusIcons = {
-  pending: Clock,
-  reviewed: Eye,
-  interview_scheduled: Calendar,
-  accepted: CheckCircle2,
-  rejected: XCircle,
-  withdrawn: AlertTriangle,
+const statusConfig = {
+  pending:              { label: 'Chờ xét duyệt', icon: Clock,         color: 'amber',   bg: 'bg-amber-500/10',  text: 'text-amber-600',  border: 'border-amber-300/40' },
+  reviewed:             { label: 'Đã xem',         icon: Eye,           color: 'blue',    bg: 'bg-blue-500/10',   text: 'text-blue-600',   border: 'border-blue-300/40' },
+  interview_scheduled:  { label: 'Hẹn phỏng vấn', icon: Calendar,      color: 'primary', bg: 'bg-primary/10',    text: 'text-primary',    border: 'border-primary/30' },
+  accepted:             { label: 'Được nhận',      icon: CheckCircle2,  color: 'emerald', bg: 'bg-emerald-500/10',text: 'text-emerald-600',border: 'border-emerald-300/40' },
+  rejected:             { label: 'Từ chối',        icon: XCircle,       color: 'red',     bg: 'bg-red-500/10',    text: 'text-red-500',    border: 'border-red-300/40' },
+  withdrawn:            { label: 'Đã rút',         icon: AlertTriangle, color: 'gray',    bg: 'bg-muted',         text: 'text-muted-foreground', border: 'border-transparent' },
 };
 
 export default function ApplicationsPage() {
@@ -67,6 +50,7 @@ export default function ApplicationsPage() {
   async function openDetail(app) {
     setDetailLoading(true);
     setShowDetail(true);
+    setDetail(null);
     try {
       const { data } = await api.get(`/student/applications/${app._id}`);
       setDetail(data.data);
@@ -84,7 +68,6 @@ export default function ApplicationsPage() {
       message: 'Bạn có chắc muốn rút đơn ứng tuyển này?',
       confirmLabel: 'Rút đơn',
       variant: 'warning',
-      icon: XCircle,
       onConfirm: async () => {
         setWithdrawing(true);
         try {
@@ -101,179 +84,294 @@ export default function ApplicationsPage() {
     });
   }
 
-  const pending = apps.filter((a) => a.status === 'pending').length;
-  const interviews = apps.filter((a) => a.status === 'interview_scheduled').length;
+  const pending    = apps.filter(a => a.status === 'pending').length;
+  const interviews = apps.filter(a => a.status === 'interview_scheduled').length;
+  const accepted   = apps.filter(a => a.status === 'accepted').length;
 
   if (loading) {
     return (
-      <div className="animate-fade-in flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="animate-fade-in space-y-4">
+        <div className="h-32 skeleton rounded-2xl" />
+        {[1, 2, 3].map(i => <div key={i} className="h-20 skeleton rounded-xl" />)}
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Đơn Ứng Tuyển</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {apps.length} đơn • {pending > 0 ? `${pending} chờ xét` : 'không có đơn chờ'}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {pending > 0 && <Badge variant="warning" className="gap-1"><Clock className="w-3 h-3" /> {pending} chờ</Badge>}
-          {interviews > 0 && <Badge variant="success" className="gap-1"><Calendar className="w-3 h-3" /> {interviews} phỏng vấn</Badge>}
+    <div className="animate-fade-in space-y-5">
+
+      {/* ── Hero Header ── */}
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6">
+        <div className="absolute top-0 right-0 w-56 h-56 bg-gradient-to-bl from-amber-500/8 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+        <div className="relative flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <ClipboardList className="w-5 h-5 text-primary" />
+              <span className="text-xs font-medium text-primary uppercase tracking-wider">Việc làm</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Đơn Ứng Tuyển</h1>
+            <p className="text-muted-foreground text-sm mt-1.5">{apps.length} đơn đã gửi</p>
+          </div>
+          {/* Stat pills */}
+          <div className="flex flex-wrap gap-2">
+            {pending > 0 && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-300/40 text-amber-700 text-xs font-medium">
+                <Clock className="w-3.5 h-3.5" /> {pending} chờ xét
+              </div>
+            )}
+            {interviews > 0 && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
+                <Calendar className="w-3.5 h-3.5" /> {interviews} phỏng vấn
+              </div>
+            )}
+            {accepted > 0 && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-300/40 text-emerald-700 text-xs font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5" /> {accepted} được nhận
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
+      {/* ── Application List ── */}
       {apps.length === 0 ? (
         <div className="rounded-xl border bg-card p-16 text-center">
-          <ClipboardList className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
+          <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
+            <ClipboardList className="w-8 h-8 text-muted-foreground/30" />
+          </div>
           <h3 className="font-semibold text-lg mb-1">Chưa ứng tuyển</h3>
           <p className="text-sm text-muted-foreground">Tìm công việc phù hợp và gửi đơn ứng tuyển</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {apps.map((app) => {
-            const Icon = statusIcons[app.status] || Clock;
+          {apps.map(app => {
+            const cfg = statusConfig[app.status] || statusConfig.pending;
+            const Icon = cfg.icon;
+            const isInterview = app.status === 'interview_scheduled';
             return (
               <div key={app._id}
-                className={`rounded-xl border bg-card p-4 card-hover ${app.status === 'interview_scheduled' ? 'border-primary/30' : ''
-                  }`}>
-                <div className="flex items-center gap-4">
-                  {/* Icon */}
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${app.status === 'accepted' ? 'bg-emerald-500/10 text-emerald-500'
-                      : app.status === 'rejected' ? 'bg-red-500/10 text-red-500'
-                        : app.status === 'interview_scheduled' ? 'bg-primary/10 text-primary'
-                          : 'bg-muted text-muted-foreground'
-                    }`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
+                className={`group rounded-xl border bg-card transition-all duration-200 hover:shadow-md overflow-hidden ${isInterview ? 'border-primary/30' : 'hover:border-primary/20'}`}>
+                {/* Status accent strip */}
+                <div className={`h-0.5 ${
+                  app.status === 'accepted' ? 'bg-emerald-400'
+                  : app.status === 'rejected' ? 'bg-red-400'
+                  : app.status === 'interview_scheduled' ? 'bg-primary'
+                  : app.status === 'reviewed' ? 'bg-blue-400'
+                  : 'bg-amber-400/60'
+                }`} />
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold truncate">{app.jobPosting?.title || 'Công việc'}</h3>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-                      <span className="flex items-center gap-1">
-                        <Building2 className="w-3 h-3" /> {app.jobPosting?.company?.name || 'N/A'}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" /> {new Date(app.createdAt).toLocaleDateString('vi-VN')}
-                      </span>
-                      {app.cv?.title && (
-                        <span className="flex items-center gap-1">CV: {app.cv.title}</span>
-                      )}
+                <div className="p-4">
+                  <div className="flex items-center gap-3">
+                    {/* Status icon */}
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg}`}>
+                      <Icon className={`w-5 h-5 ${cfg.text}`} />
                     </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
+                        {app.jobPosting?.title || 'Công việc'}
+                      </h3>
+                      <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
+                        <span className="flex items-center gap-1">
+                          <Building2 className="w-3 h-3" /> {app.jobPosting?.company?.name || 'N/A'}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" /> {new Date(app.createdAt).toLocaleDateString('vi-VN')}
+                        </span>
+                        {app.cv?.title && (
+                          <span className="flex items-center gap-1">
+                            <FileText className="w-3 h-3" /> {app.cv.title}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Status badge */}
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border shrink-0 ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                      {cfg.label}
+                    </span>
+
+                    {/* Detail btn */}
+                    <button onClick={() => openDetail(app)}
+                      className="p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0">
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
                   </div>
 
-                  {/* Status */}
-                  <Badge variant={statusColors[app.status]} className="shrink-0">
-                    {statusLabels[app.status]}
-                  </Badge>
-
-                  {/* Actions */}
-                  <button onClick={() => openDetail(app)}
-                    className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0">
-                    <Eye className="w-4 h-4" />
-                  </button>
+                  {/* Interview banner */}
+                  {isInterview && app.interview && (
+                    <div className="mt-3 flex items-center gap-3 p-3 rounded-lg bg-primary/[0.04] border border-primary/15 text-sm">
+                      <Calendar className="w-4 h-4 text-primary shrink-0" />
+                      <div>
+                        <span className="font-medium text-primary">Lịch phỏng vấn: </span>
+                        <span className="text-muted-foreground text-xs">
+                          {app.interview.date && new Date(app.interview.date).toLocaleDateString('vi-VN')}
+                          {app.interview.time && ` lúc ${app.interview.time}`}
+                          {app.interview.type && ` · ${app.interview.type === 'online' ? 'Online' : 'Tại chỗ'}`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-
-                {/* Interview info */}
-                {app.status === 'interview_scheduled' && app.interview && (
-                  <div className="mt-3 p-3 rounded-lg bg-primary/[0.03] border border-primary/10 text-sm">
-                    <p className="font-medium text-primary">📅 Lịch phỏng vấn</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {app.interview.date && new Date(app.interview.date).toLocaleDateString('vi-VN')}
-                      {app.interview.time && ` lúc ${app.interview.time}`}
-                      {app.interview.type && ` • ${app.interview.type === 'online' ? 'Online' : 'Tại chỗ'}`}
-                    </p>
-                  </div>
-                )}
               </div>
             );
           })}
         </div>
       )}
 
-      {/* Detail Dialog */}
-      <Dialog open={showDetail} onClose={() => setShowDetail(false)} className="max-w-2xl">
+      {/* ── Detail Dialog ── */}
+      <Dialog open={showDetail} onClose={() => setShowDetail(false)} className="max-w-xl">
         <DialogHeader onClose={() => setShowDetail(false)}>Chi tiết đơn ứng tuyển</DialogHeader>
+
         {detailLoading ? (
-          <DialogBody className="flex items-center justify-center py-12">
+          <DialogBody className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </DialogBody>
         ) : detail ? (
-          <DialogBody className="space-y-4 max-h-[70vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
+          <DialogBody className="p-0 max-h-[75vh] overflow-y-auto">
+            {/* Hero */}
+            {(() => {
+              const cfg = statusConfig[detail.status] || statusConfig.pending;
+              return (
+                <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-5 border-b">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-white dark:bg-card border shadow-sm flex items-center justify-center shrink-0">
+                        <Building2 className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold leading-snug">{detail.jobPosting?.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1">
+                          <Building2 className="w-3.5 h-3.5" /> {detail.jobPosting?.company?.name}
+                        </p>
+                        {detail.jobPosting?.locationText && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <MapPin className="w-3 h-3" /> {detail.jobPosting.locationText}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border shrink-0 ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                      {cfg.label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="p-6 space-y-5">
+              {/* Timeline */}
               <div>
-                <h3 className="font-semibold text-lg">{detail.jobPosting?.title}</h3>
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Building2 className="w-3.5 h-3.5" /> {detail.jobPosting?.company?.name}
-                </p>
-              </div>
-              <Badge variant={statusColors[detail.status]} className="text-sm">
-                {statusLabels[detail.status]}
-              </Badge>
-            </div>
-
-            {/* Timeline */}
-            <div className="space-y-2 text-xs text-muted-foreground">
-              <p>📨 Ứng tuyển: {new Date(detail.createdAt).toLocaleString('vi-VN')}</p>
-              {detail.reviewedAt && <p>👀 Đã xem: {new Date(detail.reviewedAt).toLocaleString('vi-VN')}</p>}
-              {detail.interviewScheduledAt && <p>📅 Hẹn PV: {new Date(detail.interviewScheduledAt).toLocaleString('vi-VN')}</p>}
-              {detail.respondedAt && <p>📋 Phản hồi: {new Date(detail.respondedAt).toLocaleString('vi-VN')}</p>}
-            </div>
-
-            {detail.interview && detail.status === 'interview_scheduled' && (
-              <div className="rounded-lg border border-primary/20 bg-primary/[0.03] p-4">
-                <h4 className="font-medium text-sm mb-1">Thông tin phỏng vấn</h4>
-                <p className="text-sm">
-                  {detail.interview.date && new Date(detail.interview.date).toLocaleDateString('vi-VN')}
-                  {detail.interview.time && ` lúc ${detail.interview.time}`}
-                </p>
-                {detail.interview.location && <p className="text-xs text-muted-foreground">{detail.interview.location}</p>}
-                {detail.interview.notes && <p className="text-xs text-muted-foreground mt-1">{detail.interview.notes}</p>}
-              </div>
-            )}
-
-            {detail.rejectionReason && (
-              <div className="rounded-lg border border-red-200 bg-red-50/50 p-3">
-                <p className="text-sm text-red-600">Lý do từ chối: {detail.rejectionReason}</p>
-              </div>
-            )}
-
-            {detail.employerNotes && (
-              <div className="rounded-lg border bg-muted/20 p-3">
-                <p className="text-xs text-muted-foreground">Ghi chú NTD: {detail.employerNotes}</p>
-              </div>
-            )}
-
-            {/* Required skills */}
-            {detail.jobPosting?.requiredSkills?.length > 0 && (
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground mb-1">Kỹ năng yêu cầu</h4>
-                <div className="flex flex-wrap gap-1.5">
-                  {detail.jobPosting.requiredSkills.map((rs, i) => (
-                    <Badge key={i} variant="secondary">{rs.skill?.icon} {rs.skill?.name}</Badge>
+                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <span className="w-1 h-4 rounded-full bg-primary inline-block" />
+                  Tiến trình
+                </h4>
+                <div className="space-y-2 pl-3">
+                  {[
+                    { icon: Send,        label: 'Ứng tuyển',   date: detail.createdAt },
+                    { icon: Eye,         label: 'Đã xem',      date: detail.reviewedAt },
+                    { icon: Calendar,    label: 'Hẹn phỏng vấn', date: detail.interviewScheduledAt },
+                    { icon: ClipboardList, label: 'Phản hồi', date: detail.respondedAt },
+                  ].filter(t => t.date).map((t, i) => (
+                    <div key={i} className="flex items-center gap-3 text-xs">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <t.icon className="w-3 h-3 text-primary" />
+                      </div>
+                      <span className="font-medium">{t.label}</span>
+                      <span className="text-muted-foreground ml-auto">{new Date(t.date).toLocaleString('vi-VN')}</span>
+                    </div>
                   ))}
                 </div>
               </div>
-            )}
+
+              {/* Interview info */}
+              {detail.interview && detail.status === 'interview_scheduled' && (
+                <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-4">
+                  <h4 className="font-semibold text-sm text-primary mb-2 flex items-center gap-2">
+                    <Calendar className="w-4 h-4" /> Thông tin phỏng vấn
+                  </h4>
+                  <div className="space-y-1 text-sm">
+                    {detail.interview.date && (
+                      <p>{new Date(detail.interview.date).toLocaleDateString('vi-VN')}
+                        {detail.interview.time && ` lúc ${detail.interview.time}`}
+                        {detail.interview.type && ` · ${detail.interview.type === 'online' ? 'Online' : 'Tại chỗ'}`}
+                      </p>
+                    )}
+                    {detail.interview.location && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <MapPin className="w-3 h-3" /> {detail.interview.location}
+                      </p>
+                    )}
+                    {detail.interview.notes && (
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{detail.interview.notes}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Rejection reason */}
+              {detail.rejectionReason && (
+                <div className="rounded-xl border border-red-200 bg-red-50/50 dark:bg-red-950/20 dark:border-red-900/40 p-4">
+                  <h4 className="font-semibold text-sm text-red-600 mb-1 flex items-center gap-2">
+                    <XCircle className="w-4 h-4" /> Lý do từ chối
+                  </h4>
+                  <p className="text-sm text-red-600/80">{detail.rejectionReason}</p>
+                </div>
+              )}
+
+              {/* Employer notes */}
+              {detail.employerNotes && (
+                <div className="rounded-xl border bg-muted/20 p-4">
+                  <h4 className="font-semibold text-sm mb-1">Ghi chú từ nhà tuyển dụng</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{detail.employerNotes}</p>
+                </div>
+              )}
+
+              {/* CV used */}
+              {detail.cv && (
+                <div className="flex items-center gap-3 p-3 rounded-xl border bg-muted/10">
+                  <FileText className="w-4 h-4 text-primary shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">CV đã gửi</p>
+                    <p className="text-sm font-medium">{detail.cv.title}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Required skills */}
+              {detail.jobPosting?.requiredSkills?.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                    <span className="w-1 h-4 rounded-full bg-primary inline-block" />
+                    Kỹ năng yêu cầu
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5 pl-3">
+                    {detail.jobPosting.requiredSkills.map((rs, i) => (
+                      <span key={i} className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary/8 text-primary border border-primary/15">
+                        {rs.skill?.icon} {rs.skill?.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </DialogBody>
         ) : null}
+
         <DialogFooter>
           {detail && ['pending', 'reviewed', 'interview_scheduled'].includes(detail.status) && (
-            <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50"
+            <Button variant="outline" size="sm"
+              className="text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-950/20 gap-1.5"
               onClick={() => handleWithdraw(detail._id)} disabled={withdrawing}>
-              <XCircle className="w-4 h-4 mr-1" /> {withdrawing ? 'Đang rút...' : 'Rút đơn'}
+              <XCircle className="w-4 h-4" />
+              {withdrawing ? 'Đang rút...' : 'Rút đơn'}
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Đóng</Button>
         </DialogFooter>
       </Dialog>
 
-      {/* Confirm Dialog */}
       <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
     </div>
   );
