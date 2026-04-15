@@ -11,6 +11,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import {
   GraduationCap, ChevronDown, ChevronRight,
   Save, CheckCircle2, GripVertical, AlertTriangle, Trash2, X, Plus, Search, BookOpen,
+  TrendingUp, Award, Layers, BookMarked,
 } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 
@@ -145,9 +146,7 @@ export default function AcademicProfilePage() {
   const [expandedSems, setExpandedSems] = useState({});
   const [gradeChanges, setGradeChanges] = useState({});
   const [numericChanges, setNumericChanges] = useState({});
-  const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [confirmDeleteSem, setConfirmDeleteSem] = useState(null);
-  const [confirmState, setConfirmState] = useState(null);
+  const [confirmState, setConfirmState] = useState(null); // unified confirm dialog
   const [previewProgram, setPreviewProgram] = useState(null);
   const [customProgramName, setCustomProgramName] = useState('');
   const [creatingCustom, setCreatingCustom] = useState(false);
@@ -161,10 +160,31 @@ export default function AcademicProfilePage() {
   const [showAddSem, setShowAddSem] = useState(false);
   const [newSemName, setNewSemName] = useState('');
   const [addingSem, setAddingSem] = useState(false);
-  const [addCourseForSem, setAddCourseForSem] = useState(null); // semId being targeted
+  const [addCourseForSem, setAddCourseForSem] = useState(null);
   const [allCourses, setAllCourses] = useState([]);
   const [courseSearch, setCourseSearch] = useState('');
   const [coursesLoaded, setCoursesLoaded] = useState(false);
+
+  // UI state
+  const [hoveredRow, setHoveredRow] = useState(null);
+  const [hoveredSem, setHoveredSem] = useState(null);
+  const [courseDetail, setCourseDetail] = useState(null);
+  const [courseDetailLoading, setCourseDetailLoading] = useState(false);
+
+  async function openCourseDetail(course) {
+    if (!course?._id) return;
+    // Show partial data first, then fetch full
+    setCourseDetail(course);
+    setCourseDetailLoading(true);
+    try {
+      const { data } = await api.get(`/courses/${course._id}`);
+      setCourseDetail(data.data);
+    } catch {
+      // Keep partial data, just stop loading
+    } finally {
+      setCourseDetailLoading(false);
+    }
+  }
 
   useEffect(() => { loadData(); }, []);
 
@@ -366,11 +386,32 @@ export default function AcademicProfilePage() {
     try {
       const { data } = await api.delete(`/student/academic-profile/course/${courseGradeId}`);
       setProfile(data.data);
-      setDeleteConfirm(null);
       toast.success('Đã xóa học phần');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Không thể xóa');
     }
+  }
+
+  function openDeleteCourseConfirm(cg) {
+    setConfirmState({
+      title: 'Xóa học phần',
+      message: `Xóa "${cg.course?.name}" (${cg.course?.code}) khỏi học kỳ này?`,
+      confirmLabel: 'Xóa học phần',
+      variant: 'danger',
+      onConfirm: () => handleRemoveCourse(cg._id),
+    });
+  }
+
+  function openDeleteSemConfirm(semId, courses) {
+    setConfirmState({
+      title: 'Xóa học kỳ',
+      message: courses.length > 0
+        ? `Xóa học kỳ này sẽ xóa luôn ${courses.length} học phần bên trong.`
+        : 'Xóa học kỳ trống này?',
+      confirmLabel: 'Xóa học kỳ',
+      variant: 'danger',
+      onConfirm: () => handleRemoveSemester(semId),
+    });
   }
 
   /* ──── Drag & Drop ──── */
@@ -471,43 +512,76 @@ export default function AcademicProfilePage() {
     );
   }
 
+  const gpaColor = !profile?.gpa ? 'text-foreground'
+    : profile.gpa >= 3.6 ? 'text-emerald-500'
+      : profile.gpa >= 3.2 ? 'text-blue-500'
+        : profile.gpa >= 2.5 ? 'text-amber-500'
+          : 'text-red-500';
+
   return (
     <div className="animate-fade-in space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Hồ Sơ Học Tập</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Chọn CTĐT mẫu, nhập điểm, kéo thả HP giữa các học kỳ, xóa HP không học
-          </p>
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6">
+        <div className="absolute top-0 right-0 w-56 h-56 bg-gradient-to-bl from-emerald-500/10 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+        <div className="relative flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <GraduationCap className="w-5 h-5 text-primary" />
+              <span className="text-xs font-medium text-primary uppercase tracking-wider">Học vụ</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Hồ Sơ Học Tập</h1>
+            <p className="text-muted-foreground text-sm mt-1.5 max-w-lg">
+              Chọn CTĐT mẫu, nhập điểm, kéo thả HP giữa các học kỳ, xóa HP không học
+            </p>
+          </div>
+          {hasChanges && (
+            <Button onClick={handleSaveGrades} disabled={saving} className="gap-2 shadow-md">
+              <Save className="w-4 h-4" />
+              {saving ? 'Đang lưu...' : `Lưu điểm (${changeCount})`}
+            </Button>
+          )}
         </div>
-        {hasChanges && (
-          <Button onClick={handleSaveGrades} disabled={saving} className="gap-2">
-            <Save className="w-4 h-4" />
-            {saving ? 'Đang lưu...' : `Lưu điểm (${changeCount})`}
-          </Button>
-        )}
       </div>
 
-      {/* Stats */}
+      {/* Stats Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="rounded-lg border bg-card px-4 py-3">
-          <p className="text-xs text-muted-foreground">GPA tích lũy</p>
-          <p className="text-2xl font-bold">{profile?.gpa?.toFixed(2) || '0.00'}</p>
+        <div className="rounded-xl border bg-card p-4 flex items-center gap-3 card-hover group">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <Award className="w-5 h-5 text-emerald-500" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] text-muted-foreground font-medium">GPA tích lũy</p>
+            <p className={`text-2xl font-bold ${gpaColor}`}>{profile?.gpa?.toFixed(2) || '0.00'}</p>
+          </div>
         </div>
-        <div className="rounded-lg border bg-card px-4 py-3">
-          <p className="text-xs text-muted-foreground">TC tích lũy</p>
-          <p className="text-2xl font-bold">{profile?.completedCredits || 0}</p>
+        <div className="rounded-xl border bg-card p-4 flex items-center gap-3 card-hover group">
+          <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <BookMarked className="w-5 h-5 text-sky-500" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] text-muted-foreground font-medium">TC tích lũy</p>
+            <p className="text-2xl font-bold">{profile?.completedCredits || 0}</p>
+          </div>
         </div>
-        <div className="rounded-lg border bg-card px-4 py-3">
-          <p className="text-xs text-muted-foreground">Học kỳ</p>
-          <p className="text-2xl font-bold">{semGroups.length || 0}</p>
+        <div className="rounded-xl border bg-card p-4 flex items-center gap-3 card-hover group">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <Layers className="w-5 h-5 text-amber-500" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] text-muted-foreground font-medium">Học kỳ</p>
+            <p className="text-2xl font-bold">{semGroups.length || 0}</p>
+          </div>
         </div>
-        <div className="rounded-lg border bg-card px-4 py-3">
-          <p className="text-xs text-muted-foreground">CTĐT</p>
-          <p className="text-sm font-semibold mt-1 line-clamp-1">
-            {profile?.curriculumProgram?.name || 'Chưa chọn'}
-          </p>
+        <div className="rounded-xl border bg-card p-4 flex items-center gap-3 card-hover group">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <GraduationCap className="w-5 h-5 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] text-muted-foreground font-medium">CTĐT</p>
+            <p className="text-sm font-semibold mt-0.5 line-clamp-2 leading-tight">
+              {profile?.curriculumProgram?.name || 'Chưa chọn'}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -691,34 +765,43 @@ export default function AcademicProfilePage() {
             return (
               <div
                 key={semId}
-                className={`rounded-xl border bg-card overflow-hidden transition-all duration-200 relative group/sem ${isDragOver && !hasError && !isSameSem
+                className={`rounded-xl border bg-card overflow-hidden transition-all duration-200 relative ${isDragOver && !hasError && !isSameSem
                   ? 'ring-2 ring-primary border-primary/50 bg-primary/5'
                   : hasError
                     ? 'ring-2 ring-red-500 border-red-500/50 bg-red-500/5'
                     : ''
                   }`}
+                onMouseEnter={() => setHoveredSem(semId)}
+                onMouseLeave={() => setHoveredSem(null)}
                 onDragOver={e => handleDragOver(e, semId, semOrder)}
                 onDragLeave={handleDragLeave}
                 onDrop={e => handleDrop(e, semId, semOrder)}
               >
                 <button
                   onClick={() => setExpandedSems(prev => ({ ...prev, [semId]: !prev[semId] }))}
-                  className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-muted/30 transition-colors"
+                  className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-muted/20 transition-colors text-left"
                 >
-                  <div className="flex items-center gap-3">
-                    {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                    <span className="font-semibold">{semester?.name || 'Học kỳ'}</span>
-                    <Badge variant="secondary">{effectiveHP} HP</Badge>
-                    <span className="text-xs text-muted-foreground">{effectiveTC} TC</span>
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${isExpanded ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    </div>
+                    <span className="font-semibold text-sm">{semester?.name || 'Học kỳ'}</span>
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{effectiveHP} HP / {effectiveTC} TC</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {semesterGPA !== null && (
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-primary/10 text-primary">
-                        GPA HK: {semesterGPA.toFixed(2)}
-                      </span>
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      {completedCount}/{courses.length} hoàn thành
+                  <div className="flex items-center gap-2.5">
+                    {semesterGPA !== null && (() => {
+                      const gC = semesterGPA >= 3.6 ? 'bg-emerald-500/10 text-emerald-600'
+                        : semesterGPA >= 3.2 ? 'bg-blue-500/10 text-blue-600'
+                          : semesterGPA >= 2.5 ? 'bg-amber-500/10 text-amber-600'
+                            : 'bg-red-500/10 text-red-600';
+                      return (
+                        <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${gC}`}>
+                          GPA {semesterGPA.toFixed(2)}
+                        </span>
+                      );
+                    })()}
+                    <span className="text-[11px] text-muted-foreground">
+                      {completedCount} / {courses.length} Hoàn Thành
                     </span>
                     {completedCount === courses.length && courses.length > 0 && (
                       <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -726,29 +809,11 @@ export default function AcademicProfilePage() {
                   </div>
                 </button>
 
-                {/* Xóa HK */}
-                {confirmDeleteSem === semId ? (
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-card border rounded-lg px-2 py-1 shadow-md z-10">
-                    <span className="text-xs text-red-600 mr-1">{courses.length > 0 ? `Xóa ${courses.length} HP?` : 'Xóa?'}</span>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleRemoveSemester(semId); }}
-                      className="p-1 rounded text-red-500 hover:bg-red-500/10"
-                      title="Xác nhận xóa"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteSem(null); }}
-                      className="p-1 rounded text-muted-foreground hover:bg-muted/30"
-                      title="Hủy"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ) : (
+                {/* Xóa HK — ẩn khi đang xem chi tiết, hiện khi hover header (dùng JS state vì group/sem ko ổn) */}
+                {!isExpanded && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteSem(semId); }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-0 group-hover/sem:opacity-100"
+                    onClick={(e) => { e.stopPropagation(); openDeleteSemConfirm(semId, courses); }}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/10 transition-all ${hoveredSem === semId ? 'opacity-100' : 'opacity-0'}`}
                     title="Xóa học kỳ"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -768,23 +833,25 @@ export default function AcademicProfilePage() {
                       <>
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="bg-muted/20">
-                              <th className="w-8"></th>
-                              <th className="text-left px-3 py-2 font-medium text-muted-foreground text-xs w-20">Mã HP</th>
-                              <th className="text-left px-2 py-2 font-medium text-muted-foreground text-xs">Tên học phần</th>
-                              <th className="text-center px-2 py-2 font-medium text-muted-foreground text-xs w-10">TC</th>
-                              <th className="text-center px-2 py-2 font-medium text-muted-foreground text-xs w-14">Loại</th>
-                              <th className="text-center px-2 py-2 font-medium text-muted-foreground text-xs w-20">Điểm số</th>
-                              <th className="text-center px-2 py-2 font-medium text-muted-foreground text-xs w-20">Điểm chữ</th>
-                              <th className="w-8"></th>
+                            <tr className="bg-muted/30 border-b">
+                              <th className="w-8 pl-2" />
+                              <th className="text-left px-3 py-2.5 font-semibold text-xs text-muted-foreground uppercase tracking-wide w-[90px]">Mã HP</th>
+                              <th className="text-left px-2 py-2.5 font-semibold text-xs text-muted-foreground uppercase tracking-wide">Tên học phần</th>
+                              <th className="text-center px-2 py-2.5 font-semibold text-xs text-muted-foreground uppercase tracking-wide w-12">TC</th>
+                              <th className="text-center px-2 py-2.5 font-semibold text-xs text-muted-foreground uppercase tracking-wide w-24">Loại</th>
+                              <th className="text-center px-2 py-2.5 font-semibold text-xs text-muted-foreground uppercase tracking-wide w-24">Điểm số</th>
+                              <th className="text-center px-2 py-2.5 font-semibold text-xs text-muted-foreground uppercase tracking-wide w-24">Điểm chữ</th>
+                              <th className="w-10" />
                             </tr>
                           </thead>
-                          <tbody>
-                            {courses.map(cg => {
+                          <tbody className="divide-y divide-border/60">
+                            {courses.map((cg, rowIdx) => {
                               const numVal = numericChanges[cg._id] !== undefined ? numericChanges[cg._id] : (cg.numericGrade ?? '');
                               const currentGrade = getEffectiveGrade(cg, gradeChanges, numericChanges);
                               const isElective = cg.isRequired === false;
                               const isDragging = dragItem?._id === cg._id;
+                              const isChanged = gradeChanges[cg._id] !== undefined || numericChanges[cg._id] !== undefined;
+                              const isHovered = hoveredRow === cg._id;
 
                               return (
                                 <tr
@@ -792,78 +859,79 @@ export default function AcademicProfilePage() {
                                   draggable
                                   onDragStart={e => handleDragStart(e, cg)}
                                   onDragEnd={handleDragEnd}
-                                  className={`border-t transition-colors cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-40' : 'hover:bg-muted/10'
-                                    } ${isElective ? 'bg-amber-500/[0.03]' : ''}`}
+                                  onMouseEnter={() => setHoveredRow(cg._id)}
+                                  onMouseLeave={() => setHoveredRow(null)}
+                                  className={`transition-colors cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-40 bg-primary/5' : rowIdx % 2 === 0 ? 'hover:bg-muted/20' : 'bg-muted/[0.03] hover:bg-muted/20'
+                                    } ${isElective ? 'border-l-2 border-l-amber-400/50' : ''} ${isChanged ? '!bg-amber-500/[0.06]' : ''}`}
                                 >
-                                  <td className="pl-2 py-2 text-muted-foreground/40 hover:text-muted-foreground">
+                                  {/* Drag handle */}
+                                  <td className={`pl-2 py-3 transition-colors ${isHovered ? 'text-muted-foreground/50' : 'text-muted-foreground/20'}`}>
                                     <GripVertical className="w-4 h-4" />
                                   </td>
-                                  <td className="px-3 py-2 font-mono text-xs text-primary font-bold">{cg.course?.code}</td>
-                                  <td className="px-2 py-2 text-sm truncate" style={{ maxWidth: '200px' }} title={cg.course?.name}>
-                                    {cg.course?.name}
-                                    {cg.electiveGroup && (
-                                      <span className="ml-1 text-[9px] text-muted-foreground/50">
-                                        [{cg.electiveGroup.split('_')[0]}]
-                                      </span>
-                                    )}
+                                  {/* Mã HP - click để xem chi tiết */}
+                                  <td className="px-3 py-3">
+                                    <button
+                                      onClick={e => { e.stopPropagation(); openCourseDetail(cg.course); }}
+                                      className="font-mono text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                                      title="Xem chi tiết học phần"
+                                    >
+                                      {cg.course?.code}
+                                    </button>
                                   </td>
-                                  <td className="text-center px-2 py-2 text-muted-foreground text-xs">{cg.course?.credits}</td>
-                                  <td className="text-center px-2 py-2">
+                                  {/* Tên HP */}
+                                  <td className="px-2 py-3 max-w-[240px]">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      <p className="text-sm font-medium truncate" title={cg.course?.name}>{cg.course?.name}</p>
+                                      {cg.electiveGroup && (
+                                        <span className="text-[9px] text-muted-foreground/50 shrink-0 whitespace-nowrap">[{cg.electiveGroup.split('_')[0]}]</span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  {/* TC */}
+                                  <td className="text-center px-2 py-3">
+                                    <span className="text-sm font-semibold">{cg.course?.credits}</span>
+                                  </td>
+                                  {/* Loại */}
+                                  <td className="text-center px-2 py-3">
                                     {isElective ? (
-                                      <Badge variant="warning" className="text-[10px] px-1.5 py-0">TC</Badge>
+                                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600">TỰ CHỌN</span>
                                     ) : (
-                                      <Badge variant="default" className="text-[10px] px-1.5 py-0">BB</Badge>
+                                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">BẮT BUỘC</span>
                                     )}
                                   </td>
-                                  <td className="text-center px-2 py-2">
+                                  {/* Điểm số */}
+                                  <td className="text-center px-2 py-3">
                                     <input
                                       type="number" min="0" max="10" step="0.1"
                                       value={numVal}
                                       onChange={e => handleNumericGradeChange(cg._id, e.target.value)}
-                                      placeholder="—"
-                                      className="w-16 text-center text-sm font-semibold bg-transparent border rounded-md px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                                      placeholder=""
+                                      className="w-16 text-center text-sm font-semibold bg-transparent border border-border/60 rounded-lg px-1 py-1 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary hover:border-primary/40 transition-colors"
                                       onClick={e => e.stopPropagation()}
                                     />
                                   </td>
-                                  <td className="text-center px-2 py-2">
+                                  {/* Điểm chữ */}
+                                  <td className="text-center px-2 py-3">
                                     <select
                                       value={currentGrade || ''}
                                       onChange={e => handleLetterGradeChange(cg._id, e.target.value)}
-                                      className={`w-16 text-center text-sm font-semibold bg-transparent border rounded-md px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary ${gradeColors[currentGrade] || 'text-muted-foreground'}`}
+                                      className={`w-16 text-center text-sm font-bold bg-transparent border border-border/60 rounded-lg px-1 py-1 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary hover:border-primary/40 transition-colors cursor-pointer ${gradeColors[currentGrade] || 'text-muted-foreground'}`}
                                       onClick={e => e.stopPropagation()}
                                     >
                                       {GRADES.map(g => (
-                                        <option key={g} value={g}>{g || '—'}</option>
+                                        <option key={g} value={g}>{g || ''}</option>
                                       ))}
                                     </select>
                                   </td>
-                                  <td className="pr-2 py-2">
-                                    {deleteConfirm === cg._id ? (
-                                      <div className="flex items-center gap-0.5">
-                                        <button
-                                          onClick={e => { e.stopPropagation(); handleRemoveCourse(cg._id); }}
-                                          className="p-0.5 rounded text-red-500 hover:bg-red-500/10"
-                                          title="Xác nhận xóa"
-                                        >
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                        <button
-                                          onClick={e => { e.stopPropagation(); setDeleteConfirm(null); }}
-                                          className="p-0.5 rounded text-muted-foreground hover:bg-muted/30"
-                                          title="Hủy"
-                                        >
-                                          <X className="w-3.5 h-3.5" />
-                                        </button>
-                                      </div>
-                                    ) : (
-                                      <button
-                                        onClick={e => { e.stopPropagation(); setDeleteConfirm(cg._id); }}
-                                        className="p-1 rounded text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/10 transition-colors"
-                                        title="Xóa học phần"
-                                      >
-                                        <X className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
+                                  {/* Nút xóa — hiện khi hover (JS state) */}
+                                  <td className="pr-3 py-3 w-10">
+                                    <button
+                                      onClick={e => { e.stopPropagation(); openDeleteCourseConfirm(cg); }}
+                                      className={`p-1.5 rounded-lg text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/10 transition-all ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                                      title="Xóa học phần"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
                                   </td>
                                 </tr>
                               );
@@ -1028,6 +1096,209 @@ export default function AcademicProfilePage() {
       )}
 
       <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
+
+      {/* Modal chi tiết học phần */}
+      {courseDetail && (() => {
+        const categoryLabel = {
+          general: 'Đại cương',
+          foundation: 'Cơ sở ngành',
+          specialized: 'Chuyên ngành',
+        }[courseDetail.courseCategory] || '—';
+
+        const knowledgeLabel = {
+          general_education: 'Giáo dục đại cương',
+          foundation: 'Cơ sở ngành',
+          specialized_required: 'Chuyên ngành bắt buộc',
+          specialized_elective: 'Chuyên ngành tự chọn',
+          thesis: 'Luận văn / Tiểu luận',
+          internship: 'Thực tập',
+        }[courseDetail.knowledgeBlock] || '—';
+
+        const majorLabel = {
+          KyThuatPhanMem: 'Kỹ thuật phần mềm',
+          AnToanThongTin: 'An toàn thông tin',
+          CongNgheThongTin: 'Công nghệ thông tin',
+          HeThongThongTin: 'Hệ thống thông tin',
+          KhoaHocMayTinh: 'Khoa học máy tính',
+          MangMayTinhVaTruyenThongDuLieu: 'Mạng & Truyền thông',
+          chung: 'Chung',
+        }[courseDetail.major] || courseDetail.major || '—';
+
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
+            onClick={() => setCourseDetail(null)}
+          >
+            <div
+              className="bg-card rounded-2xl border shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="p-5 border-b flex items-start justify-between gap-3 flex-shrink-0">
+                <div>
+                  {(courseDetail.excludeFromCumulativeGPA || courseDetail.excludeFromSemesterGPA) && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-mono text-sm font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                        {courseDetail.code}
+                      </span>
+                      {courseDetail.excludeFromCumulativeGPA && (
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Không tính GPA tích lũy</span>
+                      )}
+                      {courseDetail.excludeFromSemesterGPA && (
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Không tính GPA HK</span>
+                      )}
+                    </div>
+                  )}
+                  {!(courseDetail.excludeFromCumulativeGPA || courseDetail.excludeFromSemesterGPA) && (
+                    <span className="font-mono text-sm font-bold text-primary bg-primary/10 px-2 py-0.5 rounded inline-block mb-2">
+                      {courseDetail.code}
+                    </span>
+                  )}
+                  <h2 className="text-lg font-bold leading-snug">{courseDetail.name}</h2>
+                </div>
+                <button
+                  onClick={() => setCourseDetail(null)}
+                  className="p-1.5 rounded-lg hover:bg-muted/50 transition-colors shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                {courseDetailLoading && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse">
+                    <div className="w-3 h-3 rounded-full border-2 border-primary/40 border-t-primary animate-spin" />
+                    Đang tải thông tin chi tiết...
+                  </div>
+                )}
+
+                {/* Stats grid */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-primary/10 px-3 py-2.5 text-center">
+                    <p className="text-[10px] text-muted-foreground mb-0.5">Tín chỉ</p>
+                    <p className="text-2xl font-bold text-primary">{courseDetail.credits}</p>
+                  </div>
+                  <div className="rounded-xl bg-muted/40 px-3 py-2.5 text-center">
+                    <p className="text-[10px] text-muted-foreground mb-0.5">Phân loại</p>
+                    <p className="text-xs font-semibold">{categoryLabel}</p>
+                  </div>
+                  <div className="rounded-xl bg-muted/40 px-3 py-2.5 text-center">
+                    <p className="text-[10px] text-muted-foreground mb-0.5">Loại HP</p>
+                    <p className="text-xs font-semibold">
+                      {courseDetail.courseType === 'required' ? 'Bắt buộc' : 'Tự chọn'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Khối kiến thức & Chuyên ngành */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border px-3 py-2.5">
+                    <p className="text-[10px] text-muted-foreground font-medium mb-0.5">Khối kiến thức</p>
+                    <p className="text-sm font-medium">{knowledgeLabel}</p>
+                  </div>
+                  <div className="rounded-xl border px-3 py-2.5">
+                    <p className="text-[10px] text-muted-foreground font-medium mb-0.5">Chuyên ngành</p>
+                    <p className="text-sm font-medium">{majorLabel}</p>
+                  </div>
+                </div>
+
+                {/* Điều kiện đăng ký */}
+                {courseDetail.condition && (
+                  <div className="rounded-xl bg-amber-500/8 border border-amber-500/20 px-3 py-2.5">
+                    <p className="text-[10px] text-amber-600 font-semibold mb-0.5">Điều kiện đăng ký</p>
+                    <p className="text-sm">{courseDetail.condition}</p>
+                  </div>
+                )}
+
+                {/* Tiên quyết */}
+                {courseDetail.prerequisites?.length > 0 && (
+                  <div className="rounded-xl bg-muted/30 px-3 py-2.5">
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-2">Học phần tiên quyết</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {courseDetail.prerequisites.map(code => (
+                        <span key={code} className="font-mono text-xs font-bold text-amber-600 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">{code}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Song hành */}
+                {courseDetail.corequisites?.length > 0 && (
+                  <div className="rounded-xl bg-muted/30 px-3 py-2.5">
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-2">Học phần song hành</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {courseDetail.corequisites.map(code => (
+                        <span key={code} className="font-mono text-xs font-bold text-blue-600 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md">{code}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Kỹ năng liên quan */}
+                {courseDetail.relatedSkills?.length > 0 && (
+                  <div className="rounded-xl bg-muted/30 px-3 py-2.5">
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-2">Kỹ năng liên quan</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {courseDetail.relatedSkills.map(skill => (
+                        <span key={skill._id || skill} className="text-xs font-medium text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
+                          {skill.name || skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Mô tả */}
+                {courseDetail.description && (
+                  <div>
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-1.5">Mô tả học phần</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{courseDetail.description}</p>
+                  </div>
+                )}
+
+                {/* Lý thuyết & Thực hành */}
+                {(courseDetail.theoryKnowledge || courseDetail.practiceKnowledge) && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {courseDetail.theoryKnowledge && (
+                      <div className="rounded-xl border px-3 py-2.5">
+                        <p className="text-[10px] text-muted-foreground font-medium mb-1">Lý thuyết</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{courseDetail.theoryKnowledge}</p>
+                      </div>
+                    )}
+                    {courseDetail.practiceKnowledge && (
+                      <div className="rounded-xl border px-3 py-2.5">
+                        <p className="text-[10px] text-muted-foreground font-medium mb-1">Thực hành</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{courseDetail.practiceKnowledge}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Empty state khi không có thêm info */}
+                {!courseDetailLoading
+                  && !courseDetail.description
+                  && !courseDetail.prerequisites?.length
+                  && !courseDetail.corequisites?.length
+                  && !courseDetail.relatedSkills?.length
+                  && !courseDetail.condition && (
+                    <p className="text-xs text-muted-foreground text-center py-2">Không có thông tin bổ sung</p>
+                  )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-5 py-3 border-t flex-shrink-0">
+                <button
+                  onClick={() => setCourseDetail(null)}
+                  className="w-full py-2 rounded-xl border text-sm font-medium hover:bg-muted/30 transition-colors"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
