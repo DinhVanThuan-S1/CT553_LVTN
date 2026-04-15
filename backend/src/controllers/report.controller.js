@@ -16,35 +16,27 @@ const Roadmap = require('../models/Roadmap');
  */
 exports.getOverview = async (req, res) => {
   try {
+    const months = parseInt(req.query.months) || 0; // 0 = all time
+    const dateFilter = months > 0
+      ? { createdAt: { $gte: new Date(new Date().setMonth(new Date().getMonth() - months)) } }
+      : {};
+
     const [
-      totalStudents,
-      totalEmployers,
-      totalJobPostings,
-      pendingJobs,
-      totalApplications,
-      totalRoadmaps,
-      activePersonalRoadmaps,
+      totalStudents, totalEmployers, totalJobPostings,
+      pendingJobs, totalApplications, totalRoadmaps, activePersonalRoadmaps,
     ] = await Promise.all([
-      User.countDocuments({ role: 'student' }),
-      User.countDocuments({ role: 'employer' }),
-      JobPosting.countDocuments({ status: 'approved' }),
+      User.countDocuments({ role: 'student', ...dateFilter }),
+      User.countDocuments({ role: 'employer', ...dateFilter }),
+      JobPosting.countDocuments({ status: 'approved', ...dateFilter }),
       JobPosting.countDocuments({ status: 'pending' }),
-      Application.countDocuments(),
+      Application.countDocuments(dateFilter),
       Roadmap.countDocuments(),
-      PersonalRoadmap.countDocuments({ status: { $ne: 'cancelled' } }),
+      PersonalRoadmap.countDocuments({ status: { $ne: 'cancelled' }, ...dateFilter }),
     ]);
 
     res.json({
       success: true,
-      data: {
-        totalStudents,
-        totalEmployers,
-        totalJobPostings,
-        pendingJobs,
-        totalApplications,
-        totalRoadmaps,
-        activePersonalRoadmaps,
-      },
+      data: { totalStudents, totalEmployers, totalJobPostings, pendingJobs, totalApplications, totalRoadmaps, activePersonalRoadmaps },
     });
   } catch (err) {
     console.error('getOverview error:', err);
@@ -221,45 +213,28 @@ exports.getTopSkills = async (req, res) => {
  */
 exports.getApplicationStats = async (req, res) => {
   try {
+    const months = parseInt(req.query.months) || 6;
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+    const dateMatch = { createdAt: { $gte: startDate } };
+
     const results = await Application.aggregate([
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 },
-        },
-      },
+      { $match: dateMatch },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
     ]);
 
     const statusLabels = {
-      pending: 'Chờ xem xét',
-      reviewed: 'Đã xem',
-      interview_scheduled: 'Hẹn phỏng vấn',
-      accepted: 'Được nhận',
-      rejected: 'Bị từ chối',
-      withdrawn: 'Đã rút',
+      pending: 'Chờ xem xét', reviewed: 'Đã xem',
+      interview_scheduled: 'Hẹn phỏng vấn', accepted: 'Được nhận',
+      rejected: 'Bị từ chối', withdrawn: 'Đã rút',
     };
 
-    const data = results.map(r => ({
-      status: r._id,
-      label: statusLabels[r._id] || r._id,
-      count: r.count,
-    }));
+    const data = results.map(r => ({ status: r._id, label: statusLabels[r._id] || r._id, count: r.count }));
 
-    // Thống kê ứng tuyển theo tháng (6 tháng gần nhất)
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
+    // Monthly within range
     const monthlyStats = await Application.aggregate([
-      { $match: { createdAt: { $gte: sixMonthsAgo } } },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' },
-          },
-          count: { $sum: 1 },
-        },
-      },
+      { $match: dateMatch },
+      { $group: { _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } }, count: { $sum: 1 } } },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
     ]);
 
@@ -268,10 +243,7 @@ exports.getApplicationStats = async (req, res) => {
       count: r.count,
     }));
 
-    res.json({
-      success: true,
-      data: { byStatus: data, monthly },
-    });
+    res.json({ success: true, data: { byStatus: data, monthly } });
   } catch (err) {
     console.error('getApplicationStats error:', err);
     res.status(500).json({ success: false, message: 'Lỗi server' });
