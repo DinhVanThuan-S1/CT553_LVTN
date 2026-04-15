@@ -116,9 +116,9 @@ export default function FavoritesPage() {
             const item = isJob ? fav.jobPosting : fav.roadmap;
             return (
               <div key={fav._id}
-                className="group rounded-xl border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden">
-                {/* type strip */}
-                <div className={`h-1 ${isJob ? 'bg-gradient-to-r from-blue-400 to-sky-400' : 'bg-gradient-to-r from-primary/60 to-sky-500/40'}`} />
+                className={`group rounded-xl border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden border-l-4 ${
+                  isJob ? 'border-l-blue-400' : 'border-l-primary/50'
+                }`}>
 
                 <div className="p-4">
                   <div className="flex items-start gap-3 mb-3">

@@ -193,14 +193,13 @@ export default function ApplicationsPage() {
             const isInterview = app.status === 'interview_scheduled';
             return (
               <div key={app._id}
-                className={`group rounded-xl border bg-card transition-all duration-200 hover:shadow-md overflow-hidden ${isInterview ? 'border-primary/30' : 'hover:border-primary/20'}`}>
-                {/* Status accent strip */}
-                <div className={`h-0.5 ${app.status === 'accepted' ? 'bg-emerald-400'
-                  : app.status === 'rejected' ? 'bg-red-400'
-                    : app.status === 'interview_scheduled' ? 'bg-primary'
-                      : app.status === 'reviewed' ? 'bg-blue-400'
-                        : 'bg-amber-400/60'
-                  }`} />
+                className={`group rounded-xl border bg-card transition-all duration-200 hover:shadow-md overflow-hidden border-l-4 ${isInterview ? 'border-primary/30' : 'hover:border-primary/20'} ${
+                  app.status === 'accepted' ? 'border-l-emerald-400'
+                  : app.status === 'rejected' ? 'border-l-red-400'
+                  : app.status === 'interview_scheduled' ? 'border-l-primary'
+                  : app.status === 'reviewed' ? 'border-l-blue-400'
+                  : 'border-l-amber-400/70'
+                }`}>
 
                 <div className="p-4">
                   <div className="flex items-center gap-3">

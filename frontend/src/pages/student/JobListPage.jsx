@@ -337,9 +337,7 @@ export default function JobListPage() {
             const isFav = favorites[job._id];
             const soon = isDeadlineSoon(job.deadline);
             return (
-              <div key={job._id} className="group relative rounded-xl border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden">
-                {/* top accent strip */}
-                <div className="h-1 bg-gradient-to-r from-primary/60 to-sky-500/40" />
+              <div key={job._id} className="group relative rounded-xl border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden border-l-4 border-l-primary/50">
 
                 <div className="p-5">
                   {/* Header */}

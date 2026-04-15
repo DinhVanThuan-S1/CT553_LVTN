@@ -202,9 +202,9 @@ export default function CVPage() {
               cvSkills.academic.some(v => (v.skill?._id || v.skill) === s._id)
             ).length;
             return (
-              <div key={cv._id} className="group relative rounded-xl border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden">
-                {/* accent strip */}
-                <div className={`h-1 ${cv.isDefault ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : 'bg-gradient-to-r from-primary/60 to-sky-500/40'}`} />
+              <div key={cv._id} className={`group relative rounded-xl border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden border-l-4 ${
+                cv.isDefault ? 'border-l-emerald-400' : 'border-l-primary/50'
+              }`}>
 
                 <div className="p-5">
                   {/* Header */}
