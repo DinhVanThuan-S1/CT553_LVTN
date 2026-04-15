@@ -93,7 +93,10 @@ class JobPostingService {
    */
   async createJob(employerId, data) {
     data.employer = employerId;
-    data.status = 'pending'; // Cần admin duyệt
+    // Cho phép lưu nháp hoặc gửi duyệt
+    if (!['draft', 'pending'].includes(data.status)) {
+      data.status = 'pending';
+    }
     return JobPosting.create(data);
   }
 
@@ -108,7 +111,12 @@ class JobPostingService {
     }
 
     Object.assign(job, data);
-    job.status = 'pending'; // Gửi duyệt lại
+    // Cho phép giữ nguyên draft hoặc chuyển sang pending
+    if (data.status && ['draft', 'pending'].includes(data.status)) {
+      job.status = data.status;
+    } else {
+      job.status = 'pending';
+    }
     await job.save();
     return job;
   }
