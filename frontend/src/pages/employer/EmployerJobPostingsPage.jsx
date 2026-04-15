@@ -364,7 +364,7 @@ export default function EmployerJobPostingsPage() {
           <div>
             <div className="flex items-center gap-2 mb-0.5">
               <TrendingUp className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Quản lý Tin Tuyển Dụng</span>
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Quản lý Tin Tuyển Dụng</span>
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">{jobs.length} tin đang quản lý</p>
           </div>
@@ -381,15 +381,13 @@ export default function EmployerJobPostingsPage() {
           const active = filterStatus === key;
           return (
             <button key={key} onClick={() => setFilterStatus(key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                active
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${active
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}>
+                }`}>
               {label}
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                active ? 'bg-white/20' : 'bg-background/80'
-              }`}>{count}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-white/20' : 'bg-background/80'
+                }`}>{count}</span>
             </button>
           );
         })}
@@ -554,17 +552,15 @@ export default function EmployerJobPostingsPage() {
               <button
                 type="button"
                 onClick={() => setForm((f) => ({ ...f, salaryRange: { ...f.salaryRange, isNegotiable: !f.salaryRange.isNegotiable } }))}
-                className={`mt-5 shrink-0 h-9 flex items-center gap-2 px-3.5 rounded-lg border text-xs font-semibold transition-all ${
-                  form.salaryRange.isNegotiable
+                className={`mt-5 shrink-0 h-9 flex items-center gap-2 px-3.5 rounded-lg border text-xs font-semibold transition-all ${form.salaryRange.isNegotiable
                     ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                     : 'bg-background border-input text-muted-foreground hover:border-primary/60 hover:text-foreground'
-                }`}
+                  }`}
               >
-                <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                  form.salaryRange.isNegotiable
+                <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-colors ${form.salaryRange.isNegotiable
                     ? 'border-white bg-white/30'
                     : 'border-muted-foreground/40'
-                }`}>
+                  }`}>
                   {form.salaryRange.isNegotiable && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                 </div>
                 Thỏa thuận
@@ -595,11 +591,10 @@ export default function EmployerJobPostingsPage() {
                 const selected = form.requiredSkills.some((rs) => rs.skill === skill._id);
                 return (
                   <button key={skill._id} type="button" onClick={() => toggleSkill(skill._id)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all border ${
-                      selected
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all border ${selected
                         ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                         : 'bg-background border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                    }`}>
+                      }`}>
                     {skill.icon} {skill.name}
                   </button>
                 );

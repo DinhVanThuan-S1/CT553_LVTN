@@ -259,17 +259,18 @@ export default function SkillMapPage() {
     <div className="animate-fade-in space-y-5">
 
       {/* ── Hero Header ── */}
-      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-500/8 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 md:p-8">
+        <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-primary/8 to-transparent rounded-full translate-y-1/2 -translate-x-1/4 pointer-events-none" />
         <div className="relative flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Zap className="w-5 h-5 text-primary" />
               <span className="text-xs font-semibold text-primary uppercase tracking-widest">Skill Map</span>
             </div>
-            {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Skill Map</h1> */}
             <p className="text-muted-foreground text-sm mt-1.5">
-              Tổng quan {totalSkills} kỹ năng &bull; {mySkills.length} kỹ năng của tôi
+              Tổng quan <strong className="text-foreground">{totalSkills}</strong> kỹ năng &bull;&nbsp;
+              <strong className="text-foreground">{mySkills.length}</strong> kỹ năng của tôi
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -366,32 +367,33 @@ export default function SkillMapPage() {
           </button>
 
           {showMyDetails && (
-            <div className="border-t">
+            <div className="border-t divide-y divide-border/50">
 
               {/* ── Kỹ năng của tôi ── */}
               {mySkills.length > 0 && (
-                <div className="p-5 space-y-4 border-b border-border/50">
+                <div className="p-5 space-y-4">
                   <div className="flex items-center gap-2">
-                    <Shield className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kỹ năng của tôi</span>
+                    <div className="w-1 h-4 rounded-full bg-primary shrink-0" />
+                    <Shield className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs font-semibold uppercase tracking-widest text-foreground">Kỹ năng của tôi</span>
                   </div>
 
                   {/* Stats 3 cột */}
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 p-3 text-center">
-                      <Route className="w-6 h-6 text-emerald-500/40 absolute -bottom-1 -right-1" />
-                      <span className="text-[11px] font-medium text-emerald-600 block mb-1">Lộ Trình</span>
-                      <p className="text-2xl font-bold text-emerald-600">{roadmapSkills.length}</p>
+                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 p-4 text-center">
+                      <Route className="w-8 h-8 text-emerald-500/20 absolute -bottom-1 -right-1" />
+                      <span className="text-[11px] font-medium text-emerald-600 block mb-1.5">Lộ Trình</span>
+                      <p className="text-3xl font-bold text-emerald-600">{roadmapSkills.length}</p>
                     </div>
-                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 p-3 text-center">
-                      <GraduationCap className="w-6 h-6 text-amber-500/40 absolute -bottom-1 -right-1" />
-                      <span className="text-[11px] font-medium text-amber-600 block mb-1">Học Phần</span>
-                      <p className="text-2xl font-bold text-amber-600">{academicSkills.length}</p>
+                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 p-4 text-center">
+                      <GraduationCap className="w-8 h-8 text-amber-500/20 absolute -bottom-1 -right-1" />
+                      <span className="text-[11px] font-medium text-amber-600 block mb-1.5">Học Phần</span>
+                      <p className="text-3xl font-bold text-amber-600">{academicSkills.length}</p>
                     </div>
-                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-muted/60 to-muted/20 border p-3 text-center">
-                      <User className="w-6 h-6 text-muted-foreground/40 absolute -bottom-1 -right-1" />
-                      <span className="text-[11px] font-medium text-muted-foreground block mb-1">Tự Khai Báo</span>
-                      <p className="text-2xl font-bold">{selfSkills.length}</p>
+                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-muted/60 to-muted/20 border p-4 text-center">
+                      <User className="w-8 h-8 text-muted-foreground/20 absolute -bottom-1 -right-1" />
+                      <span className="text-[11px] font-medium text-muted-foreground block mb-1.5">Tự Khai Báo</span>
+                      <p className="text-3xl font-bold">{selfSkills.length}</p>
                     </div>
                   </div>
 
@@ -424,10 +426,11 @@ export default function SkillMapPage() {
               {/* ── Tiến độ kỹ năng ── */}
               {chartSkills.length > 0 && (
                 <div className="p-5 space-y-1">
-                  <div className="flex items-center gap-2 mb-3">
-                    <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tiến độ kỹ năng</span>
-                    <span className="ml-auto text-[10px] font-normal text-muted-foreground">Top {chartSkills.length}</span>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-1 h-4 rounded-full bg-amber-500 shrink-0" />
+                    <BarChart3 className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="text-xs font-semibold uppercase tracking-widest text-foreground">Tiến độ kỹ năng</span>
+                    <span className="ml-auto text-[10px] font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full">Top {chartSkills.length}</span>
                   </div>
                   {chartSkills.map((skill, idx) => {
                     const prog = skillProgress[skill._id];
@@ -437,7 +440,7 @@ export default function SkillMapPage() {
                       <button
                         key={skill._id}
                         onClick={() => openSkillDetail(skill)}
-                        className="w-full flex items-center gap-3 group hover:bg-muted/20 rounded-xl px-3 py-2.5 transition-colors text-left"
+                        className="w-full flex items-center gap-3 group hover:bg-muted/30 rounded-xl px-3 py-2.5 transition-colors text-left"
                       >
                         <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${rankColor}`}>
                           {idx + 1}
@@ -448,11 +451,11 @@ export default function SkillMapPage() {
                             <span className="text-xs font-medium truncate group-hover:text-primary transition-colors">
                               {skill.name}
                             </span>
-                            <span className={`text-[10px] font-bold shrink-0 ${pct === 100 ? 'text-emerald-500' : 'text-muted-foreground'}`}>
+                            <span className={`text-[10px] font-bold shrink-0 ${pct === 100 ? 'text-emerald-500' : 'text-foreground'}`}>
                               {pct}%
                             </span>
                           </div>
-                          <div className="h-1.5 bg-muted/40 rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all duration-700 ${getProgressColor(pct)}`}
                               style={{ width: `${pct}%` }}
@@ -471,23 +474,36 @@ export default function SkillMapPage() {
         </div>
       )}
 
-      {/* Skill Groups */}
+      {/* ── Skill Groups ── */}
       <div className="space-y-4">
         {Object.entries(grouped).map(([category, catSkills]) => {
           const learnedInCat = catSkills.filter(s => mySkillMap[s._id]).length;
+          const pctCat = catSkills.length > 0 ? Math.round((learnedInCat / catSkills.length) * 100) : 0;
           return (
             <div key={category} className="rounded-xl border bg-card overflow-hidden">
-              <div className="flex items-center gap-2 px-5 py-3 bg-muted/20 border-b">
-                <span className="text-lg">{categoryIcons[category] || '📘'}</span>
-                <h3 className="font-semibold text-sm">
+              {/* Category header */}
+              <div className="flex items-center gap-3 px-5 py-3.5 bg-muted/20 border-b">
+                <span className="text-xl">{categoryIcons[category] || '📘'}</span>
+                <h3 className="font-semibold text-sm flex-1">
                   {categoryLabels[category] || category}
                 </h3>
-                <span className="text-xs text-muted-foreground ml-auto">
-                  {learnedInCat}/{catSkills.length}
-                </span>
+                {/* Mini progress */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="hidden sm:flex items-center gap-1.5">
+                    <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full" style={{ width: `${pctCat}%` }} />
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-medium">{pctCat}%</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full font-medium">
+                    {learnedInCat}/{catSkills.length}
+                  </span>
+                </div>
               </div>
+
+              {/* Skill cards grid */}
               <div className="p-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
                   {catSkills.map((skill) => {
                     const prog = skillProgress[skill._id];
                     const pct = prog ? Math.round((prog.completed / prog.total) * 100) : 0;
@@ -500,40 +516,40 @@ export default function SkillMapPage() {
                       <button
                         key={skill._id}
                         onClick={() => openSkillDetail(skill)}
-                        className={`relative rounded-lg border p-3 text-center transition-all cursor-pointer group ${isOwned && ms.isVerified
-                          ? 'border-emerald-500/30 bg-emerald-500/[0.04] shadow-sm'
+                        className={`relative rounded-xl border p-3.5 text-center transition-all duration-200 cursor-pointer group hover:shadow-md ${isOwned && ms.isVerified
+                          ? 'border-emerald-500/30 bg-emerald-500/[0.04] shadow-sm hover:border-emerald-500/50'
                           : isOwned
-                            ? 'border-primary/30 bg-primary/[0.04] shadow-sm'
+                            ? 'border-primary/30 bg-primary/[0.04] shadow-sm hover:border-primary/50'
                             : hasProgress
-                              ? 'border-primary/20 bg-primary/[0.02]'
-                              : 'hover:border-muted-foreground/30 hover:shadow-sm'
+                              ? 'border-primary/20 bg-primary/[0.02] hover:border-primary/40'
+                              : 'hover:border-muted-foreground/30'
                           }`}
                       >
                         {/* Badge trạng thái */}
                         {isOwned && ms.isVerified && (
-                          <div className="absolute -top-1 -right-1">
-                            <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
-                              <CheckCircle2 className="w-2.5 h-2.5 text-white" />
+                          <div className="absolute -top-1.5 -right-1.5">
+                            <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shadow-sm">
+                              <CheckCircle2 className="w-3 h-3 text-white" />
                             </div>
                           </div>
                         )}
                         {isOwned && !ms.isVerified && (
-                          <div className="absolute -top-1 -right-1">
-                            <div className="w-4 h-4 rounded-full bg-muted-foreground flex items-center justify-center">
-                              <User className="w-2.5 h-2.5 text-white" />
+                          <div className="absolute -top-1.5 -right-1.5">
+                            <div className="w-5 h-5 rounded-full bg-muted-foreground/80 flex items-center justify-center shadow-sm">
+                              <User className="w-3 h-3 text-white" />
                             </div>
                           </div>
                         )}
                         {!isOwned && hasProgress && (
-                          <div className="absolute -top-1 -right-1">
-                            <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                              <span className="text-[8px] font-bold text-white">{pct}%</span>
+                          <div className="absolute -top-1.5 -right-1.5">
+                            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                              <span className="text-[9px] font-bold text-white">{pct}%</span>
                             </div>
                           </div>
                         )}
 
-                        <span className="text-2xl block mb-1">{skill.icon || '📘'}</span>
-                        <p className={`text-xs font-medium truncate group-hover:text-primary transition-colors ${isOwned && ms.isVerified ? 'text-emerald-600' : isOwned ? 'text-primary' : ''
+                        <span className="text-2xl block mb-1.5">{skill.icon || '📘'}</span>
+                        <p className={`text-xs font-medium leading-snug group-hover:text-primary transition-colors line-clamp-2 ${isOwned && ms.isVerified ? 'text-emerald-600' : isOwned ? 'text-primary' : ''
                           }`}>
                           {skill.name}
                         </p>
@@ -541,7 +557,7 @@ export default function SkillMapPage() {
 
                         {/* Source indicator */}
                         {isOwned && ms.sources && (
-                          <div className="flex items-center justify-center gap-0.5 mt-1">
+                          <div className="flex items-center justify-center gap-0.5 mt-1.5">
                             {ms.sources.map(src => {
                               const Ic = sourceIcons[src];
                               return <Ic key={src} className={`w-2.5 h-2.5 ${src === 'self' ? 'text-muted-foreground' : 'text-emerald-500'}`} />;
@@ -551,7 +567,7 @@ export default function SkillMapPage() {
 
                         {/* Mini progress bar */}
                         {hasProgress && (
-                          <div className="h-1 bg-muted/40 rounded-full overflow-hidden mt-1.5">
+                          <div className="h-1 bg-muted/40 rounded-full overflow-hidden mt-2">
                             <div
                               className={`h-full rounded-full ${isCompleted ? 'bg-emerald-500' : 'bg-primary'}`}
                               style={{ width: `${pct}%` }}
@@ -624,7 +640,7 @@ export default function SkillMapPage() {
             <div className="space-y-5">
               {/* Header */}
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center text-3xl">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center text-3xl shrink-0">
                   {skillDetail.icon || '📘'}
                 </div>
                 <div className="flex-1">
@@ -638,12 +654,12 @@ export default function SkillMapPage() {
                     </span>
                   </div>
                 </div>
-                {/* Progress */}
+                {/* Progress circle */}
                 {skillProgress[skillDetail._id] && (() => {
                   const prog = skillProgress[skillDetail._id];
                   const pct = Math.round((prog.completed / prog.total) * 100);
                   return (
-                    <div className="text-center">
+                    <div className="text-center shrink-0">
                       <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center ${pct === 100 ? 'border-emerald-500 text-emerald-600' : 'border-primary text-primary'
                         }`}>
                         <span className="text-sm font-bold">{pct}%</span>
@@ -690,7 +706,6 @@ export default function SkillMapPage() {
                   <BookOpen className="w-4 h-4 text-primary" />
                   Tài nguyên ({skillDetail.linkedResources?.length || 0})
                 </h4>
-
                 {(!skillDetail.linkedResources || skillDetail.linkedResources.length === 0) ? (
                   <div className="rounded-lg border border-dashed p-6 text-center">
                     <BookOpen className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
@@ -770,3 +785,5 @@ export default function SkillMapPage() {
     </div>
   );
 }
+
+

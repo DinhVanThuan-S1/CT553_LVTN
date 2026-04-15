@@ -143,7 +143,7 @@ export default function CompanyProfilePage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
               <Building2 className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Hồ sơ công ty</span>
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Hồ sơ công ty</span>
             </div>
             <h1 className="text-xl font-bold truncate">{form.name || 'Chưa thiết lập tên công ty'}</h1>
             <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">

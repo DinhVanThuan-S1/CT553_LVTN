@@ -77,7 +77,7 @@ export default function EmployerDashboard() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="text-xs font-medium text-emerald-600 uppercase tracking-wider">Tổng Quan</span>
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Tổng Quan</span>
             </div>
             {/* <h1 className="text-2xl font-bold tracking-tight">Tổng Quan</h1> */}
             <p className="text-sm text-muted-foreground mt-0.5">

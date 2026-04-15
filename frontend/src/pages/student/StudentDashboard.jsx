@@ -9,7 +9,7 @@ import { Badge } from '../../components/ui/Badge';
 import {
   BookOpen, Target, Route, Briefcase, TrendingUp,
   Calendar, Clock, ChevronRight, GraduationCap,
-  Sparkles, ArrowRight, Flame,
+  Sparkles, ArrowRight, Flame, Shield,
 } from 'lucide-react';
 
 function getGreeting() {
@@ -112,7 +112,11 @@ export default function StudentDashboard() {
         <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-accent/10 to-transparent rounded-full translate-y-1/2 -translate-x-1/4 pointer-events-none" />
         <div className="relative">
           <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1">
-            <span className="text-base">{greeting.emoji}</span> {greeting.text}!
+            <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1">
+              <Shield className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Tổng Quan</span>
+            </p>
+            {/* <div className="text-base">{greeting.emoji}</div> {greeting.text}! */}
           </p>
           {/* <h1 className="text-1xl md:text-3xl font-bold tracking-tight">Tổng Quan</h1> */}
           <p className="text-muted-foreground text-sm mt-1.5 max-w-lg">
