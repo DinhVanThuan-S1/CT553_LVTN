@@ -170,7 +170,7 @@ export default function CVPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <FileText className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">My CV</span>
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">My CV</span>
             </div>
             {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">CV Của Tôi</h1> */}
             <p className="text-muted-foreground text-sm mt-1.5">

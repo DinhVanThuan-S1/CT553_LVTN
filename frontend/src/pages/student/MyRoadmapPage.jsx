@@ -197,7 +197,7 @@ export default function MyRoadmapPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Route className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Lộ trình của tôi</span>
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Lộ trình của tôi</span>
             </div>
             <p className="text-muted-foreground text-sm mt-1.5">
               {roadmaps.length === 0 ? 'Chưa đăng ký lộ trình nào' : `${roadmaps.length} lộ trình`}

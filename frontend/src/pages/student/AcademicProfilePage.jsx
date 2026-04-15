@@ -527,7 +527,7 @@ export default function AcademicProfilePage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <GraduationCap className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Hồ sơ học tập</span>
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Hồ sơ học tập</span>
             </div>
             {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Hồ Sơ</h1> */}
             <p className="text-muted-foreground text-sm mt-1.5 max-w-lg">

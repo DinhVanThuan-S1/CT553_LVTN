@@ -119,7 +119,7 @@ export default function ApplicationsPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <ClipboardList className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Đơn Ứng Tuyển</span>
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Đơn Ứng Tuyển</span>
             </div>
             {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Đơn Ứng Tuyển</h1> */}
             <p className="text-muted-foreground text-sm mt-1.5">{apps.length} đơn đã gửi</p>
@@ -157,8 +157,8 @@ export default function ApplicationsPage() {
             return (
               <button key={key} onClick={() => setStatusFilter(key)}
                 className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${isActive
-                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                    : 'border-border text-muted-foreground hover:border-primary/40 hover:bg-muted/50'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  : 'border-border text-muted-foreground hover:border-primary/40 hover:bg-muted/50'
                   }`}>
                 {cfg && <cfg.icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : cfg.text}`} />}
                 {label}
@@ -196,10 +196,10 @@ export default function ApplicationsPage() {
                 className={`group rounded-xl border bg-card transition-all duration-200 hover:shadow-md overflow-hidden ${isInterview ? 'border-primary/30' : 'hover:border-primary/20'}`}>
                 {/* Status accent strip */}
                 <div className={`h-0.5 ${app.status === 'accepted' ? 'bg-emerald-400'
-                    : app.status === 'rejected' ? 'bg-red-400'
-                      : app.status === 'interview_scheduled' ? 'bg-primary'
-                        : app.status === 'reviewed' ? 'bg-blue-400'
-                          : 'bg-amber-400/60'
+                  : app.status === 'rejected' ? 'bg-red-400'
+                    : app.status === 'interview_scheduled' ? 'bg-primary'
+                      : app.status === 'reviewed' ? 'bg-blue-400'
+                        : 'bg-amber-400/60'
                   }`} />
 
                 <div className="p-4">

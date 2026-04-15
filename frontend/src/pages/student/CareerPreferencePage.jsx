@@ -135,7 +135,7 @@ export default function CareerPreferencePage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Star className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Sở thích nghề nghiệp</span>
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Sở thích nghề nghiệp</span>
             </div>
             {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Sở Thích Nghề Nghiệp</h1> */}
             <p className="text-muted-foreground text-sm mt-1.5">

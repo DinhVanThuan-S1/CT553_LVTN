@@ -21,6 +21,17 @@ const MONTH_NAMES = [
   'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
 ];
 
+// Màu border-left cho từng lộ trình card
+const BORDER_COLORS = [
+  'hsl(217, 82%, 55%)',  // blue
+  'hsl(45, 85%, 50%)',   // amber
+  'hsl(271, 65%, 55%)',  // violet
+  'hsl(340, 70%, 55%)',  // rose
+  'hsl(167, 75%, 45%)',  // teal
+  'hsl(30, 80%, 55%)',   // orange
+];
+
+
 function getWeekRange(date) {
   const d = new Date(date);
   const day = d.getDay();
@@ -165,7 +176,7 @@ export default function ProgressPage() {
         <div className="relative">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-5 h-5 text-primary" />
-            <span className="text-xs font-medium text-primary uppercase tracking-wider">Tiến Độ Học tập</span>
+            <span className="text-xs font-semibold text-primary uppercase tracking-widest">Tiến Độ Học tập</span>
           </div>
           {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Tiến Độ Học Tập</h1> */}
           <p className="text-muted-foreground text-sm mt-1.5">Tổng quan quá trình học và rèn luyện kỹ năng</p>
@@ -307,11 +318,9 @@ export default function ProgressPage() {
                 const progressBar = pct === 100 ? 'bg-emerald-500' : pct > 50 ? 'bg-primary' : 'bg-amber-500';
 
                 return (
-                  <div key={pr._id} className="rounded-xl border bg-card overflow-hidden">
-                    {/* Color strip */}
-                    <div className={`h-1.5 ${rmColor?.dot || 'bg-primary'}`}
-                      style={{ width: '100%', background: undefined }}
-                    />
+                  <div key={pr._id}
+                    className="rounded-xl border bg-card overflow-hidden border-l-4"
+                    style={{ borderLeftColor: BORDER_COLORS[visibleRoadmaps.indexOf(pr) % BORDER_COLORS.length] }}>
                     <div className="p-4">
                       <div className="flex items-start justify-between mb-3 gap-2">
                         <div className="min-w-0">

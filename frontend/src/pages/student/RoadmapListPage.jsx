@@ -144,7 +144,7 @@ export default function RoadmapListPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Route className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Danh sách lộ trình</span>
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Danh sách lộ trình</span>
             </div>
             {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Danh Sách Lộ Trình</h1> */}
             <p className="text-muted-foreground text-sm mt-1.5">
@@ -186,18 +186,16 @@ export default function RoadmapListPage() {
         <div className="relative shrink-0" ref={diffRef}>
           <button
             onClick={() => { setShowDiffMenu(v => !v); setShowCareerMenu(false); }}
-            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all w-40 ${
-              showDiffMenu || difficulty
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all w-40 ${showDiffMenu || difficulty
                 ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
                 : 'border-input bg-background text-foreground hover:border-primary/60'
-            }`}
+              }`}
           >
             <span className="flex-1 text-left truncate">
               {difficulty ? DIFFICULTY[difficulty]?.label : 'Tất cả mức độ'}
             </span>
-            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
-              showDiffMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'
-            }`} />
+            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${showDiffMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'
+              }`} />
           </button>
           {showDiffMenu && (
             <div className="absolute left-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-44 animate-fade-in">
@@ -206,9 +204,8 @@ export default function RoadmapListPage() {
                   .map(({ value, label }) => (
                     <button key={value}
                       onClick={() => { setParam('d', value); setShowDiffMenu(false); }}
-                      className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
-                        difficulty === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
-                      }`}
+                      className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${difficulty === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
+                        }`}
                     >
                       {difficulty === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
                       <span className={difficulty === value ? '' : 'ml-3.5'}>{label}</span>
@@ -223,18 +220,16 @@ export default function RoadmapListPage() {
           <button
             onClick={() => { setShowCareerMenu(v => !v); setShowDiffMenu(false); }}
             disabled={loading || careerPathOptions.length === 0}
-            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all w-48 disabled:opacity-50 disabled:cursor-not-allowed ${
-              showCareerMenu || careerPath
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all w-48 disabled:opacity-50 disabled:cursor-not-allowed ${showCareerMenu || careerPath
                 ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
                 : 'border-input bg-background text-foreground hover:border-primary/60'
-            }`}
+              }`}
           >
             <span className="flex-1 text-left truncate">
               {careerPath || 'Tất cả hướng nghề'}
             </span>
-            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
-              showCareerMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'
-            }`} />
+            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${showCareerMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'
+              }`} />
           </button>
           {showCareerMenu && (
             <div className="absolute right-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-52 animate-fade-in">
@@ -243,9 +238,8 @@ export default function RoadmapListPage() {
                   .map(({ value, label }) => (
                     <button key={value}
                       onClick={() => { setParam('c', value); setShowCareerMenu(false); }}
-                      className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
-                        careerPath === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
-                      }`}
+                      className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${careerPath === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
+                        }`}
                     >
                       {careerPath === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
                       <span className={careerPath === value ? '' : 'ml-3.5'}>{label}</span>

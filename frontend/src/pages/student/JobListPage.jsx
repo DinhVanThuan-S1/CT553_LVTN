@@ -199,7 +199,7 @@ export default function JobListPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Briefcase className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Danh sách công việc</span>
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Danh sách công việc</span>
             </div>
             {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Danh Sách Công Việc</h1> */}
             <p className="text-muted-foreground text-sm mt-1.5">
@@ -233,18 +233,16 @@ export default function JobListPage() {
         <div className="relative shrink-0" ref={typeRef}>
           <button
             onClick={() => { setShowTypeMenu(v => !v); setShowCareerMenu(false); }}
-            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all w-40 ${
-              showTypeMenu || jobType
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all w-40 ${showTypeMenu || jobType
                 ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
                 : 'border-input bg-background text-foreground hover:border-primary/60'
-            }`}
+              }`}
           >
             <span className="flex-1 text-left truncate">
               {jobType ? jobTypeLabels[jobType] : 'Tất cả loại'}
             </span>
-            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
-              showTypeMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'
-            }`} />
+            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${showTypeMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'
+              }`} />
           </button>
           {showTypeMenu && (
             <div className="absolute left-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-44 animate-fade-in">
@@ -253,9 +251,8 @@ export default function JobListPage() {
                   .map(({ value, label }) => (
                     <button key={value}
                       onClick={() => { setJobType(value); setPagination(p => ({ ...p, page: 1 })); setShowTypeMenu(false); }}
-                      className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
-                        jobType === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
-                      }`}
+                      className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${jobType === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
+                        }`}
                     >
                       {jobType === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
                       <span className={jobType === value ? '' : 'ml-3.5'}>{label}</span>
@@ -270,18 +267,16 @@ export default function JobListPage() {
           <div className="relative shrink-0" ref={careerMenuRef}>
             <button
               onClick={() => { setShowCareerMenu(v => !v); setShowTypeMenu(false); }}
-              className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all w-48 ${
-                showCareerMenu || careerPath
+              className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all w-48 ${showCareerMenu || careerPath
                   ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
                   : 'border-input bg-background text-foreground hover:border-primary/60'
-              }`}
+                }`}
             >
               <span className="flex-1 text-left truncate">
                 {careerPath || 'Tất cả hướng nghề'}
               </span>
-              <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
-                showCareerMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'
-              }`} />
+              <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${showCareerMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'
+                }`} />
             </button>
             {showCareerMenu && (
               <div className="absolute right-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-52 animate-fade-in">
@@ -290,9 +285,8 @@ export default function JobListPage() {
                     .map(({ value, label }) => (
                       <button key={value}
                         onClick={() => { setCareerPath(value); setPagination(p => ({ ...p, page: 1 })); setShowCareerMenu(false); }}
-                        className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
-                          careerPath === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
-                        }`}
+                        className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${careerPath === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
+                          }`}
                       >
                         {careerPath === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
                         <span className={careerPath === value ? '' : 'ml-3.5'}>{label}</span>
