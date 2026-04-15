@@ -126,7 +126,7 @@ export default function WelcomePage() {
               : s
           ));
         }
-      } catch {/* fail silently */} finally {
+      } catch {/* fail silently */ } finally {
         setLoading(false);
       }
     };
