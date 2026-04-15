@@ -165,9 +165,9 @@ export default function ProgressPage() {
         <div className="relative">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-5 h-5 text-primary" />
-            <span className="text-xs font-medium text-primary uppercase tracking-wider">Học tập</span>
+            <span className="text-xs font-medium text-primary uppercase tracking-wider">Tiến Độ Học tập</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Tiến Độ Học Tập</h1>
+          {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Tiến Độ Học Tập</h1> */}
           <p className="text-muted-foreground text-sm mt-1.5">Tổng quan quá trình học và rèn luyện kỹ năng</p>
         </div>
       </div>

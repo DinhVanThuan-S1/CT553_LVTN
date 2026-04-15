@@ -49,17 +49,17 @@ export default function FavoritesPage() {
   const roadmapCount = favorites.filter(f => f.type === 'roadmap').length;
 
   const tabs = [
-    { key: 'all',     label: 'Tất cả',   count: favorites.length, icon: Heart },
-    { key: 'job',     label: 'Công việc', count: jobCount,         icon: Briefcase },
-    { key: 'roadmap', label: 'Lộ trình',  count: roadmapCount,     icon: Route },
+    { key: 'all', label: 'Tất cả', count: favorites.length, icon: Heart },
+    { key: 'job', label: 'Công việc', count: jobCount, icon: Briefcase },
+    { key: 'roadmap', label: 'Lộ trình', count: roadmapCount, icon: Route },
   ];
 
   if (loading) {
     return (
       <div className="animate-fade-in space-y-4">
         <div className="h-32 skeleton rounded-2xl" />
-        <div className="flex gap-2">{[1,2,3].map(i => <div key={i} className="h-9 w-28 skeleton rounded-full" />)}</div>
-        {[1,2,3].map(i => <div key={i} className="h-20 skeleton rounded-xl" />)}
+        <div className="flex gap-2">{[1, 2, 3].map(i => <div key={i} className="h-9 w-28 skeleton rounded-full" />)}</div>
+        {[1, 2, 3].map(i => <div key={i} className="h-20 skeleton rounded-xl" />)}
       </div>
     );
   }
@@ -73,9 +73,9 @@ export default function FavoritesPage() {
         <div className="relative">
           <div className="flex items-center gap-2 mb-1">
             <Heart className="w-5 h-5 text-primary" />
-            <span className="text-xs font-medium text-primary uppercase tracking-wider">Đã lưu</span>
+            <span className="text-xs font-medium text-primary uppercase tracking-wider">Yêu Thích</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Yêu Thích</h1>
+          {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Yêu Thích</h1> */}
           <p className="text-muted-foreground text-sm mt-1.5">
             {favorites.length} mục đã lưu
             {jobCount > 0 && ` · ${jobCount} công việc`}
@@ -88,16 +88,14 @@ export default function FavoritesPage() {
       <div className="flex items-center gap-2">
         {tabs.map(({ key, label, count, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
-              tab === key
+            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${tab === key
                 ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                 : 'border-border text-muted-foreground hover:border-primary/50 hover:bg-muted/50'
-            }`}>
+              }`}>
             <Icon className="w-3.5 h-3.5" />
             {label}
-            <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-              tab === key ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
-            }`}>{count}</span>
+            <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${tab === key ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
+              }`}>{count}</span>
           </button>
         ))}
       </div>
@@ -125,11 +123,10 @@ export default function FavoritesPage() {
                 <div className="p-4">
                   <div className="flex items-start gap-3 mb-3">
                     {/* Icon */}
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
-                      isJob
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${isJob
                         ? 'bg-blue-500/10 text-blue-600 border-blue-300/30'
                         : 'bg-primary/10 text-primary border-primary/15'
-                    }`}>
+                      }`}>
                       {isJob ? <Briefcase className="w-4 h-4" /> : <Route className="w-4 h-4" />}
                     </div>
 
@@ -160,11 +157,10 @@ export default function FavoritesPage() {
                     </div>
 
                     {/* Type badge */}
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${
-                      isJob
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${isJob
                         ? 'bg-blue-500/10 text-blue-600 border-blue-300/30'
                         : 'bg-primary/8 text-primary border-primary/15'
-                    }`}>
+                      }`}>
                       {isJob ? 'Công việc' : 'Lộ trình'}
                     </span>
                   </div>

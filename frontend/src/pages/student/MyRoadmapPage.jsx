@@ -17,10 +17,10 @@ import {
 } from 'lucide-react';
 
 const STATUS = {
-  active:    { label: 'Đang học',   cls: 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/25' },
+  active: { label: 'Đang học', cls: 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/25' },
   completed: { label: 'Hoàn thành', cls: 'bg-primary/10    text-primary    border border-primary/25' },
-  paused:    { label: 'Tạm dừng',  cls: 'bg-amber-500/10  text-amber-600  border border-amber-500/25' },
-  cancelled: { label: 'Đã hủy',    cls: 'bg-red-500/10    text-red-600    border border-red-500/25' },
+  paused: { label: 'Tạm dừng', cls: 'bg-amber-500/10  text-amber-600  border border-amber-500/25' },
+  cancelled: { label: 'Đã hủy', cls: 'bg-red-500/10    text-red-600    border border-red-500/25' },
 };
 // Keep legacy maps for dialogs that use Badge component
 const statusLabels = { active: 'Đang học', completed: 'Hoàn thành', paused: 'Tạm dừng', cancelled: 'Đã hủy' };
@@ -166,14 +166,14 @@ export default function MyRoadmapPage() {
       <div className="animate-fade-in space-y-6">
         <div className="h-32 skeleton rounded-2xl" />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {[1,2,3,4].map(i => (
+          {[1, 2, 3, 4].map(i => (
             <div key={i} className="rounded-xl border bg-card overflow-hidden">
               <div className="h-1.5 bg-muted" />
               <div className="p-5 space-y-3">
                 <div className="h-5 w-48 skeleton" />
                 <div className="h-3 w-32 skeleton" />
                 <div className="grid grid-cols-3 gap-3 mt-4">
-                  {[1,2,3].map(j => <div key={j} className="h-16 skeleton rounded-lg" />)}
+                  {[1, 2, 3].map(j => <div key={j} className="h-16 skeleton rounded-lg" />)}
                 </div>
               </div>
             </div>
@@ -183,9 +183,9 @@ export default function MyRoadmapPage() {
     );
   }
 
-  const activeCount    = roadmaps.filter(r => r.status === 'active').length;
+  const activeCount = roadmaps.filter(r => r.status === 'active').length;
   const completedCount = roadmaps.filter(r => r.status === 'completed').length;
-  const pausedCount    = roadmaps.filter(r => r.status === 'paused').length;
+  const pausedCount = roadmaps.filter(r => r.status === 'paused').length;
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -197,25 +197,22 @@ export default function MyRoadmapPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Route className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Của tôi</span>
+              <span className="text-xs font-medium text-primary uppercase tracking-wider">Lộ trình của tôi</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Lộ Trình Của Tôi</h1>
             <p className="text-muted-foreground text-sm mt-1.5">
               {roadmaps.length === 0 ? 'Chưa đăng ký lộ trình nào' : `${roadmaps.length} lộ trình`}
             </p>
             {roadmaps.length > 0 && (
-              <div className="flex items-center gap-2 mt-3 flex-wrap">
-                {activeCount > 0    && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">{activeCount} đang học</span>}
-                {pausedCount > 0    && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10  text-amber-600" >{pausedCount} tạm dừng</span>}
-                {completedCount > 0 && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-primary/10     text-primary"   >{completedCount} hoàn thành</span>}
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                {activeCount > 0 && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">{activeCount} đang học</span>}
+                {pausedCount > 0 && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">{pausedCount} tạm dừng</span>}
+                {completedCount > 0 && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">{completedCount} hoàn thành</span>}
               </div>
             )}
           </div>
-          <Link to="/student/roadmaps">
-            <Button variant="outline" className="gap-2">
-              <Route className="w-4 h-4" /> Khám phá lộ trình
-            </Button>
-          </Link>
+          <Button className="gap-2 shadow-md" onClick={() => navigate('/student/roadmaps')}>
+            <Route className="w-4 h-4" /> Khám phá lộ trình
+          </Button>
         </div>
       </div>
 
@@ -239,22 +236,21 @@ export default function MyRoadmapPage() {
           {roadmaps.map(pr => {
             const isActive = pr.status === 'active';
             const isPaused = pr.status === 'paused';
-            const isDone   = pr.status === 'completed';
+            const isDone = pr.status === 'completed';
             const st = STATUS[pr.status] || STATUS.cancelled;
             const progressColor = isDone ? 'bg-emerald-500' : isActive ? 'bg-primary' : 'bg-muted-foreground/30';
 
-            const gradBg  = isDone ? 'from-emerald-500/80 to-emerald-600/60'
-                          : isActive ? 'from-primary/80 to-primary/60'
-                          : isPaused ? 'from-amber-500/60 to-amber-600/40'
-                          : 'from-muted-foreground/30 to-muted-foreground/20';
+            const gradBg = isDone ? 'from-emerald-500/80 to-emerald-600/60'
+              : isActive ? 'from-primary/80 to-primary/60'
+                : isPaused ? 'from-amber-500/60 to-amber-600/40'
+                  : 'from-muted-foreground/30 to-muted-foreground/20';
             const ringColor = isDone ? 'text-emerald-300' : isActive ? 'text-white/90' : 'text-amber-300';
 
             return (
               <div
                 key={pr._id}
-                className={`rounded-xl border bg-card overflow-hidden transition-all duration-200 flex flex-col ${
-                  isActive ? 'hover:shadow-lg hover:-translate-y-0.5' : 'opacity-75'
-                }`}
+                className={`rounded-xl border bg-card overflow-hidden transition-all duration-200 flex flex-col ${isActive ? 'hover:shadow-lg hover:-translate-y-0.5' : 'opacity-75'
+                  }`}
               >
                 {/* ── Thumbnail strip ── */}
                 <div className={`relative h-24 bg-gradient-to-br ${gradBg} flex items-center justify-between px-5`}>
@@ -672,8 +668,8 @@ export default function MyRoadmapPage() {
                               <div key={res._id}
                                 className="flex items-center gap-3 rounded-lg border px-3 py-2.5 hover:bg-muted/20 transition-colors">
                                 <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${type === 'content' ? 'bg-blue-500/10 text-blue-500'
-                                    : type === 'exercise' ? 'bg-amber-500/10 text-amber-500'
-                                      : 'bg-emerald-500/10 text-emerald-500'
+                                  : type === 'exercise' ? 'bg-amber-500/10 text-amber-500'
+                                    : 'bg-emerald-500/10 text-emerald-500'
                                   }`}>
                                   <TypeIcon className="w-4 h-4" />
                                 </div>

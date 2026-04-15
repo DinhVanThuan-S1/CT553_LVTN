@@ -114,9 +114,9 @@ export default function StudentDashboard() {
           <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1">
             <span className="text-base">{greeting.emoji}</span> {greeting.text}!
           </p>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Tổng Quan</h1>
+          {/* <h1 className="text-1xl md:text-3xl font-bold tracking-tight">Tổng Quan</h1> */}
           <p className="text-muted-foreground text-sm mt-1.5 max-w-lg">
-            Theo dõi tiến độ, lộ trình và các buổi học sắp tới của bạn.
+            Theo dõi tổng quan toàn bộ thông tin học tập và làm việc của bạn.
           </p>
         </div>
       </div>

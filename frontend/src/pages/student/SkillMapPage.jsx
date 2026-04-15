@@ -15,8 +15,9 @@ import {
   Search, Loader2, Zap, BookOpen, ExternalLink, FileText,
   Clock, BarChart3, ChevronRight, ChevronDown, Play, HelpCircle, X,
   Plus, Shield, GraduationCap, Route, User, RefreshCw, Trash2,
-  CheckCircle2, Star,
+  CheckCircle2, Star, LayoutGrid,
 } from 'lucide-react';
+import { useRef } from 'react';
 
 const categoryLabels = {
   programming: 'Ngôn ngữ lập trình',
@@ -72,6 +73,19 @@ export default function SkillMapPage() {
   const [syncing, setSyncing] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showMyDetails, setShowMyDetails] = useState(true);
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
+  const categoryMenuRef = useRef(null);
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (categoryMenuRef.current && !categoryMenuRef.current.contains(e.target)) {
+        setShowCategoryMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => { loadData(); }, []);
 
@@ -251,9 +265,9 @@ export default function SkillMapPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Zap className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Kỹ năng</span>
+              <span className="text-xs font-medium text-primary uppercase tracking-wider">Skill Map</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Skill Map</h1>
+            {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Skill Map</h1> */}
             <p className="text-muted-foreground text-sm mt-1.5">
               Tổng quan {totalSkills} kỹ năng &bull; {mySkills.length} kỹ năng của tôi
             </p>
@@ -281,22 +295,43 @@ export default function SkillMapPage() {
             className="pl-9"
           />
         </div>
-        <div className="relative shrink-0">
-          <select
-            value={categoryFilter}
-            onChange={e => setCategoryFilter(e.target.value)}
-            className="h-9 appearance-none pl-3 pr-8 rounded-md border border-border/50 bg-muted/30 text-sm font-medium
-              focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
-              text-foreground cursor-pointer transition-colors hover:border-primary/40 min-w-[160px]"
+        <div className="relative shrink-0" ref={categoryMenuRef}>
+          <button
+            onClick={() => setShowCategoryMenu(v => !v)}
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all min-w-[160px] ${
+              showCategoryMenu
+                ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
+                : 'border-input bg-background text-foreground hover:border-primary/60'
+            }`}
           >
-            <option value="all">Tất cả danh mục</option>
-            {allCategories.map(cat => (
-              <option key={cat} value={cat}>
-                {categoryLabels[cat] || cat}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            <span className="flex-1 text-left truncate">
+              {categoryFilter === 'all' ? 'Tất cả danh mục' : (categoryLabels[categoryFilter] || categoryFilter)}
+            </span>
+            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
+              showCategoryMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'
+            }`} />
+          </button>
+
+          {showCategoryMenu && (
+            <div className="absolute right-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-52 animate-fade-in">
+              <div className="py-1.5 max-h-72 overflow-y-auto">
+                {[{ value: 'all', label: 'Tất cả danh mục' }, ...allCategories.map(cat => ({ value: cat, label: categoryLabels[cat] || cat }))].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => { setCategoryFilter(value); setShowCategoryMenu(false); }}
+                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
+                      categoryFilter === value
+                        ? 'bg-primary/10 text-primary font-semibold'
+                        : 'text-foreground hover:bg-muted/50'
+                    }`}
+                  >
+                    {categoryFilter === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+                    <span className={categoryFilter === value ? '' : 'ml-3.5'}>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -310,7 +345,7 @@ export default function SkillMapPage() {
             className="w-full flex items-center gap-3 px-5 py-4 hover:bg-muted/20 transition-colors text-left group"
           >
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
-              <Shield className="w-4 h-4 text-primary" />
+              <LayoutGrid className="w-4 h-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm">Skill Detail</p>
@@ -347,18 +382,18 @@ export default function SkillMapPage() {
                   {/* Stats 3 cột */}
                   <div className="grid grid-cols-3 gap-3">
                     <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 p-3 text-center">
-                      <Route className="w-5 h-5 text-emerald-500/20 absolute -bottom-1 -right-1" />
-                      <span className="text-[11px] font-medium text-emerald-600 block mb-1">Lộ trình</span>
+                      <Route className="w-6 h-6 text-emerald-500/40 absolute -bottom-1 -right-1" />
+                      <span className="text-[11px] font-medium text-emerald-600 block mb-1">Lộ Trình</span>
                       <p className="text-2xl font-bold text-emerald-600">{roadmapSkills.length}</p>
                     </div>
                     <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 p-3 text-center">
-                      <GraduationCap className="w-5 h-5 text-amber-500/20 absolute -bottom-1 -right-1" />
-                      <span className="text-[11px] font-medium text-amber-600 block mb-1">Học phần</span>
+                      <GraduationCap className="w-6 h-6 text-amber-500/40 absolute -bottom-1 -right-1" />
+                      <span className="text-[11px] font-medium text-amber-600 block mb-1">Học Phần</span>
                       <p className="text-2xl font-bold text-amber-600">{academicSkills.length}</p>
                     </div>
                     <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-muted/60 to-muted/20 border p-3 text-center">
-                      <User className="w-5 h-5 text-muted-foreground/20 absolute -bottom-1 -right-1" />
-                      <span className="text-[11px] font-medium text-muted-foreground block mb-1">Tự khai báo</span>
+                      <User className="w-6 h-6 text-muted-foreground/40 absolute -bottom-1 -right-1" />
+                      <span className="text-[11px] font-medium text-muted-foreground block mb-1">Tự Khai Báo</span>
                       <p className="text-2xl font-bold">{selfSkills.length}</p>
                     </div>
                   </div>

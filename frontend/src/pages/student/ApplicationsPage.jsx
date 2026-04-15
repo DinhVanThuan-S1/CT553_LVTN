@@ -15,12 +15,12 @@ import {
 } from 'lucide-react';
 
 const statusConfig = {
-  pending:              { label: 'Chờ xét duyệt', icon: Clock,         color: 'amber',   bg: 'bg-amber-500/10',  text: 'text-amber-600',  border: 'border-amber-300/40' },
-  reviewed:             { label: 'Đã xem',         icon: Eye,           color: 'blue',    bg: 'bg-blue-500/10',   text: 'text-blue-600',   border: 'border-blue-300/40' },
-  interview_scheduled:  { label: 'Hẹn phỏng vấn', icon: Calendar,      color: 'primary', bg: 'bg-primary/10',    text: 'text-primary',    border: 'border-primary/30' },
-  accepted:             { label: 'Được nhận',      icon: CheckCircle2,  color: 'emerald', bg: 'bg-emerald-500/10',text: 'text-emerald-600',border: 'border-emerald-300/40' },
-  rejected:             { label: 'Từ chối',        icon: XCircle,       color: 'red',     bg: 'bg-red-500/10',    text: 'text-red-500',    border: 'border-red-300/40' },
-  withdrawn:            { label: 'Đã rút',         icon: AlertTriangle, color: 'gray',    bg: 'bg-muted',         text: 'text-muted-foreground', border: 'border-transparent' },
+  pending: { label: 'Chờ xét duyệt', icon: Clock, color: 'amber', bg: 'bg-amber-500/10', text: 'text-amber-600', border: 'border-amber-300/40' },
+  reviewed: { label: 'Đã xem', icon: Eye, color: 'blue', bg: 'bg-blue-500/10', text: 'text-blue-600', border: 'border-blue-300/40' },
+  interview_scheduled: { label: 'Hẹn phỏng vấn', icon: Calendar, color: 'primary', bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary/30' },
+  accepted: { label: 'Được nhận', icon: CheckCircle2, color: 'emerald', bg: 'bg-emerald-500/10', text: 'text-emerald-600', border: 'border-emerald-300/40' },
+  rejected: { label: 'Từ chối', icon: XCircle, color: 'red', bg: 'bg-red-500/10', text: 'text-red-500', border: 'border-red-300/40' },
+  withdrawn: { label: 'Đã rút', icon: AlertTriangle, color: 'gray', bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-transparent' },
 };
 
 export default function ApplicationsPage() {
@@ -85,9 +85,9 @@ export default function ApplicationsPage() {
     });
   }
 
-  const pending    = apps.filter(a => a.status === 'pending').length;
+  const pending = apps.filter(a => a.status === 'pending').length;
   const interviews = apps.filter(a => a.status === 'interview_scheduled').length;
-  const accepted   = apps.filter(a => a.status === 'accepted').length;
+  const accepted = apps.filter(a => a.status === 'accepted').length;
 
   // Client-side status filter
   const filtered = statusFilter === 'all' ? apps : apps.filter(a => a.status === statusFilter);
@@ -119,9 +119,9 @@ export default function ApplicationsPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <ClipboardList className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Việc làm</span>
+              <span className="text-xs font-medium text-primary uppercase tracking-wider">Đơn Ứng Tuyển</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Đơn Ứng Tuyển</h1>
+            {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Đơn Ứng Tuyển</h1> */}
             <p className="text-muted-foreground text-sm mt-1.5">{apps.length} đơn đã gửi</p>
           </div>
           {/* Stat pills — clickable to filter */}
@@ -156,16 +156,14 @@ export default function ApplicationsPage() {
             const isActive = statusFilter === key;
             return (
               <button key={key} onClick={() => setStatusFilter(key)}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                  isActive
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${isActive
                     ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                     : 'border-border text-muted-foreground hover:border-primary/40 hover:bg-muted/50'
-                }`}>
+                  }`}>
                 {cfg && <cfg.icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : cfg.text}`} />}
                 {label}
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                  isActive ? 'bg-white/25 text-white' : 'bg-muted text-muted-foreground'
-                }`}>{count}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${isActive ? 'bg-white/25 text-white' : 'bg-muted text-muted-foreground'
+                  }`}>{count}</span>
               </button>
             );
           })}
@@ -197,13 +195,12 @@ export default function ApplicationsPage() {
               <div key={app._id}
                 className={`group rounded-xl border bg-card transition-all duration-200 hover:shadow-md overflow-hidden ${isInterview ? 'border-primary/30' : 'hover:border-primary/20'}`}>
                 {/* Status accent strip */}
-                <div className={`h-0.5 ${
-                  app.status === 'accepted' ? 'bg-emerald-400'
-                  : app.status === 'rejected' ? 'bg-red-400'
-                  : app.status === 'interview_scheduled' ? 'bg-primary'
-                  : app.status === 'reviewed' ? 'bg-blue-400'
-                  : 'bg-amber-400/60'
-                }`} />
+                <div className={`h-0.5 ${app.status === 'accepted' ? 'bg-emerald-400'
+                    : app.status === 'rejected' ? 'bg-red-400'
+                      : app.status === 'interview_scheduled' ? 'bg-primary'
+                        : app.status === 'reviewed' ? 'bg-blue-400'
+                          : 'bg-amber-400/60'
+                  }`} />
 
                 <div className="p-4">
                   <div className="flex items-center gap-3">
@@ -314,9 +311,9 @@ export default function ApplicationsPage() {
                 </h4>
                 <div className="space-y-2 pl-3">
                   {[
-                    { icon: Send,        label: 'Ứng tuyển',   date: detail.createdAt },
-                    { icon: Eye,         label: 'Đã xem',      date: detail.reviewedAt },
-                    { icon: Calendar,    label: 'Hẹn phỏng vấn', date: detail.interviewScheduledAt },
+                    { icon: Send, label: 'Ứng tuyển', date: detail.createdAt },
+                    { icon: Eye, label: 'Đã xem', date: detail.reviewedAt },
+                    { icon: Calendar, label: 'Hẹn phỏng vấn', date: detail.interviewScheduledAt },
                     { icon: ClipboardList, label: 'Phản hồi', date: detail.respondedAt },
                   ].filter(t => t.date).map((t, i) => (
                     <div key={i} className="flex items-center gap-3 text-xs">

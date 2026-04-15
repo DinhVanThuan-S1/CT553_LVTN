@@ -113,12 +113,15 @@
     width: 6px;
     height: 6px;
   }
+
   ::-webkit-scrollbar-track {
     @apply bg-transparent;
   }
+
   ::-webkit-scrollbar-thumb {
     @apply bg-muted-foreground/20 rounded-full;
   }
+
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground/40;
   }
@@ -130,12 +133,14 @@
     appearance: none !important;
     background-image: none !important;
   }
+
   select::-ms-expand {
     display: none !important;
   }
 }
 
 @layer components {
+
   /* Glass effect */
   .glass {
     @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20;

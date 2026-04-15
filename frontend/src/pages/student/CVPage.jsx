@@ -170,11 +170,11 @@ export default function CVPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <FileText className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Hồ sơ</span>
+              <span className="text-xs font-medium text-primary uppercase tracking-wider">My CV</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">CV Của Tôi</h1>
+            {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">CV Của Tôi</h1> */}
             <p className="text-muted-foreground text-sm mt-1.5">
-              {cvs.length} CV · ứng tuyển công việc với CV phù hợp
+              {cvs.length} CV - Hãy chọn CVs phù hợp để ứng tuyển
             </p>
           </div>
           <Button onClick={openCreate} className="gap-2 shadow-md">
@@ -232,11 +232,10 @@ export default function CVPage() {
                         const isRoadmap = cvSkills.roadmap.some(v => (v.skill?._id || v.skill) === s._id);
                         const isAcademic = cvSkills.academic.some(v => (v.skill?._id || v.skill) === s._id);
                         return (
-                          <span key={s._id} className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border ${
-                            isRoadmap ? 'bg-emerald-500/10 text-emerald-700 border-emerald-400/30'
+                          <span key={s._id} className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border ${isRoadmap ? 'bg-emerald-500/10 text-emerald-700 border-emerald-400/30'
                             : isAcademic ? 'bg-amber-500/10 text-amber-700 border-amber-400/30'
-                            : 'bg-muted text-muted-foreground border-transparent'
-                          }`}>
+                              : 'bg-muted text-muted-foreground border-transparent'
+                            }`}>
                             {isRoadmap && <CheckCircle2 className="w-2.5 h-2.5" />}
                             {isAcademic && <GraduationCap className="w-2.5 h-2.5" />}
                             {s.icon} {s.name}
@@ -335,11 +334,10 @@ export default function CVPage() {
                       const isRoadmap = cvSkills.roadmap.some(v => (v.skill?._id || v.skill) === s._id);
                       const isAcademic = cvSkills.academic.some(v => (v.skill?._id || v.skill) === s._id);
                       return (
-                        <span key={s._id} className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border ${
-                          isRoadmap ? 'bg-emerald-500/10 text-emerald-700 border-emerald-400/30'
+                        <span key={s._id} className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border ${isRoadmap ? 'bg-emerald-500/10 text-emerald-700 border-emerald-400/30'
                           : isAcademic ? 'bg-amber-500/10 text-amber-700 border-amber-400/30'
-                          : 'bg-muted text-muted-foreground border-transparent'
-                        }`}>
+                            : 'bg-muted text-muted-foreground border-transparent'
+                          }`}>
                           {isRoadmap && <CheckCircle2 className="w-3 h-3" />}
                           {isAcademic && <GraduationCap className="w-3 h-3" />}
                           {s.icon} {s.name}

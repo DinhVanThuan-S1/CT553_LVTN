@@ -3,31 +3,31 @@
  * Browse, search, filter + button "Gợi ý lộ trình" (AI)
  * Filters persisted in URL params để giữ state khi navigate back
  */
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo, useState, useRef } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import api from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Select } from '../../components/ui/Select';
 import { useToast } from '../../components/ui/Toast';
 import SmartRoadmapModal from '../../components/student/SmartRoadmapModal';
-import { useState } from 'react';
+
 import {
-  Search, Route, Clock, Users, Star,
+  Search, Route, Clock, Users, Star, ChevronDown,
   Heart, Target, ChevronRight, Sparkles, ArrowRight,
 } from 'lucide-react';
 
+
 const DIFFICULTY = {
-  beginner:     { label: 'Cơ bản',    cls: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
-  intermediate: { label: 'Trung bình', cls: 'bg-amber-500/10  text-amber-600  border-amber-500/20'  },
-  advanced:     { label: 'Nâng cao',   cls: 'bg-red-500/10    text-red-600    border-red-500/20'    },
+  beginner: { label: 'Cơ bản', cls: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+  intermediate: { label: 'Trung bình', cls: 'bg-amber-500/10  text-amber-600  border-amber-500/20' },
+  advanced: { label: 'Nâng cao', cls: 'bg-red-500/10    text-red-600    border-red-500/20' },
 };
 
 const CARD_GRADIENT = {
-  beginner:     'from-emerald-500/10 via-emerald-500/5 to-transparent',
+  beginner: 'from-emerald-500/10 via-emerald-500/5 to-transparent',
   intermediate: 'from-amber-500/10  via-amber-500/5  to-transparent',
-  advanced:     'from-red-500/10    via-red-500/5    to-transparent',
+  advanced: 'from-red-500/10    via-red-500/5    to-transparent',
 };
 
 export default function RoadmapListPage() {
@@ -38,7 +38,7 @@ export default function RoadmapListPage() {
 
   // ── Persist filters in URL so browser Back restores state ──
   const [searchParams, setSearchParams] = useSearchParams();
-  const search     = searchParams.get('q') || '';
+  const search = searchParams.get('q') || '';
   const difficulty = searchParams.get('d') || '';
   const careerPath = searchParams.get('c') || '';
 
@@ -51,10 +51,24 @@ export default function RoadmapListPage() {
     }, { replace: true });
   }
 
-  const [roadmaps, setRoadmaps]   = useState([]);
-  const [loading, setLoading]     = useState(true);
+  const [roadmaps, setRoadmaps] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState({});
   const [showSmart, setShowSmart] = useState(false);
+  const [showDiffMenu, setShowDiffMenu] = useState(false);
+  const [showCareerMenu, setShowCareerMenu] = useState(false);
+  const diffRef = useRef(null);
+  const careerRef = useRef(null);
+
+  useEffect(() => {
+    function handler(e) {
+      if (diffRef.current && !diffRef.current.contains(e.target)) setShowDiffMenu(false);
+      if (careerRef.current && !careerRef.current.contains(e.target)) setShowCareerMenu(false);
+    }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
 
   const loadRoadmaps = useCallback(async () => {
     setLoading(true);
@@ -130,9 +144,9 @@ export default function RoadmapListPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Route className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Học tập</span>
+              <span className="text-xs font-medium text-primary uppercase tracking-wider">Danh sách lộ trình</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Danh Sách Lộ Trình</h1>
+            {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Danh Sách Lộ Trình</h1> */}
             <p className="text-muted-foreground text-sm mt-1.5">
               Khám phá các lộ trình học tập phù hợp với mục tiêu của bạn
             </p>
@@ -169,33 +183,79 @@ export default function RoadmapListPage() {
           />
         </div>
         {/* Difficulty */}
-        <Select value={difficulty} onChange={e => setParam('d', e.target.value)} className="w-40">
-          <option value="">Tất cả mức độ</option>
-          {Object.entries(DIFFICULTY).map(([k, { label }]) => (
-            <option key={k} value={k}>{label}</option>
-          ))}
-        </Select>
-        {/* Career path */}
-        <Select
-          value={careerPath}
-          onChange={e => setParam('c', e.target.value)}
-          className="w-48"
-          disabled={loading || careerPathOptions.length === 0}
-        >
-          <option value="">Tất cả hướng nghề</option>
-          {careerPathOptions.map(cp => (
-            <option key={cp} value={cp}>{cp}</option>
-          ))}
-        </Select>
-        {/* Clear all */}
-        {activeFilters > 0 && (
+        <div className="relative shrink-0" ref={diffRef}>
           <button
-            onClick={() => setSearchParams({}, { replace: true })}
-            className="text-xs text-muted-foreground hover:text-destructive transition-colors whitespace-nowrap"
+            onClick={() => { setShowDiffMenu(v => !v); setShowCareerMenu(false); }}
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all w-40 ${
+              showDiffMenu || difficulty
+                ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
+                : 'border-input bg-background text-foreground hover:border-primary/60'
+            }`}
           >
-            Xóa bộ lọc
+            <span className="flex-1 text-left truncate">
+              {difficulty ? DIFFICULTY[difficulty]?.label : 'Tất cả mức độ'}
+            </span>
+            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
+              showDiffMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'
+            }`} />
           </button>
-        )}
+          {showDiffMenu && (
+            <div className="absolute left-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-44 animate-fade-in">
+              <div className="py-1.5">
+                {[{ value: '', label: 'Tất cả mức độ' }, ...Object.entries(DIFFICULTY).map(([k, { label }]) => ({ value: k, label }))]
+                  .map(({ value, label }) => (
+                    <button key={value}
+                      onClick={() => { setParam('d', value); setShowDiffMenu(false); }}
+                      className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
+                        difficulty === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
+                      }`}
+                    >
+                      {difficulty === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+                      <span className={difficulty === value ? '' : 'ml-3.5'}>{label}</span>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Career path */}
+        <div className="relative shrink-0" ref={careerRef}>
+          <button
+            onClick={() => { setShowCareerMenu(v => !v); setShowDiffMenu(false); }}
+            disabled={loading || careerPathOptions.length === 0}
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all w-48 disabled:opacity-50 disabled:cursor-not-allowed ${
+              showCareerMenu || careerPath
+                ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
+                : 'border-input bg-background text-foreground hover:border-primary/60'
+            }`}
+          >
+            <span className="flex-1 text-left truncate">
+              {careerPath || 'Tất cả hướng nghề'}
+            </span>
+            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
+              showCareerMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'
+            }`} />
+          </button>
+          {showCareerMenu && (
+            <div className="absolute right-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-52 animate-fade-in">
+              <div className="py-1.5 max-h-64 overflow-y-auto">
+                {[{ value: '', label: 'Tất cả hướng nghề' }, ...careerPathOptions.map(cp => ({ value: cp, label: cp }))]
+                  .map(({ value, label }) => (
+                    <button key={value}
+                      onClick={() => { setParam('c', value); setShowCareerMenu(false); }}
+                      className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
+                        careerPath === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
+                      }`}
+                    >
+                      {careerPath === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+                      <span className={careerPath === value ? '' : 'ml-3.5'}>{label}</span>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* ── Grid ── */}
@@ -240,11 +300,10 @@ export default function RoadmapListPage() {
                   {/* Favorite */}
                   <button
                     onClick={() => toggleFavorite(roadmap._id)}
-                    className={`absolute top-3 right-3 p-1.5 rounded-full backdrop-blur-sm transition-all ${
-                      isFav
-                        ? 'bg-red-500/15 text-red-500 hover:bg-red-500/25'
-                        : 'bg-black/10 text-white/60 hover:bg-black/20 hover:text-white'
-                    }`}
+                    className={`absolute top-3 right-3 p-1.5 rounded-full backdrop-blur-sm transition-all ${isFav
+                      ? 'bg-red-500/15 text-red-500 hover:bg-red-500/25'
+                      : 'bg-black/10 text-white/60 hover:bg-black/20 hover:text-white'
+                      }`}
                   >
                     <Heart className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
                   </button>

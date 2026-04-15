@@ -2,22 +2,22 @@
  * JobListPage - Danh sách công việc
  * Browse jobs, search, filter, apply
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
-import { Select } from '../../components/ui/Select';
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
 import SmartJobModal from '../../components/student/SmartJobModal';
 import {
   Search, Briefcase, MapPin, DollarSign, Eye, Heart,
   ChevronLeft, ChevronRight, Building2, Send, FileText,
-  Loader2, Sparkles, CalendarDays, Users, CheckCircle2,
+  Loader2, Sparkles, CalendarDays, Users, CheckCircle2, ChevronDown,
 } from 'lucide-react';
+
 
 const jobTypeLabels = {
   'full-time': 'Toàn thời gian', 'part-time': 'Bán thời gian',
@@ -25,11 +25,11 @@ const jobTypeLabels = {
 };
 
 const jobTypeColors = {
-  'full-time':  'bg-blue-500/10 text-blue-600 border-blue-300/30',
-  'part-time':  'bg-sky-500/10 text-sky-600 border-sky-300/30',
+  'full-time': 'bg-blue-500/10 text-blue-600 border-blue-300/30',
+  'part-time': 'bg-sky-500/10 text-sky-600 border-sky-300/30',
   'internship': 'bg-violet-500/10 text-violet-600 border-violet-300/30',
-  'freelance':  'bg-amber-500/10 text-amber-600 border-amber-300/30',
-  'remote':     'bg-emerald-500/10 text-emerald-600 border-emerald-300/30',
+  'freelance': 'bg-amber-500/10 text-amber-600 border-amber-300/30',
+  'remote': 'bg-emerald-500/10 text-emerald-600 border-emerald-300/30',
 };
 
 export default function JobListPage() {
@@ -48,6 +48,20 @@ export default function JobListPage() {
   const [showDetail, setShowDetail] = useState(false);
   const [favorites, setFavorites] = useState({});
   const [showSmart, setShowSmart] = useState(false);
+  const [showTypeMenu, setShowTypeMenu] = useState(false);
+  const [showCareerMenu, setShowCareerMenu] = useState(false);
+  const typeRef = useRef(null);
+  const careerMenuRef = useRef(null);
+
+  useEffect(() => {
+    function handler(e) {
+      if (typeRef.current && !typeRef.current.contains(e.target)) setShowTypeMenu(false);
+      if (careerMenuRef.current && !careerMenuRef.current.contains(e.target)) setShowCareerMenu(false);
+    }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
 
   // Apply flow
   const [showApply, setShowApply] = useState(false);
@@ -63,7 +77,7 @@ export default function JobListPage() {
         const paths = [...new Set((data.data || []).map(j => j.careerPath).filter(Boolean))].sort();
         setCareerPaths(paths);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const loadJobs = useCallback(async () => {
@@ -185,9 +199,9 @@ export default function JobListPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Briefcase className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wider">Việc làm</span>
+              <span className="text-xs font-medium text-primary uppercase tracking-wider">Danh sách công việc</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Danh Sách Công Việc</h1>
+            {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Danh Sách Công Việc</h1> */}
             <p className="text-muted-foreground text-sm mt-1.5">
               {pagination.total} công việc đang tuyển dụng
             </p>
@@ -215,27 +229,79 @@ export default function JobListPage() {
             className="pl-9"
           />
         </div>
-        <Select
-          value={jobType}
-          onChange={e => { setJobType(e.target.value); setPagination(p => ({ ...p, page: 1 })); }}
-          className="w-40 shrink-0"
-        >
-          <option value="">Tất cả loại</option>
-          {Object.entries(jobTypeLabels).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
-          ))}
-        </Select>
-        {careerPaths.length > 0 && (
-          <Select
-            value={careerPath}
-            onChange={e => { setCareerPath(e.target.value); setPagination(p => ({ ...p, page: 1 })); }}
-            className="w-48 shrink-0"
+        {/* Job type custom dropdown */}
+        <div className="relative shrink-0" ref={typeRef}>
+          <button
+            onClick={() => { setShowTypeMenu(v => !v); setShowCareerMenu(false); }}
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all w-40 ${
+              showTypeMenu || jobType
+                ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
+                : 'border-input bg-background text-foreground hover:border-primary/60'
+            }`}
           >
-            <option value="">Tất cả hướng nghề</option>
-            {careerPaths.map(cp => (
-              <option key={cp} value={cp}>{cp}</option>
-            ))}
-          </Select>
+            <span className="flex-1 text-left truncate">
+              {jobType ? jobTypeLabels[jobType] : 'Tất cả loại'}
+            </span>
+            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
+              showTypeMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'
+            }`} />
+          </button>
+          {showTypeMenu && (
+            <div className="absolute left-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-44 animate-fade-in">
+              <div className="py-1.5">
+                {[{ value: '', label: 'Tất cả loại' }, ...Object.entries(jobTypeLabels).map(([k, v]) => ({ value: k, label: v }))]
+                  .map(({ value, label }) => (
+                    <button key={value}
+                      onClick={() => { setJobType(value); setPagination(p => ({ ...p, page: 1 })); setShowTypeMenu(false); }}
+                      className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
+                        jobType === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
+                      }`}
+                    >
+                      {jobType === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+                      <span className={jobType === value ? '' : 'ml-3.5'}>{label}</span>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Career path custom dropdown */}
+        {careerPaths.length > 0 && (
+          <div className="relative shrink-0" ref={careerMenuRef}>
+            <button
+              onClick={() => { setShowCareerMenu(v => !v); setShowTypeMenu(false); }}
+              className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all w-48 ${
+                showCareerMenu || careerPath
+                  ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
+                  : 'border-input bg-background text-foreground hover:border-primary/60'
+              }`}
+            >
+              <span className="flex-1 text-left truncate">
+                {careerPath || 'Tất cả hướng nghề'}
+              </span>
+              <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
+                showCareerMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'
+              }`} />
+            </button>
+            {showCareerMenu && (
+              <div className="absolute right-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-52 animate-fade-in">
+                <div className="py-1.5 max-h-64 overflow-y-auto">
+                  {[{ value: '', label: 'Tất cả hướng nghề' }, ...careerPaths.map(cp => ({ value: cp, label: cp }))]
+                    .map(({ value, label }) => (
+                      <button key={value}
+                        onClick={() => { setCareerPath(value); setPagination(p => ({ ...p, page: 1 })); setShowCareerMenu(false); }}
+                        className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
+                          careerPath === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
+                        }`}
+                      >
+                        {careerPath === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+                        <span className={careerPath === value ? '' : 'ml-3.5'}>{label}</span>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -462,9 +528,9 @@ export default function JobListPage() {
               </div>
 
               {/* Text sections */}
-              {[{label:'Mô tả công việc', value: selectedJob.description},
-                {label:'Yêu cầu', value: selectedJob.requirements},
-                {label:'Quyền lợi', value: selectedJob.benefits}
+              {[{ label: 'Mô tả công việc', value: selectedJob.description },
+              { label: 'Yêu cầu', value: selectedJob.requirements },
+              { label: 'Quyền lợi', value: selectedJob.benefits }
               ].filter(s => s.value).map(s => (
                 <div key={s.label}>
                   <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
