@@ -29,19 +29,29 @@ import {
   Loader2,
 } from 'lucide-react';
 
-// Màu gradient cho lộ trình theo index
-const ROAD_COLORS = [
-  'from-cyan-500 to-blue-600',
-  'from-emerald-500 to-teal-600',
-  'from-amber-500 to-orange-600',
-  'from-rose-500 to-pink-600',
-];
+const DIFFICULTY = {
+  beginner: { label: 'Cơ bản', cls: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+  intermediate: { label: 'Trung bình', cls: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+  advanced: { label: 'Nâng cao', cls: 'bg-red-500/10 text-red-600 border-red-500/20' },
+};
 
-const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
+const CARD_GRADIENT = {
+  beginner: 'from-emerald-500/10 via-emerald-500/5 to-transparent',
+  intermediate: 'from-amber-500/10 via-amber-500/5 to-transparent',
+  advanced: 'from-red-500/10 via-red-500/5 to-transparent',
+};
 
 const jobTypeLabels = {
-  'full-time': 'Full-time', 'part-time': 'Part-time',
+  'full-time': 'Toàn thời gian', 'part-time': 'Bán thời gian',
   internship: 'Thực tập', freelance: 'Freelance', remote: 'Remote',
+};
+
+const jobTypeColors = {
+  'full-time': 'bg-blue-500/10 text-blue-600 border-blue-300/30',
+  'part-time': 'bg-sky-500/10 text-sky-600 border-sky-300/30',
+  internship: 'bg-violet-500/10 text-violet-600 border-violet-300/30',
+  freelance: 'bg-amber-500/10 text-amber-600 border-amber-300/30',
+  remote: 'bg-emerald-500/10 text-emerald-600 border-emerald-300/30',
 };
 
 const features = [
@@ -269,49 +279,62 @@ export default function WelcomePage() {
               <h2 className="text-2xl font-bold mb-2">Lộ trình nổi bật</h2>
               <p className="text-muted-foreground">Các lộ trình được đăng ký nhiều nhất, thiết kế bởi chuyên gia</p>
             </div>
-            <Link to="/roadmaps" className="hidden md:flex items-center gap-1 text-sm text-primary hover:underline font-medium">
-              Xem tất cả <ChevronRight className="w-4 h-4" />
+            <Link
+              to="/roadmaps"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-1.5 rounded-full border border-primary/25 bg-primary/8 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200"
+            >
+              Xem tất cả <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {loading ? (
-              // Skeleton cards
               Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="rounded-xl border bg-card overflow-hidden animate-pulse">
-                  <div className="h-2 bg-muted" />
+                  <div className="h-28 bg-muted" />
                   <div className="p-5 space-y-3">
+                    <div className="h-4 w-20 bg-muted rounded-full" />
                     <div className="h-5 bg-muted rounded w-3/4" />
-                    <div className="h-4 bg-muted rounded w-full" />
-                    <div className="h-4 bg-muted rounded w-2/3" />
-                    <div className="flex gap-2">
-                      {Array.from({ length: 3 }).map((_, j) => <div key={j} className="h-5 bg-muted rounded w-16" />)}
-                    </div>
+                    <div className="h-3 bg-muted rounded w-1/2" />
+                    <div className="h-3 bg-muted rounded w-full" />
                   </div>
                 </div>
               ))
             ) : roadmaps.length > 0 ? (
-              roadmaps.map((roadmap, idx) => (
-                <Link key={roadmap._id} to={`/roadmaps/${roadmap._id}`}
-                  className="rounded-xl border bg-card overflow-hidden card-hover group block">
-                  <div className={`h-2 bg-gradient-to-r ${ROAD_COLORS[idx % ROAD_COLORS.length]}`} />
-                  <div className="p-5">
-                    <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors">
-                      {roadmap.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{roadmap.description}</p>
-                    {/* Skills tags */}
-                    <div className="flex flex-wrap gap-1.5 mb-4">
-                      {(roadmap.skills || []).slice(0, 5).map((s) => (
-                        <span key={s._id || s.skill?._id}
-                          className="px-2 py-0.5 rounded-md bg-primary/8 text-primary text-xs font-medium">
-                          {s.skill?.icon} {s.skill?.name || s.name}
-                        </span>
-                      ))}
+              roadmaps.map((roadmap) => {
+                const diff = DIFFICULTY[roadmap.difficulty] || DIFFICULTY.beginner;
+                const grad = CARD_GRADIENT[roadmap.difficulty] || CARD_GRADIENT.beginner;
+                return (
+                  <Link
+                    key={roadmap._id}
+                    to={`/roadmaps/${roadmap._id}`}
+                    className="rounded-xl border bg-card overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group flex flex-col"
+                  >
+                    {/* Thumbnail */}
+                    <div className={`h-28 bg-gradient-to-br ${grad} flex items-center justify-center relative`}>
+                      <Route className="w-10 h-10 text-foreground/10" />
+                      <span className={`absolute bottom-3 left-3 text-[11px] font-bold px-2 py-0.5 rounded-full border ${diff.cls}`}>
+                        {diff.label}
+                      </span>
                     </div>
-                    {/* Meta */}
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <div className="flex items-center gap-3">
+                    {/* Body */}
+                    <div className="p-5 flex-1 flex flex-col">
+                      <h3 className="font-bold text-base mb-1 group-hover:text-primary transition-colors leading-snug">
+                        {roadmap.title}
+                      </h3>
+                      {roadmap.careerPath && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+                          <Target className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{roadmap.careerPath}</span>
+                        </p>
+                      )}
+                      {roadmap.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3 leading-relaxed flex-1">
+                          {roadmap.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" /> {roadmap.estimatedMonths} tháng
                         </span>
@@ -319,23 +342,28 @@ export default function WelcomePage() {
                           <Users className="w-3.5 h-3.5" /> {roadmap.enrollmentCount || 0} SV
                         </span>
                       </div>
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted">
-                        {difficultyLabels[roadmap.difficulty] || roadmap.difficulty}
-                      </span>
+                      <div className="flex items-center justify-between pt-3 border-t border-border/60">
+                        <span className="text-xs text-muted-foreground">{roadmap.skills?.length || 0} kỹ năng</span>
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                          Xem chi tiết <ArrowRight className="w-3.5 h-3.5" />
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))
+                  </Link>
+                );
+              })
             ) : (
               <div className="col-span-3 text-center text-muted-foreground py-8">Chưa có lộ trình</div>
             )}
           </div>
 
           <div className="md:hidden text-center mt-6">
-            <Link to="/roadmaps">
-              <Button variant="outline" size="sm" className="gap-1">
-                Xem tất cả lộ trình <ChevronRight className="w-4 h-4" />
-              </Button>
+            <Link
+              to="/roadmaps"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold px-5 py-2 rounded-full border border-primary/25 bg-primary/8 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+            >
+              Xem tất cả lộ trình <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
@@ -348,68 +376,97 @@ export default function WelcomePage() {
             <h2 className="text-2xl font-bold mb-2">Công việc nổi bật</h2>
             <p className="text-muted-foreground">Cơ hội việc làm mới nhất dành cho sinh viên CNTT</p>
           </div>
-          <Link to="/jobs" className="hidden md:flex items-center gap-1 text-sm text-primary hover:underline font-medium">
-            Xem tất cả <ChevronRight className="w-4 h-4" />
-          </Link>
+          <Link
+              to="/jobs"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-1.5 rounded-full border border-primary/25 bg-primary/8 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200"
+            >
+              Xem tất cả <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="rounded-xl border bg-card p-5 animate-pulse space-y-3">
-                <div className="h-5 bg-muted rounded w-2/3" />
-                <div className="h-4 bg-muted rounded w-1/2" />
-                <div className="flex gap-3">
-                  <div className="h-4 bg-muted rounded w-20" />
-                  <div className="h-4 bg-muted rounded w-24" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-muted rounded-xl shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-4 w-40 bg-muted rounded" />
+                    <div className="h-3 w-28 bg-muted rounded" />
+                  </div>
                 </div>
                 <div className="flex gap-2">
-                  {Array.from({ length: 3 }).map((_, j) => <div key={j} className="h-5 bg-muted rounded w-16" />)}
+                  <div className="h-5 w-24 bg-muted rounded-full" />
+                  <div className="h-5 w-20 bg-muted rounded-full" />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="h-3 w-32 bg-muted rounded" />
+                  <div className="h-3 w-36 bg-muted rounded" />
                 </div>
               </div>
             ))
           ) : jobs.length > 0 ? (
             jobs.map((job) => (
-              <Link key={job._id} to={`/jobs`}
-                className="rounded-xl border bg-card p-5 card-hover group block">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold group-hover:text-primary transition-colors">{job.title}</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <Building2 className="w-3.5 h-3.5" />
-                      {job.company?.name || 'Ẩn tên công ty'}
-                    </p>
+              <Link
+                key={job._id}
+                to="/jobs"
+                className="group relative rounded-xl border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden border-l-4 border-l-primary/50 block"
+              >
+                <div className="p-5">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
+                        <Building2 className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-sm group-hover:text-primary transition-colors line-clamp-1 leading-snug">
+                          {job.title}
+                        </h3>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{job.company?.name || ''}</p>
+                      </div>
+                    </div>
                   </div>
-                  <span className="flex-shrink-0 px-2 py-0.5 rounded-md bg-muted text-[11px]">
-                    {jobTypeLabels[job.jobType] || job.jobType}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-3">
-                  {(job.locationText || job.location) && (
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" />
-                      {job.locationText || 'Xem chi tiết'}
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border ${jobTypeColors[job.jobType] || 'bg-muted text-muted-foreground border-border'}`}>
+                      {jobTypeLabels[job.jobType] || job.jobType}
                     </span>
-                  )}
-                  {job.salaryRange?.min > 0 && (
-                    <span className="flex items-center gap-1">
-                      <DollarSign className="w-3.5 h-3.5" />
-                      {job.salaryRange.min}{job.salaryRange.isNegotiable ? '+ triệu' : ` - ${job.salaryRange.max} triệu`}
-                    </span>
-                  )}
-                  {job.salaryRange?.isNegotiable && !job.salaryRange?.min && (
-                    <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" /> Thỏa thuận</span>
-                  )}
-                </div>
-                {job.requiredSkills?.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {job.requiredSkills.slice(0, 4).map((rs) => (
-                      <span key={rs._id} className="px-2 py-0.5 rounded-md bg-muted text-xs">
-                        {rs.skill?.icon} {rs.skill?.name}
+                    {job.careerPath && (
+                      <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-primary/8 text-primary border border-primary/15">
+                        {job.careerPath}
                       </span>
-                    ))}
+                    )}
                   </div>
-                )}
+                  {/* Info rows */}
+                  <div className="space-y-1.5 text-xs text-muted-foreground mb-3">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+                      <span className="font-medium text-foreground">
+                        {job.salaryRange?.isNegotiable || (!job.salaryRange?.min && !job.salaryRange?.max)
+                          ? 'Thỏa thuận'
+                          : `${job.salaryRange.min} - ${job.salaryRange.max} triệu`}
+                      </span>
+                    </div>
+                    {(job.locationText || job.location) && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-3.5 h-3.5 shrink-0 text-blue-500" />
+                        <span className="truncate">{job.locationText || 'Xem chi tiết'}</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Skills */}
+                  {job.requiredSkills?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-3 border-t border-border/50">
+                      {job.requiredSkills.slice(0, 4).map((rs) => (
+                        <span key={rs._id} className="px-2 py-0.5 rounded-md bg-muted text-xs text-muted-foreground">
+                          {rs.skill?.icon} {rs.skill?.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </Link>
             ))
           ) : (
@@ -418,12 +475,14 @@ export default function WelcomePage() {
         </div>
 
         <div className="md:hidden text-center mt-6">
-          <Link to="/jobs">
-            <Button variant="outline" size="sm" className="gap-1">
+            <Link
+              to="/jobs"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold px-5 py-2 rounded-full border border-primary/25 bg-primary/8 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+            >
               Xem tất cả công việc <ChevronRight className="w-4 h-4" />
-            </Button>
-          </Link>
-        </div>
+            </Link>
+          </div>
       </section>
 
       {/* ====== CTA ====== */}
