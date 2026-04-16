@@ -7,15 +7,15 @@ import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
-import { Select } from '../../components/ui/Select';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Textarea } from '../../components/ui/Textarea';
-import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
+import { Dialog, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import {
   Search, Plus, Pencil, Trash2, Eye, Route,
   ChevronLeft, ChevronRight, Clock, Users, Star,
-  GripVertical, X, ArrowUp, ArrowDown, SlidersHorizontal, ChevronDown,
+  GripVertical, X, ArrowUp, ArrowDown, SlidersHorizontal, ChevronDown, Check,
 } from 'lucide-react';
 
 const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
@@ -416,168 +416,276 @@ export default function RoadmapManagement() {
 
       {/* Detail Dialog */}
       <Dialog open={showDetail} onClose={() => setShowDetail(false)} className="max-w-2xl">
-        <DialogHeader onClose={() => setShowDetail(false)}>Chi tiết Lộ trình</DialogHeader>
+        {/* Gradient header */}
         {detailRoadmap && (
-          <DialogBody className="space-y-5">
-            {/* Hero card */}
-            <div className="flex items-start gap-4 p-4 rounded-xl bg-muted/20">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Route className="w-6 h-6 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-lg leading-snug">{detailRoadmap.title}</h3>
-                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                  <DifficultyBadge difficulty={detailRoadmap.difficulty} />
-                  <span className="text-xs text-muted-foreground">{detailRoadmap.careerPath}</span>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" /> {detailRoadmap.estimatedMonths} tháng
-                  </span>
+          <div className="relative overflow-hidden rounded-t-xl border-b bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-5">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0 border border-primary/10">
+                  <Route className="w-5 h-5 text-primary" />
                 </div>
-                {detailRoadmap.description && (
-                  <p className="text-sm text-muted-foreground mt-2">{detailRoadmap.description}</p>
-                )}
+                <div>
+                  <h2 className="text-base font-bold text-foreground leading-tight">{detailRoadmap.title}</h2>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <DifficultyBadge difficulty={detailRoadmap.difficulty} />
+                    <span className="text-[11px] text-muted-foreground">{detailRoadmap.careerPath}</span>
+                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {detailRoadmap.estimatedMonths} tháng
+                    </span>
+                  </div>
+                </div>
               </div>
+              <button onClick={() => setShowDetail(false)}
+                className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            {/* Skills */}
-            <div>
-              <h4 className="font-semibold text-sm mb-2.5">Kỹ năng ({detailRoadmap.skills?.length || 0})</h4>
+            {detailRoadmap.description && (
+              <p className="text-xs text-muted-foreground mt-3 leading-relaxed">{detailRoadmap.description}</p>
+            )}
+          </div>
+        )}
+        {detailRoadmap && (
+          <DialogBody className="max-h-[60vh] overflow-y-auto px-6 py-5">
+            {/* Skills section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Route className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[11px] font-bold text-primary uppercase tracking-widest">
+                  Kỹ năng
+                </span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                  {detailRoadmap.skills?.length || 0}
+                </span>
+                <div className="flex-1 h-px bg-border" />
+                {/* Total hours */}
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  Tổng {(detailRoadmap.skills || []).reduce((sum, s) => sum + (s.estimatedHours || 0), 0)}h
+                </span>
+              </div>
               <div className="space-y-2">
                 {(detailRoadmap.skills || [])
                   .sort((a, b) => a.order - b.order)
                   .map((s, i) => (
-                    <div key={i} className="flex items-center gap-3 rounded-xl border bg-card/50 p-3">
-                      <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">{s.order}</span>
+                    <div key={i} className="flex items-center gap-3 rounded-xl border bg-card p-3 border-l-4 border-l-primary/30 hover:shadow-sm transition-shadow">
+                      <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center shrink-0">
+                        {s.order}
+                      </span>
                       <div className="flex-1 min-w-0">
-                        <span className="font-medium text-sm">{s.skill?.name || 'N/A'}</span>
-                        <span className="text-xs text-muted-foreground ml-2">{s.estimatedHours}h</span>
+                        <span className="font-semibold text-sm">{s.skill?.name || 'N/A'}</span>
+                        <span className="text-[11px] text-muted-foreground ml-2 flex-shrink-0">
+                          <Clock className="w-2.5 h-2.5 inline mr-0.5" />{s.estimatedHours}h
+                        </span>
                       </div>
                       <DifficultyBadge difficulty={s.targetLevel} />
                     </div>
                   ))}
                 {(!detailRoadmap.skills || detailRoadmap.skills.length === 0) && (
-                  <p className="text-sm text-muted-foreground py-4 text-center">Chưa có kỹ năng</p>
+                  <div className="text-center py-8">
+                    <Route className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
+                    <p className="text-xs text-muted-foreground">Chưa có kỹ năng nào</p>
+                  </div>
                 )}
               </div>
             </div>
           </DialogBody>
         )}
-        <DialogFooter>
+        <DialogFooter className="border-t bg-muted/20 rounded-b-xl px-6 py-4">
           <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Đóng</Button>
+          {detailRoadmap && (
+            <Button size="sm" className="gap-2" onClick={() => { setShowDetail(false); openEdit(detailRoadmap); }}>
+              <Pencil className="w-3.5 h-3.5" /> Chỉnh sửa
+            </Button>
+          )}
         </DialogFooter>
       </Dialog>
 
       {/* Form Dialog */}
       <Dialog open={showForm} onClose={() => setShowForm(false)} className="max-w-3xl">
-        <DialogHeader onClose={() => setShowForm(false)}>
-          {editingId ? 'Chỉnh sửa lộ trình' : 'Thêm lộ trình mới'}
-        </DialogHeader>
-        <form onSubmit={handleSave}>
-          <DialogBody className="space-y-4 max-h-[70vh] overflow-y-auto">
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Tên lộ trình *</label>
-              <Input value={formData.title} required
-                onChange={(e) => setFormData((f) => ({ ...f, title: e.target.value }))}
-                placeholder="VD: Frontend Developer" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+        {/* Gradient header */}
+        <div className="relative overflow-hidden rounded-t-xl border-b bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-5">
+          <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                editingId ? 'bg-amber-500/15 text-amber-600' : 'bg-primary/15 text-primary'
+              }`}>
+                {editingId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              </div>
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Hướng nghề nghiệp *</label>
-                <Input value={formData.careerPath} required
-                  onChange={(e) => setFormData((f) => ({ ...f, careerPath: e.target.value }))}
-                  placeholder="VD: Frontend Developer" />
+                <h2 className="text-sm font-bold text-foreground leading-tight">
+                  {editingId ? 'Chỉnh sửa lộ trình' : 'Thêm lộ trình mới'}
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {editingId ? 'Cập nhật thông tin lộ trình đào tạo' : 'Tạo lộ trình đào tạo mới cho hệ thống'}
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+            </div>
+            <button onClick={() => setShowForm(false)}
+              className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSave}>
+          <DialogBody className="space-y-5 max-h-[68vh] overflow-y-auto px-6 py-5">
+
+            {/* Section: Thông tin cơ bản */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Route className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[11px] font-bold text-primary uppercase tracking-widest">Thông tin cơ bản</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              {/* Tên lộ trình */}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                  Tên lộ trình <span className="text-red-500">*</span>
+                </label>
+                <Input value={formData.title} required
+                  onChange={(e) => setFormData((f) => ({ ...f, title: e.target.value }))}
+                  placeholder="VD: Frontend Developer"
+                  className="h-9" />
+              </div>
+
+              {/* Hướng nghề + Thời gian + Mức độ */}
+              <div className="grid grid-cols-4 gap-3">
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                    Hướng nghề nghiệp <span className="text-red-500">*</span>
+                  </label>
+                  <Input value={formData.careerPath} required
+                    onChange={(e) => setFormData((f) => ({ ...f, careerPath: e.target.value }))}
+                    placeholder="VD: Frontend Developer"
+                    className="h-9" />
+                </div>
                 <div>
-                  <label className="text-sm font-medium mb-1.5 block">Thời gian (tháng)</label>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Thời gian (tháng)</label>
                   <Input type="number" min={1} max={36} value={formData.estimatedMonths}
-                    onChange={(e) => setFormData((f) => ({ ...f, estimatedMonths: e.target.value }))} />
+                    onChange={(e) => setFormData((f) => ({ ...f, estimatedMonths: e.target.value }))}
+                    className="h-9" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1.5 block">Mức độ</label>
-                  <Select value={formData.difficulty}
-                    onChange={(e) => setFormData((f) => ({ ...f, difficulty: e.target.value }))}>
-                    {Object.entries(difficultyLabels).map(([k, v]) => (
-                      <option key={k} value={k}>{v}</option>
-                    ))}
-                  </Select>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Mức độ</label>
+                  <CustomSelect
+                    value={formData.difficulty}
+                    onChange={v => setFormData(f => ({ ...f, difficulty: v }))}
+                    options={[
+                      { value: 'beginner',     label: 'Cơ bản',    color: 'bg-emerald-500' },
+                      { value: 'intermediate', label: 'Trung bình', color: 'bg-amber-400' },
+                      { value: 'advanced',     label: 'Nâng cao',  color: 'bg-red-500' },
+                    ]}
+                  />
                 </div>
               </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Mô tả</label>
-              <Textarea value={formData.description} rows={2}
-                onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))} />
+
+              {/* Mô tả */}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Mô tả</label>
+                <Textarea value={formData.description} rows={2}
+                  onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Mô tả ngắn về lộ trình..." />
+              </div>
             </div>
 
-            {/* Skills section */}
-            <div className="border-t pt-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium text-sm">
-                  Kỹ năng trong lộ trình ({formData.skills.length}) — Tổng {totalHours}h
-                </h4>
+            {/* Section: Kỹ năng trong lộ trình */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <GripVertical className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-[11px] font-bold text-amber-600 uppercase tracking-widest">Kỹ năng trong lộ trình</span>
+                {formData.skills.length > 0 && (
+                  <span className="text-[10px] text-white bg-amber-500 px-1.5 py-0.5 rounded-full">{formData.skills.length}</span>
+                )}
+                <div className="flex-1 h-px bg-border" />
+                {totalHours > 0 && (
+                  <span className="text-[11px] text-muted-foreground flex items-center gap-1 shrink-0">
+                    <Clock className="w-3 h-3" /> Tổng {totalHours}h
+                  </span>
+                )}
               </div>
 
-              {/* Add skill */}
-              <Select
+              {/* Skill picker dropdown */}
+              <CustomSelect
                 value=""
-                onChange={(e) => { if (e.target.value) addSkillToForm(e.target.value); }}
-                className="mb-3"
-              >
-                <option value="">+ Thêm kỹ năng...</option>
-                {allSkills
-                  .filter((s) => !formData.skills.some((fs) => fs.skill === s._id))
-                  .map((s) => (
-                    <option key={s._id} value={s._id}>{s.icon} {s.name} ({s.estimatedHours}h)</option>
-                  ))}
-              </Select>
+                onChange={v => { if (v) addSkillToForm(v); }}
+                placeholder="+ Thêm kỹ năng..."
+                options={allSkills
+                  .filter(s => !formData.skills.some(fs => fs.skill === s._id))
+                  .map(s => ({ value: s._id, label: `${s.icon || ''} ${s.name} (${s.estimatedHours}h)` }))}
+              />
 
               {/* Skill list */}
               <div className="space-y-2">
                 {formData.skills.map((s, i) => (
-                  <div key={s.skill} className="flex items-center gap-2 rounded-lg border p-2.5 bg-muted/5">
-                    <span className="text-xs font-bold text-primary w-5 text-center">{i + 1}</span>
+                  <div key={s.skill} className="flex items-center gap-2.5 rounded-xl border p-3 bg-muted/10 hover:bg-muted/20 transition-colors group">
+                    {/* Order number */}
+                    <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center shrink-0">
+                      {i + 1}
+                    </span>
+                    {/* Skill name */}
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm font-medium truncate block">
-                        {s.skillName || allSkills.find((sk) => sk._id === s.skill)?.name || s.skill}
+                      <span className="text-sm font-semibold truncate block">
+                        {s.skillName || allSkills.find(sk => sk._id === s.skill)?.name || s.skill}
                       </span>
                     </div>
-                    <Input type="number" min={1} className="w-16 text-center text-xs" value={s.estimatedHours}
-                      onChange={(e) => updateSkillInForm(i, 'estimatedHours', e.target.value)} />
-                    <span className="text-xs text-muted-foreground">h</span>
-                    <Select className="w-24 text-xs" value={s.targetLevel}
-                      onChange={(e) => updateSkillInForm(i, 'targetLevel', e.target.value)}>
-                      {Object.entries(levelLabels).map(([k, v]) => (
-                        <option key={k} value={k}>{v}</option>
-                      ))}
-                    </Select>
-                    <div className="flex flex-col gap-0.5">
+                    {/* Hours */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Input type="number" min={1}
+                        className="w-14 text-center text-xs h-7 px-1"
+                        value={s.estimatedHours}
+                        onChange={e => updateSkillInForm(i, 'estimatedHours', e.target.value)} />
+                      <span className="text-xs text-muted-foreground">h</span>
+                    </div>
+                    {/* Target level */}
+                    <CustomSelect
+                      className="w-36 shrink-0"
+                      value={s.targetLevel}
+                      onChange={v => updateSkillInForm(i, 'targetLevel', v)}
+                      options={[
+                        { value: 'beginner',     label: 'Cơ bản',    color: 'bg-emerald-500' },
+                        { value: 'intermediate', label: 'Trung bình', color: 'bg-amber-400' },
+                        { value: 'advanced',     label: 'Nâng cao',  color: 'bg-red-500' },
+                      ]}
+                    />
+                    {/* Move up/down */}
+                    <div className="flex flex-col gap-0.5 shrink-0">
                       <button type="button" onClick={() => moveSkill(i, -1)} disabled={i === 0}
-                        className="p-0.5 rounded hover:bg-muted disabled:opacity-20">
+                        className="p-0.5 rounded hover:bg-muted disabled:opacity-20 transition-opacity">
                         <ArrowUp className="w-3 h-3" />
                       </button>
                       <button type="button" onClick={() => moveSkill(i, 1)} disabled={i === formData.skills.length - 1}
-                        className="p-0.5 rounded hover:bg-muted disabled:opacity-20">
+                        className="p-0.5 rounded hover:bg-muted disabled:opacity-20 transition-opacity">
                         <ArrowDown className="w-3 h-3" />
                       </button>
                     </div>
+                    {/* Remove */}
                     <button type="button" onClick={() => removeSkillFromForm(i)}
-                      className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-600">
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors shrink-0">
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
                 {formData.skills.length === 0 && (
-                  <p className="text-xs text-muted-foreground text-center py-4">
-                    Chọn kỹ năng từ dropdown phía trên
-                  </p>
+                  <div className="text-center py-8 rounded-xl border border-dashed border-border/60">
+                    <GripVertical className="w-7 h-7 text-muted-foreground/20 mx-auto mb-2" />
+                    <p className="text-xs text-muted-foreground">Chọn kỹ năng từ dropdown phía trên</p>
+                    <p className="text-[11px] text-muted-foreground/60 mt-0.5">Có thể sắp xếp lại thứ tự sau khi thêm</p>
+                  </div>
                 )}
               </div>
             </div>
+
           </DialogBody>
-          <DialogFooter>
+          <DialogFooter className="border-t bg-muted/20 rounded-b-xl px-6 py-4">
             <Button type="button" variant="outline" size="sm" onClick={() => setShowForm(false)}>Hủy</Button>
-            <Button type="submit" size="sm" disabled={saving}>
-              {saving ? 'Đang lưu...' : editingId ? 'Cập nhật' : 'Tạo mới'}
+            <Button type="submit" size="sm" disabled={saving} className="gap-2 min-w-24">
+              {saving ? (
+                <><span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Đang lưu...</>
+              ) : editingId ? 'Cập nhật' : 'Tạo mới'}
             </Button>
           </DialogFooter>
         </form>
