@@ -134,6 +134,15 @@ export default function LearningSessionPage() {
   return (
     <div className="animate-fade-in space-y-5 max-w-4xl mx-auto">
 
+      {/* ── Back nav ── */}
+      <button
+        onClick={goBack}
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        <span>Quay lại</span>
+      </button>
+
       {/* ── Hero Header ── */}
       <div className={`relative overflow-hidden rounded-2xl border p-6
         ${isCompleted
@@ -144,37 +153,29 @@ export default function LearningSessionPage() {
       >
         <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-sky-500/8 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
         <div className="relative flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex items-start gap-3">
-            <button
-              onClick={goBack}
-              className="mt-0.5 p-1.5 rounded-lg hover:bg-black/10 transition-colors text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-medium text-primary uppercase tracking-wider">Buổi học</span>
-              </div>
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight flex items-center gap-2">
-                <span className="text-2xl">{skill.icon}</span>
-                {skill.name}
-              </h1>
-              <div className="flex items-center gap-3 mt-1.5 text-sm text-muted-foreground flex-wrap">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {new Date(session.date).toLocaleDateString('vi-VN')}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-medium text-primary uppercase tracking-wider">Buổi học</span>
+            </div>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight flex items-center gap-2">
+              <span className="text-2xl">{skill.icon}</span>
+              {skill.name}
+            </h1>
+            <div className="flex items-center gap-3 mt-1.5 text-sm text-muted-foreground flex-wrap">
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                {new Date(session.date).toLocaleDateString('vi-VN')}
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" />
+                {session.startTime} – {session.endTime}
+              </span>
+              {skill.category && (
+                <span className="flex items-center gap-1 capitalize">
+                  <Target className="w-3.5 h-3.5" />
+                  {skill.category}
                 </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {session.startTime} – {session.endTime}
-                </span>
-                {skill.category && (
-                  <span className="flex items-center gap-1 capitalize">
-                    <Target className="w-3.5 h-3.5" />
-                    {skill.category}
-                  </span>
-                )}
-              </div>
+              )}
             </div>
           </div>
 
