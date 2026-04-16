@@ -188,7 +188,7 @@ export default function JobTemplateManagement() {
               <span className="text-xs font-semibold text-primary uppercase tracking-widest">Quản Lý Công Việc Mẫu</span>
             </div>
             <p className="text-muted-foreground text-sm mt-1.5">
-              Tổng <strong className="text-foreground">{pagination.total}</strong> mẫu - Phục vụ gợi ý &amp; so khớp kỹ năng
+              Tổng <strong className="text-foreground">{pagination.total}</strong> mẫu • Phục vụ gợi ý - so khớp kỹ năng
             </p>
           </div>
           <Button onClick={openCreate} className="gap-2 shrink-0">
@@ -387,10 +387,9 @@ export default function JobTemplateManagement() {
                   {detailTemplate.requiredSkills.map((rs, i) => {
                     const lvl = levelStyles[rs.level] || levelStyles.intermediate;
                     return (
-                      <div key={i} className={`flex items-center justify-between rounded-xl border bg-card p-3 border-l-4 ${
-                        rs.level === 'beginner' ? 'border-l-emerald-400' :
+                      <div key={i} className={`flex items-center justify-between rounded-xl border bg-card p-3 border-l-4 ${rs.level === 'beginner' ? 'border-l-emerald-400' :
                         rs.level === 'advanced' ? 'border-l-red-400' : 'border-l-amber-400'
-                      } hover:shadow-sm transition-shadow`}>
+                        } hover:shadow-sm transition-shadow`}>
                         <span className="text-sm font-semibold">{rs.skill?.name || 'N/A'}</span>
                         <LevelBadge level={rs.level} />
                       </div>
@@ -418,9 +417,8 @@ export default function JobTemplateManagement() {
           <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
           <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                editingId ? 'bg-amber-500/15 text-amber-600' : 'bg-primary/15 text-primary'
-              }`}>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${editingId ? 'bg-amber-500/15 text-amber-600' : 'bg-primary/15 text-primary'
+                }`}>
                 {editingId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
               </div>
               <div>
@@ -541,9 +539,9 @@ export default function JobTemplateManagement() {
                         requiredSkills: f.requiredSkills.map((s, j) => j === i ? { ...s, level: v } : s),
                       }))}
                       options={[
-                        { value: 'beginner',     label: 'Cơ bản',    color: 'bg-emerald-500' },
+                        { value: 'beginner', label: 'Cơ bản', color: 'bg-emerald-500' },
                         { value: 'intermediate', label: 'Trung bình', color: 'bg-amber-400' },
-                        { value: 'advanced',     label: 'Nâng cao',  color: 'bg-red-500' },
+                        { value: 'advanced', label: 'Nâng cao', color: 'bg-red-500' },
                       ]}
                     />
                     <button type="button" onClick={() => removeSkillFromForm(i)}

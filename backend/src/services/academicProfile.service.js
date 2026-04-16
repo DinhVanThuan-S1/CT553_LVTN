@@ -194,7 +194,7 @@ class AcademicProfileService {
    * Thêm HP vào profile theo semester
    * body: { courseId, semesterId, isRequired? }
    */
-  async addCourse(studentId, { courseId, semesterId, isRequired = true }) {
+  async addCourse(studentId, { courseId, semesterId, isRequired }) {
     if (!courseId || !semesterId) throw { status: 400, message: 'Thiếu courseId hoặc semesterId' };
 
     const profile = await AcademicProfile.findOne({ student: studentId });
@@ -208,6 +208,11 @@ class AcademicProfileService {
     const semester = await Semester.findById(semesterId);
     if (!semester) throw { status: 404, message: 'Không tìm thấy học kỳ' };
 
+    // Xác định isRequired từ courseType nếu không được truyền rõ ràng
+    const resolvedIsRequired = isRequired !== undefined
+      ? isRequired !== false
+      : course.courseType === 'required';
+
     // Kiểm tra trùng lặp
     const exists = profile.courseGrades.some(
       cg => cg.course?.toString() === courseId && cg.semester?.toString() === semesterId
@@ -218,7 +223,7 @@ class AcademicProfileService {
     profile.courseGrades.push({
       course: courseId,
       semester: semesterId,
-      isRequired: isRequired !== false,
+      isRequired: resolvedIsRequired,
       grade: '',
       numericGrade: null,
       gradePoint: 0,
@@ -230,9 +235,9 @@ class AcademicProfileService {
       c => c.course?.toString() === courseId
     );
     if (!semCourseExists) {
-      semester.courses.push({ course: courseId, isRequired: isRequired !== false });
+      semester.courses.push({ course: courseId, isRequired: resolvedIsRequired });
       const credits = course.credits || 0;
-      if (isRequired !== false) semester.requiredCredits += credits;
+      if (resolvedIsRequired) semester.requiredCredits += credits;
       else semester.electiveCredits += credits;
       await semester.save();
     }
@@ -244,6 +249,7 @@ class AcademicProfileService {
 
     return this.getProfile(studentId);
   }
+
 
   /**
    * Cập nhật điểm các HP
