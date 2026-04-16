@@ -17,7 +17,7 @@ import { useToast } from '../../components/ui/Toast';
 import {
   Plus, Search, BookOpen, Video, Globe, Wrench, BookMarked,
   Edit3, Trash2, ExternalLink, Star, Dumbbell,
-  HelpCircle, FileText, ChevronLeft, ChevronRight, X,
+  HelpCircle, FileText, ChevronLeft, ChevronRight, X, CheckCircle2,
   Library,
 } from 'lucide-react';
 
@@ -520,19 +520,26 @@ export default function AdminResourcesPage() {
               </div>
             )}
 
-            {/* ── Section: Câu hỏi Test ── */}
+            {/* \u2500\u2500 Section: C\u00e2u h\u1ecfi Test \u2500\u2500 */}
             {form.type === 'test' && (
               <div className="space-y-3">
+                {/* Section header */}
                 <div className="flex items-center gap-2">
-                  <HelpCircle className="w-3.5 h-3.5 text-red-500" />
+                  <div className="w-5 h-5 rounded bg-red-500/15 flex items-center justify-center shrink-0">
+                    <HelpCircle className="w-3 h-3 text-red-500" />
+                  </div>
                   <span className="text-[11px] font-bold text-red-600 uppercase tracking-widest">
                     Câu hỏi test
                   </span>
-                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-                    {form.testQuestions.length} câu
-                  </span>
+                  {form.testQuestions.length > 0 && (
+                    <span className="text-[10px] font-semibold text-white bg-red-500 px-1.5 py-0.5 rounded-full">
+                      {form.testQuestions.length}
+                    </span>
+                  )}
                   <div className="flex-1 h-px bg-border" />
-                  <Button type="button" variant="outline" size="sm" className="gap-1 text-xs h-7 shrink-0"
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-full border border-primary/20 hover:border-primary/30 transition-all shrink-0"
                     onClick={() => setForm(f => ({
                       ...f,
                       testQuestions: [...f.testQuestions, {
@@ -544,100 +551,167 @@ export default function AdminResourcesPage() {
                           { text: '', isCorrect: false },
                         ],
                       }],
-                    }))}>
+                    }))}
+                  >
                     <Plus className="w-3 h-3" /> Thêm câu hỏi
-                  </Button>
+                  </button>
                 </div>
-                <div className="space-y-3 max-h-72 overflow-y-auto pr-0.5">
+
+                <div className="space-y-3 max-h-80 overflow-y-auto pr-0.5">
                   {form.testQuestions.map((q, qi) => (
-                    <div key={qi} className="rounded-xl border bg-muted/20 p-4 space-y-3">
-                      <div className="flex items-center justify-between">
+                    <div key={qi} className="rounded-xl border overflow-hidden shadow-sm">
+                      {/* Question card header */}
+                      <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-primary/8 to-transparent border-b">
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-primary/15 text-primary text-[11px] font-bold flex items-center justify-center">
+                          <span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
                             {qi + 1}
                           </span>
-                          <span className="text-xs font-semibold text-foreground">Câu hỏi</span>
+                          <span className="text-[11px] font-semibold text-foreground">Câu hỏi</span>
                         </div>
-                        <button type="button" onClick={() => setForm(f => ({
-                          ...f, testQuestions: f.testQuestions.filter((_, i) => i !== qi),
-                        }))} className="text-[11px] text-red-500 hover:text-red-600 hover:underline font-medium">
-                          Xóa
+                        <button
+                          type="button"
+                          onClick={() => setForm(f => ({
+                            ...f, testQuestions: f.testQuestions.filter((_, i) => i !== qi),
+                          }))}
+                          className="text-[11px] font-medium text-muted-foreground/60 hover:text-red-500 transition-colors flex items-center gap-0.5"
+                        >
+                          <X className="w-3 h-3" /> Xóa
                         </button>
                       </div>
-                      <Input value={q.question} placeholder="Nội dung câu hỏi..."
-                        className="h-9"
-                        onChange={e => setForm(f => {
-                          const qs = [...f.testQuestions];
-                          qs[qi] = { ...qs[qi], question: e.target.value };
-                          return { ...f, testQuestions: qs };
-                        })} />
-                      <div className="space-y-1.5">
-                        <p className="text-[11px] font-semibold text-muted-foreground">Đáp án — nhấn ○ để chọn đúng</p>
-                        {q.options.map((opt, oi) => (
-                          <div key={oi} className="flex items-center gap-2">
-                            <button type="button" onClick={() => setForm(f => {
-                              const qs = [...f.testQuestions];
-                              qs[qi] = { ...qs[qi], options: qs[qi].options.map((o, j) => ({ ...o, isCorrect: j === oi })) };
-                              return { ...f, testQuestions: qs };
-                            })} className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center text-[10px] transition-colors ${
-                              opt.isCorrect
-                                ? 'border-emerald-500 bg-emerald-500 text-white'
-                                : 'border-border hover:border-emerald-400'
-                            }`}>
-                              {opt.isCorrect && '✓'}
-                            </button>
-                            <Input value={opt.text} placeholder={`Lựa chọn ${oi + 1}`}
-                              className="h-8 text-xs flex-1"
-                              onChange={e => setForm(f => {
-                                const qs = [...f.testQuestions];
-                                const opts = [...qs[qi].options];
-                                opts[oi] = { ...opts[oi], text: e.target.value };
-                                qs[qi] = { ...qs[qi], options: opts };
-                                return { ...f, testQuestions: qs };
-                              })} />
-                            {q.options.length > 2 && (
-                              <button type="button"
-                                className="w-5 h-5 rounded text-muted-foreground hover:text-red-500 hover:bg-red-500/10 flex items-center justify-center transition-colors text-sm"
-                                onClick={() => setForm(f => {
-                                  const qs = [...f.testQuestions];
-                                  qs[qi] = { ...qs[qi], options: qs[qi].options.filter((_, j) => j !== oi) };
-                                  return { ...f, testQuestions: qs };
-                                })}>×</button>
-                            )}
-                          </div>
-                        ))}
-                        {q.options.length < 6 && (
-                          <button type="button"
-                            className="text-[11px] text-primary hover:underline font-medium ml-7"
-                            onClick={() => setForm(f => {
-                              const qs = [...f.testQuestions];
-                              qs[qi] = { ...qs[qi], options: [...qs[qi].options, { text: '', isCorrect: false }] };
-                              return { ...f, testQuestions: qs };
-                            })}>+ Thêm lựa chọn</button>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-[11px] font-semibold text-muted-foreground mb-1">Giải thích (tùy chọn)</p>
-                        <Input value={q.explanation} placeholder="Giải thích đáp án đúng..."
-                          className="h-8 text-xs"
+
+                      {/* Question body */}
+                      <div className="p-3 space-y-3 bg-card">
+                        {/* Question text */}
+                        <Input
+                          value={q.question}
+                          placeholder="Nội dung câu hỏi..."
+                          className="h-9 text-sm"
                           onChange={e => setForm(f => {
                             const qs = [...f.testQuestions];
-                            qs[qi] = { ...qs[qi], explanation: e.target.value };
+                            qs[qi] = { ...qs[qi], question: e.target.value };
                             return { ...f, testQuestions: qs };
-                          })} />
+                          })}
+                        />
+
+                        {/* Options */}
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                            Lựa chọn — bấm ○ để đánh dấu đáp án đúng
+                          </p>
+                          {q.options.map((opt, oi) => (
+                            <div
+                              key={oi}
+                              className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${
+                                opt.isCorrect
+                                  ? 'border-emerald-400/40 bg-emerald-500/[0.06]'
+                                  : 'border-border/60 hover:border-border hover:bg-muted/20'
+                              }`}
+                            >
+                              {/* Radio toggle */}
+                              <button
+                                type="button"
+                                onClick={() => setForm(f => {
+                                  const qs = [...f.testQuestions];
+                                  qs[qi] = {
+                                    ...qs[qi],
+                                    options: qs[qi].options.map((o, j) => ({ ...o, isCorrect: j === oi })),
+                                  };
+                                  return { ...f, testQuestions: qs };
+                                })}
+                                className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all ${
+                                  opt.isCorrect
+                                    ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm'
+                                    : 'border-border/60 hover:border-emerald-400'
+                                }`}
+                              >
+                                {opt.isCorrect && <CheckCircle2 className="w-3 h-3" />}
+                              </button>
+
+                              {/* Option input */}
+                              <input
+                                type="text"
+                                value={opt.text}
+                                placeholder={`Lựa chọn ${oi + 1}`}
+                                onChange={e => setForm(f => {
+                                  const qs = [...f.testQuestions];
+                                  const opts = [...qs[qi].options];
+                                  opts[oi] = { ...opts[oi], text: e.target.value };
+                                  qs[qi] = { ...qs[qi], options: opts };
+                                  return { ...f, testQuestions: qs };
+                                })}
+                                className={`flex-1 text-xs bg-transparent border-0 outline-none placeholder:text-muted-foreground/50 ${
+                                  opt.isCorrect ? 'font-semibold text-emerald-700' : ''
+                                }`}
+                              />
+
+                              {/* Remove option */}
+                              {q.options.length > 2 && (
+                                <button
+                                  type="button"
+                                  className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/10 transition-colors shrink-0"
+                                  onClick={() => setForm(f => {
+                                    const qs = [...f.testQuestions];
+                                    qs[qi] = { ...qs[qi], options: qs[qi].options.filter((_, j) => j !== oi) };
+                                    return { ...f, testQuestions: qs };
+                                  })}
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+
+                          {/* Add option */}
+                          {q.options.length < 6 && (
+                            <button
+                              type="button"
+                              className="text-[11px] font-medium text-primary/70 hover:text-primary hover:underline flex items-center gap-1 ml-1 transition-colors"
+                              onClick={() => setForm(f => {
+                                const qs = [...f.testQuestions];
+                                qs[qi] = { ...qs[qi], options: [...qs[qi].options, { text: '', isCorrect: false }] };
+                                return { ...f, testQuestions: qs };
+                              })}
+                            >
+                              <Plus className="w-3 h-3" /> Thêm lựa chọn
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Explanation */}
+                        <div className="rounded-lg bg-amber-500/[0.05] border border-amber-400/20 px-3 py-2 space-y-1.5">
+                          <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wide">
+                            Giải thích đáp án (tùy chọn)
+                          </p>
+                          <input
+                            type="text"
+                            value={q.explanation}
+                            placeholder="Giải thích tại sao đáp án này là đúng..."
+                            onChange={e => setForm(f => {
+                              const qs = [...f.testQuestions];
+                              qs[qi] = { ...qs[qi], explanation: e.target.value };
+                              return { ...f, testQuestions: qs };
+                            })}
+                            className="w-full text-xs bg-transparent border-0 outline-none placeholder:text-muted-foreground/40"
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
+
+                  {/* Empty state */}
                   {form.testQuestions.length === 0 && (
-                    <div className="rounded-xl border border-dashed bg-muted/10 p-8 text-center">
-                      <HelpCircle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                      <p className="text-xs text-muted-foreground">Chưa có câu hỏi nào</p>
-                      <p className="text-[11px] text-muted-foreground/70 mt-0.5">Nhấn "Thêm câu hỏi" để bắt đầu</p>
+                    <div className="rounded-xl border border-dashed border-red-300/40 bg-red-500/[0.03] p-6 text-center">
+                      <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-2">
+                        <HelpCircle className="w-5 h-5 text-red-400" />
+                      </div>
+                      <p className="text-xs font-medium text-muted-foreground">Chưa có câu hỏi nào</p>
+                      <p className="text-[11px] text-muted-foreground/60 mt-0.5">Nhấn "Thêm câu hỏi" để bắt đầu</p>
                     </div>
                   )}
                 </div>
               </div>
             )}
+
 
             {/* ── Section: Kỹ năng liên kết ── */}
             <div className="space-y-3">
