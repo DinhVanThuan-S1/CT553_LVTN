@@ -377,12 +377,12 @@ export default function WelcomePage() {
             <p className="text-muted-foreground">Cơ hội việc làm mới nhất dành cho sinh viên CNTT</p>
           </div>
           <Link
-              to="/jobs"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-1.5 rounded-full border border-primary/25 bg-primary/8 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200"
-            >
-              Xem tất cả <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
+            to="/jobs"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-1.5 rounded-full border border-primary/25 bg-primary/8 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200"
+          >
+            Xem tất cả <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -477,14 +477,14 @@ export default function WelcomePage() {
         </div>
 
         <div className="md:hidden text-center mt-6">
-            <Link
-              to="/jobs"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold px-5 py-2 rounded-full border border-primary/25 bg-primary/8 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
-            >
-              Xem tất cả công việc <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
+          <Link
+            to="/jobs"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold px-5 py-2 rounded-full border border-primary/25 bg-primary/8 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+          >
+            Xem tất cả công việc <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
       </section>
 
       {/* ====== CTA ====== */}
