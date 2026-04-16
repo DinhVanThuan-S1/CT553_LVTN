@@ -802,42 +802,59 @@ export default function CurriculumManagement() {
                   </div>
                 ) : (
                   <>
-                    {/* Add Semester button */}
+                    {/* Stats bar */}
                     <div className="px-5 py-3 border-b bg-muted/10 flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        {activeSems.length} học kỳ · {totalCourses} học phần
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-semibold text-muted-foreground">{activeSems.length} học kỳ</span>
+                        <span className="text-muted-foreground/40 text-xs">·</span>
+                        <span className="text-xs font-semibold text-muted-foreground">{totalCourses} học phần</span>
+                        {dirtyCount > 0 && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 border border-amber-400/20">
+                            ✦ {dirtyCount} thay đổi
+                          </span>
+                        )}
+                      </div>
                       <Button type="button" size="sm" variant="outline" onClick={addSemester} className="gap-1.5 h-7 text-xs">
                         <Plus className="w-3.5 h-3.5" /> Thêm học kỳ
                       </Button>
                     </div>
 
                     {activeSems.length === 0 ? (
-                      <div className="py-16 text-center text-muted-foreground text-sm space-y-2">
-                        <p>Chưa có học kỳ nào</p>
+                      <div className="flex flex-col items-center justify-center py-16 gap-3">
+                        <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
+                          <Calendar className="w-6 h-6 text-muted-foreground/30" />
+                        </div>
+                        <p className="text-sm text-muted-foreground">Chưa có học kỳ nào</p>
                         <button type="button" onClick={addSemester}
-                          className="text-primary text-xs hover:underline">
-                          + Thêm học kỳ đầu tiên
+                          className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-primary/5 transition-colors">
+                          <Plus className="w-3.5 h-3.5" /> Thêm học kỳ đầu tiên
                         </button>
                       </div>
                     ) : (
-                      <div className="divide-y">
-                        {editSemesters.filter(s => !s._deleted).map(sem => {
+                      <div>
+                        {editSemesters.filter(s => !s._deleted).map((sem, semIdx) => {
                           const semKey = sem._id || sem._localId;
                           const isExpanded = expandedSems[semKey];
                           const isPickerOpen = pickerOpenFor === semKey;
                           const existingCodes = new Set(sem.courses.map(c => c.course?.code));
                           const reqCount = sem.courses.filter(c => c.isRequired !== false).length;
                           const dirtyInSem = sem.courses.filter(c => c._dirty).length;
+                          const totalCreditsInSem = sem.courses.reduce((s, c) => s + (c.course?.credits || 0), 0);
 
                           return (
-                            <div key={semKey} className={sem._isNew ? 'bg-primary/[0.02]' : ''}>
-                              {/* Semester Header */}
-                              <div className="flex items-center gap-2 px-4 py-2.5 hover:bg-muted/20 transition-colors">
+                            <div key={semKey} className={`border-b transition-colors`}>
+                              {/* ── Semester Header ── */}
+                              <div className={`flex items-center gap-2 px-4 py-3 transition-colors border-l-4 ${
+                                sem._isNew
+                                  ? 'border-l-emerald-400 bg-emerald-500/[0.025]'
+                                  : isExpanded
+                                  ? 'border-l-primary bg-primary/[0.025]'
+                                  : 'border-l-transparent hover:border-l-primary/30 hover:bg-muted/20'
+                              }`}>
                                 <button
                                   type="button"
                                   onClick={() => setExpandedSems(prev => ({ ...prev, [semKey]: !prev[semKey] }))}
-                                  className="text-muted-foreground hover:text-foreground"
+                                  className={`transition-colors shrink-0 ${isExpanded ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                   {isExpanded
                                     ? <ChevronDown className="w-4 h-4" />
@@ -849,55 +866,65 @@ export default function CurriculumManagement() {
                                   type="text"
                                   value={sem.name}
                                   onChange={e => updateSemesterField(semKey, 'name', e.target.value)}
-                                  className="font-medium text-sm bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none px-1 flex-1 min-w-0"
+                                  className="font-semibold text-sm bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none px-1 flex-1 min-w-0 transition-colors"
                                   onClick={e => e.stopPropagation()}
                                 />
 
+                                {/* Stat chips */}
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {sem._isNew && (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 border border-emerald-400/20 shrink-0">
+                                      Mới
+                                    </span>
+                                  )}
+                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
+                                    {sem.courses.length} HP
+                                  </span>
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/8 text-primary border border-primary/15">
+                                    {totalCreditsInSem} TC
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground hidden sm:inline">{reqCount} BB</span>
+                                  {dirtyInSem > 0 && (
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 border border-amber-400/20">
+                                      ✦ {dirtyInSem}
+                                    </span>
+                                  )}
+                                </div>
+
                                 {/* Order */}
-                                <div className="flex items-center gap-1 shrink-0">
-                                  <span className="text-xs text-muted-foreground">Thứ tự:</span>
+                                <div className="flex items-center gap-1 shrink-0 border-l border-border/50 pl-2 ml-1">
+                                  <span className="text-[10px] text-muted-foreground">STT:</span>
                                   <input
                                     type="number" min={1} max={20}
                                     value={sem.order}
                                     onChange={e => updateSemesterField(semKey, 'order', parseInt(e.target.value) || 1)}
                                     onClick={e => e.stopPropagation()}
-                                    className="w-10 text-center text-xs bg-transparent border rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                                    className="w-9 text-center text-xs bg-background border border-border/60 rounded-md px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary"
                                   />
-                                </div>
-
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  <Badge variant="secondary" className="text-[10px]">{sem.courses.length} HP</Badge>
-                                  <span className="text-xs text-muted-foreground">{reqCount} BB</span>
-                                  {dirtyInSem > 0 && (
-                                    <span className="text-[10px] text-amber-600 font-medium">● {dirtyInSem}</span>
-                                  )}
-                                  {sem._isNew && (
-                                    <Badge variant="default" className="text-[9px] px-1.5">Mới</Badge>
-                                  )}
                                 </div>
 
                                 <button
                                   type="button"
                                   onClick={() => deleteSemester(semKey)}
-                                  className="p-1 rounded hover:bg-red-500/10 hover:text-red-600 text-muted-foreground/40 transition-colors"
+                                  className="p-1.5 rounded-lg hover:bg-red-500/10 hover:text-red-600 text-muted-foreground/40 transition-colors shrink-0"
                                   title="Xóa học kỳ"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                               </div>
 
-                              {/* Course Table */}
+                              {/* ── Course Table ── */}
                               {isExpanded && (
-                                <div className="border-t bg-muted/5 pb-2">
+                                <div className="bg-muted/[0.03]">
                                   {sem.courses.length > 0 ? (
                                     <table className="w-full text-sm">
                                       <thead>
-                                        <tr className="bg-muted/20 border-b">
-                                          <th className="text-left px-4 py-2 font-medium text-muted-foreground text-xs w-20">Mã HP</th>
-                                          <th className="text-left px-2 py-2 font-medium text-muted-foreground text-xs">Tên học phần</th>
-                                          <th className="text-center px-2 py-2 font-medium text-muted-foreground text-xs w-10">TC</th>
-                                          <th className="text-center px-2 py-2 font-medium text-muted-foreground text-xs w-24">Loại</th>
-                                          <th className="text-center px-2 py-2 font-medium text-muted-foreground text-xs w-28">Nhóm TC</th>
+                                        <tr className="bg-muted/25 border-y border-border/50">
+                                          <th className="text-left px-4 py-2 font-semibold text-muted-foreground text-[10px] uppercase tracking-wider w-24">Mã HP</th>
+                                          <th className="text-left px-3 py-2 font-semibold text-muted-foreground text-[10px] uppercase tracking-wider">Tên học phần</th>
+                                          <th className="text-center px-2 py-2 font-semibold text-muted-foreground text-[10px] uppercase tracking-wider w-10">TC</th>
+                                          <th className="text-center px-2 py-2 font-semibold text-muted-foreground text-[10px] uppercase tracking-wider w-24">Loại</th>
+                                          <th className="text-center px-2 py-2 font-semibold text-muted-foreground text-[10px] uppercase tracking-wider w-28">Nhóm TC</th>
                                           <th className="w-8" />
                                         </tr>
                                       </thead>
@@ -907,50 +934,60 @@ export default function CurriculumManagement() {
                                           return (
                                             <tr
                                               key={idx}
-                                              className={`border-t transition-colors ${item._dirty || item._isNew
-                                                ? 'bg-amber-500/5'
-                                                : 'hover:bg-muted/10'}`}
+                                              className={`border-b border-border/30 transition-colors group ${
+                                                item._isNew
+                                                  ? 'bg-emerald-500/5 hover:bg-emerald-500/8'
+                                                  : item._dirty
+                                                  ? 'bg-amber-500/5 hover:bg-amber-500/8'
+                                                  : idx % 2 === 0 ? 'hover:bg-primary/5' : 'bg-muted/[0.04] hover:bg-primary/5'
+                                              }`}
                                             >
-                                              <td className="px-4 py-1.5 font-mono text-xs text-primary font-bold">
-                                                {item.course?.code}
-                                                {item._isNew && <span className="ml-1 text-primary text-[9px]">◆</span>}
+                                              <td className="px-4 py-2">
+                                                <div className="flex items-center gap-1.5">
+                                                  <span className="font-mono text-[11px] font-bold text-primary bg-primary/8 px-1.5 py-0.5 rounded border border-primary/10">
+                                                    {item.course?.code}
+                                                  </span>
+                                                  {item._isNew && (
+                                                    <span className="text-[9px] font-bold text-emerald-600" title="Mới thêm">◆</span>
+                                                  )}
+                                                </div>
                                               </td>
-                                              <td className="px-2 py-1.5 text-xs truncate max-w-[180px]" title={item.course?.name}>
+                                              <td className="px-3 py-2 text-xs truncate max-w-[200px]" title={item.course?.name}>
                                                 {item.course?.name}
                                               </td>
-                                              <td className="text-center px-2 py-1.5 text-muted-foreground text-xs">
-                                                {item.course?.credits}
+                                              <td className="text-center px-2 py-2">
+                                                <span className="text-xs font-bold text-muted-foreground">{item.course?.credits}</span>
                                               </td>
-                                              <td className="text-center px-2 py-1.5">
+                                              <td className="text-center px-2 py-2">
                                                 <button
                                                   type="button"
                                                   onClick={() => toggleIsRequired(semKey, idx)}
-                                                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all border ${isReq
-                                                    ? 'bg-primary/10 text-primary border-primary/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-300'
-                                                    : 'bg-amber-500/10 text-amber-600 border-amber-300 hover:bg-primary/10 hover:text-primary hover:border-primary/30'}`}
-                                                  title="Click để đổi"
+                                                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold transition-all border ${isReq
+                                                    ? 'bg-primary/10 text-primary border-primary/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-300/60'
+                                                    : 'bg-amber-500/10 text-amber-600 border-amber-300/60 hover:bg-primary/10 hover:text-primary hover:border-primary/30'}`}
+                                                  title="Click để đổi loại"
                                                 >
                                                   {isReq ? 'Bắt buộc' : 'Tự chọn'}
                                                 </button>
                                               </td>
-                                              <td className="text-center px-2 py-1.5">
+                                              <td className="text-center px-2 py-2">
                                                 {!isReq ? (
                                                   <input
                                                     type="text"
                                                     value={item.electiveGroup || ''}
                                                     onChange={e => changeElectiveGroup(semKey, idx, e.target.value)}
-                                                    placeholder="Nhóm TC"
-                                                    className="w-24 text-xs text-center bg-transparent border rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                                                    placeholder="Nhóm…"
+                                                    className="w-20 text-xs text-center bg-transparent border border-border/60 rounded-lg px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors placeholder:text-muted-foreground/40"
                                                   />
                                                 ) : (
-                                                  <span className="text-muted-foreground/30 text-xs">—</span>
+                                                  <span className="text-muted-foreground/25 text-xs select-none">—</span>
                                                 )}
                                               </td>
-                                              <td className="pr-2 py-1.5">
+                                              <td className="pr-2 py-2">
                                                 <button
                                                   type="button"
                                                   onClick={() => removeCourseFromSemester(semKey, idx)}
-                                                  className="p-1 rounded hover:bg-red-500/10 hover:text-red-600 text-muted-foreground/30 transition-colors"
+                                                  className="p-1.5 rounded-lg hover:bg-red-500/10 hover:text-red-600 text-transparent group-hover:text-muted-foreground/50 transition-colors"
                                                   title="Xóa khỏi học kỳ"
                                                 >
                                                   <X className="w-3 h-3" />
@@ -962,13 +999,16 @@ export default function CurriculumManagement() {
                                       </tbody>
                                     </table>
                                   ) : (
-                                    <p className="text-xs text-muted-foreground text-center py-4">
-                                      Chưa có học phần nào trong học kỳ này
-                                    </p>
+                                    <div className="flex flex-col items-center justify-center py-8 gap-2 border-b border-dashed border-border/40">
+                                      <div className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center">
+                                        <BookOpen className="w-4 h-4 text-muted-foreground/40" />
+                                      </div>
+                                      <p className="text-xs text-muted-foreground">Chưa có học phần nào trong học kỳ này</p>
+                                    </div>
                                   )}
 
                                   {/* Add Course button + picker */}
-                                  <div className="px-4 pt-2">
+                                  <div className={`px-4 ${isPickerOpen ? 'pt-2 pb-3' : 'py-2'}`}>
                                     {isPickerOpen ? (
                                       <CoursePicker
                                         allCourses={allCourses}
@@ -980,7 +1020,7 @@ export default function CurriculumManagement() {
                                       <button
                                         type="button"
                                         onClick={() => setPickerOpenFor(semKey)}
-                                        className="flex items-center gap-1.5 text-xs text-primary hover:underline py-1"
+                                        className="flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors py-1 px-2 rounded-lg hover:bg-primary/5"
                                       >
                                         <Plus className="w-3.5 h-3.5" />
                                         Thêm học phần
