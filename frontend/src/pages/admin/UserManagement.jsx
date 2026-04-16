@@ -6,11 +6,12 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
+import { Dialog, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
 import {
   Search, Users, Lock, Unlock, Eye, ChevronLeft, ChevronRight,
   Mail, Phone, Calendar, Shield, UserCheck, UserX, SlidersHorizontal, ChevronDown,
+  X, LogIn, Building2,
 } from 'lucide-react';
 
 export default function UserManagement() {
@@ -404,83 +405,112 @@ export default function UserManagement() {
       </div>
 
       {/* ── Detail Dialog ── */}
-      <Dialog open={showDetail} onClose={() => setShowDetail(false)}>
-        <DialogHeader onClose={() => setShowDetail(false)}>
-          Chi tiết người dùng
-        </DialogHeader>
+      <Dialog open={showDetail} onClose={() => setShowDetail(false)} className="max-w-md">
+        {/* Gradient header with avatar */}
         {selectedUser && (
-          <DialogBody>
-            <div className="space-y-4">
-              {/* Profile header */}
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/20 border">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-2xl font-bold text-primary shrink-0 border border-primary/10 overflow-hidden">
+          <div className="relative overflow-hidden rounded-t-xl border-b bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-5">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {/* Avatar */}
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/25 to-primary/5 flex items-center justify-center text-xl font-bold text-primary shrink-0 border border-primary/15 overflow-hidden shadow-sm">
                   {selectedUser.avatar
-                    ? <img src={selectedUser.avatar} alt="" className="w-16 h-16 object-cover" />
+                    ? <img src={selectedUser.avatar} alt="" className="w-14 h-14 object-cover" />
                     : selectedUser.fullName?.charAt(0)?.toUpperCase()
                   }
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-lg truncate">{selectedUser.fullName}</h3>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <div>
+                  <h2 className="text-base font-bold text-foreground leading-tight">{selectedUser.fullName}</h2>
+                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                    {/* Role badge */}
                     {selectedUser.role === 'student' ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 border border-blue-400/20">
-                        <UserCheck className="w-3 h-3" /> Sinh viên
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 border border-blue-400/20">
+                        <UserCheck className="w-2.5 h-2.5" /> Sinh viên
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-400/20">
-                        <Users className="w-3 h-3" /> Nhà tuyển dụng
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-400/20">
+                        <Building2 className="w-2.5 h-2.5" /> Nhà tuyển dụng
                       </span>
                     )}
+                    {/* Status badge */}
                     {selectedUser.isActive ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-400/20">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Hoạt động
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-400/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Hoạt động
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-600 border border-red-400/20">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 border border-red-400/20">
                         <Lock className="w-2.5 h-2.5" /> Bị khóa
                       </span>
                     )}
                   </div>
                 </div>
               </div>
+              <button onClick={() => setShowDetail(false)}
+                className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors self-start">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
-              {/* Info rows */}
-              <div className="space-y-2.5 text-sm">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 border">
-                  <Mail className="w-4 h-4 text-primary shrink-0" />
-                  <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Email</p>
-                    <p className="font-medium">{selectedUser.email}</p>
-                  </div>
+        {selectedUser && (
+          <DialogBody className="px-6 py-5 space-y-3">
+            {/* Email */}
+            <div className="flex items-center gap-3.5 p-3.5 rounded-xl border bg-card hover:bg-muted/20 transition-colors">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Mail className="w-3.5 h-3.5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Email</p>
+                <p className="text-sm font-medium truncate">{selectedUser.email}</p>
+              </div>
+            </div>
+
+            {/* Phone (if exists) */}
+            {selectedUser.phone && (
+              <div className="flex items-center gap-3.5 p-3.5 rounded-xl border bg-card hover:bg-muted/20 transition-colors">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                  <Phone className="w-3.5 h-3.5 text-blue-500" />
                 </div>
-                {selectedUser.phone && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 border">
-                    <Phone className="w-4 h-4 text-primary shrink-0" />
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Số điện thoại</p>
-                      <p className="font-medium">{selectedUser.phone}</p>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 border">
-                  <Calendar className="w-4 h-4 text-primary shrink-0" />
-                  <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Ngày tham gia</p>
-                    <p className="font-medium">{new Date(selectedUser.createdAt).toLocaleDateString('vi-VN')}</p>
-                  </div>
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Số điện thoại</p>
+                  <p className="text-sm font-medium">{selectedUser.phone}</p>
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 border">
-                  <Shield className="w-4 h-4 text-primary shrink-0" />
-                  <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Đăng nhập qua</p>
-                    <p className="font-medium">{selectedUser.authProvider === 'google' ? 'Google' : 'Email / Password'}</p>
-                  </div>
+              </div>
+            )}
+
+            {/* 2-col: Date + Auth */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-3 p-3.5 rounded-xl border bg-card hover:bg-muted/20 transition-colors">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                  <Calendar className="w-3.5 h-3.5 text-amber-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Tham gia</p>
+                  <p className="text-sm font-semibold">{new Date(selectedUser.createdAt).toLocaleDateString('vi-VN')}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3.5 rounded-xl border bg-card hover:bg-muted/20 transition-colors">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                  selectedUser.authProvider === 'google' ? 'bg-red-500/10' : 'bg-muted'
+                }`}>
+                  {selectedUser.authProvider === 'google'
+                    ? <svg className="w-3.5 h-3.5" viewBox="0 0 24 24"><path fill="#EA4335" d="M5.26620003,9.76452941 C6.19878754,6.93863203 8.85444915,4.90909091 12,4.90909091 C13.6909091,4.90909091 15.2181818,5.50909091 16.4181818,6.49090909 L19.9090909,3 C17.7818182,1.14545455 15.0545455,0 12,0 C7.27006974,0 3.1977497,2.69829785 1.23999023,6.65002441 L5.26620003,9.76452941 Z" /><path fill="#34A853" d="M16.0407269,18.0125889 C14.9509167,18.7163016 13.5660892,19.0909091 12,19.0909091 C8.86648613,19.0909091 6.21911939,17.076871 5.27698177,14.2678769 L1.23746264,17.3349879 C3.19279051,21.2936293 7.26500293,24 12,24 C14.9328362,24 17.7353462,22.9573905 19.834192,20.9995801 L16.0407269,18.0125889 Z" /><path fill="#4A90E2" d="M19.834192,20.9995801 C22.0291676,18.9520994 23.4545455,15.903663 23.4545455,12 C23.4545455,11.2909091 23.3454545,10.5272727 23.1818182,9.81818182 L12,9.81818182 L12,14.4545455 L18.4363636,14.4545455 C18.1187732,16.013626 17.2662994,17.2212117 16.0407269,18.0125889 L19.834192,20.9995801 Z" /><path fill="#FBBC05" d="M5.27698177,14.2678769 C5.03832634,13.556323 4.90909091,12.7937589 4.90909091,12 C4.90909091,11.2182781 5.03443647,10.4668121 5.26620003,9.76452941 L1.23999023,6.65002441 C0.43658717,8.26043162 0,10.0753848 0,12 C0,13.9195484 0.444780743,15.7301709 1.23746264,17.3349879 L5.27698177,14.2678769 Z" /></svg>
+                    : <LogIn className="w-3.5 h-3.5 text-muted-foreground" />
+                  }
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Qua</p>
+                  <p className="text-sm font-semibold">
+                    {selectedUser.authProvider === 'google' ? 'Google' : 'Email'}
+                  </p>
                 </div>
               </div>
             </div>
           </DialogBody>
         )}
-        <DialogFooter>
+
+        <DialogFooter className="border-t bg-muted/20 rounded-b-xl px-6 py-4">
           <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Đóng</Button>
           {selectedUser && (
             <Button
