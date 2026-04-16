@@ -7,14 +7,14 @@ import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
-import { Select } from '../../components/ui/Select';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Textarea } from '../../components/ui/Textarea';
-import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
+import { Dialog, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import {
   Search, Plus, Pencil, Trash2, Eye, Briefcase,
-  ChevronLeft, ChevronRight, Banknote, X, SlidersHorizontal,
+  ChevronLeft, ChevronRight, Banknote, X, SlidersHorizontal, Check,
 } from 'lucide-react';
 
 const levelLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
@@ -328,133 +328,246 @@ export default function JobTemplateManagement() {
 
       {/* Detail Dialog */}
       <Dialog open={showDetail} onClose={() => setShowDetail(false)} className="max-w-lg">
-        <DialogHeader onClose={() => setShowDetail(false)}>Chi tiết Mẫu công việc</DialogHeader>
+        {/* Gradient header */}
         {detailTemplate && (
-          <DialogBody className="space-y-4">
-            {/* Hero card */}
-            <div className="flex items-start gap-4 p-4 rounded-xl bg-muted/20">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Briefcase className="w-6 h-6 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-lg leading-snug">{detailTemplate.title}</h3>
-                <p className="text-sm text-muted-foreground mt-0.5">{detailTemplate.careerPath}</p>
-                <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground">
-                  <Banknote className="w-3.5 h-3.5" />
-                  <span>
-                    {detailTemplate.salaryRange?.min && detailTemplate.salaryRange?.max
-                      ? `${detailTemplate.salaryRange.min} - ${detailTemplate.salaryRange.max} triệu VNĐ/tháng`
-                      : 'Chưa cập nhật'}
-                  </span>
+          <div className="relative overflow-hidden rounded-t-xl border-b bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-5">
+            <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0 border border-primary/10">
+                  <Briefcase className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-foreground leading-tight">{detailTemplate.title}</h2>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{detailTemplate.careerPath}</p>
                 </div>
               </div>
+              <button onClick={() => setShowDetail(false)}
+                className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
             </div>
-
+            {/* Salary badge in header */}
+            <div className="flex items-center gap-1.5 mt-3">
+              <Banknote className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="text-xs font-semibold text-emerald-700">
+                {detailTemplate.salaryRange?.min && detailTemplate.salaryRange?.max
+                  ? `${detailTemplate.salaryRange.min} - ${detailTemplate.salaryRange.max} triệu VNĐ/tháng`
+                  : 'Chưa cập nhật mức lương'}
+              </span>
+            </div>
+          </div>
+        )}
+        {detailTemplate && (
+          <DialogBody className="space-y-4 max-h-[60vh] overflow-y-auto px-6 py-5">
+            {/* Description */}
             {detailTemplate.description && (
-              <div>
-                <h4 className="font-semibold text-sm mb-1">Mô tả</h4>
-                <p className="text-sm text-muted-foreground">{detailTemplate.description}</p>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Mô tả</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed pl-1">{detailTemplate.description}</p>
               </div>
             )}
 
-            {detailTemplate.requiredSkills?.length > 0 && (
-              <div>
-                <h4 className="font-semibold text-sm mb-2">Kỹ năng yêu cầu ({detailTemplate.requiredSkills.length})</h4>
-                <div className="space-y-1.5">
-                  {detailTemplate.requiredSkills.map((rs, i) => (
-                    <div key={i} className="flex items-center justify-between rounded-lg bg-muted/20 px-3 py-1.5">
-                      <span className="text-sm font-medium">{rs.skill?.name || 'N/A'}</span>
-                      <LevelBadge level={rs.level} />
-                    </div>
-                  ))}
+            {/* Required Skills */}
+            {(detailTemplate.requiredSkills?.length > 0) && (
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-[11px] font-bold text-primary uppercase tracking-widest">Kỹ năng yêu cầu</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    {detailTemplate.requiredSkills.length}
+                  </span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+                <div className="space-y-2">
+                  {detailTemplate.requiredSkills.map((rs, i) => {
+                    const lvl = levelStyles[rs.level] || levelStyles.intermediate;
+                    return (
+                      <div key={i} className={`flex items-center justify-between rounded-xl border bg-card p-3 border-l-4 ${
+                        rs.level === 'beginner' ? 'border-l-emerald-400' :
+                        rs.level === 'advanced' ? 'border-l-red-400' : 'border-l-amber-400'
+                      } hover:shadow-sm transition-shadow`}>
+                        <span className="text-sm font-semibold">{rs.skill?.name || 'N/A'}</span>
+                        <LevelBadge level={rs.level} />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
           </DialogBody>
         )}
-        <DialogFooter>
+        <DialogFooter className="border-t bg-muted/20 rounded-b-xl px-6 py-4">
           <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Đóng</Button>
+          {detailTemplate && (
+            <Button size="sm" className="gap-2" onClick={() => { setShowDetail(false); openEdit(detailTemplate); }}>
+              <Pencil className="w-3.5 h-3.5" /> Chỉnh sửa
+            </Button>
+          )}
         </DialogFooter>
       </Dialog>
 
       {/* Form Dialog */}
       <Dialog open={showForm} onClose={() => setShowForm(false)} className="max-w-2xl">
-        <DialogHeader onClose={() => setShowForm(false)}>
-          {editingId ? 'Chỉnh sửa mẫu' : 'Thêm mẫu công việc'}
-        </DialogHeader>
+        {/* Gradient header */}
+        <div className="relative overflow-hidden rounded-t-xl border-b bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-5">
+          <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                editingId ? 'bg-amber-500/15 text-amber-600' : 'bg-primary/15 text-primary'
+              }`}>
+                {editingId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-foreground leading-tight">
+                  {editingId ? 'Chỉnh sửa mẫu' : 'Thêm mẫu công việc'}
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {editingId ? 'Cập nhật thông tin mẫu công việc' : 'Tạo mẫu công việc mới cho hệ thống'}
+                </p>
+              </div>
+            </div>
+            <button onClick={() => setShowForm(false)}
+              className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
         <form onSubmit={handleSave}>
-          <DialogBody className="space-y-4 max-h-[65vh] overflow-y-auto">
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Tiêu đề *</label>
-              <Input value={formData.title} required
-                onChange={(e) => setFormData((f) => ({ ...f, title: e.target.value }))}
-                placeholder="VD: Frontend Developer" />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Hướng nghề nghiệp *</label>
-              <Input value={formData.careerPath} required
-                onChange={(e) => setFormData((f) => ({ ...f, careerPath: e.target.value }))}
-                placeholder="VD: Frontend Developer" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Lương tối thiểu (triệu)</label>
-                <Input type="number" min={0} value={formData.salaryRange.min}
-                  onChange={(e) => setFormData((f) => ({ ...f, salaryRange: { ...f.salaryRange, min: e.target.value } }))} />
+          <DialogBody className="space-y-5 max-h-[65vh] overflow-y-auto px-6 py-5">
+
+            {/* Section: Thông tin cơ bản */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[11px] font-bold text-primary uppercase tracking-widest">Thông tin cơ bản</span>
+                <div className="flex-1 h-px bg-border" />
               </div>
+
+              {/* Tiêu đề */}
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Lương tối đa (triệu)</label>
-                <Input type="number" min={0} value={formData.salaryRange.max}
-                  onChange={(e) => setFormData((f) => ({ ...f, salaryRange: { ...f.salaryRange, max: e.target.value } }))} />
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                  Tiêu đề <span className="text-red-500">*</span>
+                </label>
+                <Input value={formData.title} required
+                  onChange={(e) => setFormData((f) => ({ ...f, title: e.target.value }))}
+                  placeholder="VD: Frontend Developer"
+                  className="h-9" />
               </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Mô tả</label>
-              <Textarea value={formData.description} rows={2}
-                onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))} />
+
+              {/* Hướng nghề */}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                  Hướng nghề nghiệp <span className="text-red-500">*</span>
+                </label>
+                <Input value={formData.careerPath} required
+                  onChange={(e) => setFormData((f) => ({ ...f, careerPath: e.target.value }))}
+                  placeholder="VD: Frontend Developer"
+                  className="h-9" />
+              </div>
+
+              {/* Lương */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                    <Banknote className="w-3 h-3 inline mr-1 text-emerald-500" />
+                    Lương tối thiểu (triệu)
+                  </label>
+                  <Input type="number" min={0} value={formData.salaryRange.min}
+                    onChange={(e) => setFormData((f) => ({ ...f, salaryRange: { ...f.salaryRange, min: e.target.value } }))}
+                    className="h-9" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                    <Banknote className="w-3 h-3 inline mr-1 text-emerald-500" />
+                    Lương tối đa (triệu)
+                  </label>
+                  <Input type="number" min={0} value={formData.salaryRange.max}
+                    onChange={(e) => setFormData((f) => ({ ...f, salaryRange: { ...f.salaryRange, max: e.target.value } }))}
+                    className="h-9" />
+                </div>
+              </div>
+
+              {/* Mô tả */}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Mô tả</label>
+                <Textarea value={formData.description} rows={2}
+                  onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Mô tả về vị trí công việc..." />
+              </div>
             </div>
 
-            {/* Skills */}
-            <div className="border-t pt-4">
-              <h4 className="font-medium text-sm mb-3">Kỹ năng yêu cầu ({formData.requiredSkills.length})</h4>
-              <Select value="" onChange={(e) => { if (e.target.value) addSkillToForm(e.target.value); }} className="mb-3">
-                <option value="">+ Thêm kỹ năng...</option>
-                {allSkills
-                  .filter((s) => !formData.requiredSkills.some((rs) => rs.skill === s._id))
-                  .map((s) => (
-                    <option key={s._id} value={s._id}>{s.icon} {s.name}</option>
-                  ))}
-              </Select>
+            {/* Section: Kỹ năng yêu cầu */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Check className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">Kỹ năng yêu cầu</span>
+                {formData.requiredSkills.length > 0 && (
+                  <span className="text-[10px] text-white bg-emerald-500 px-1.5 py-0.5 rounded-full">
+                    {formData.requiredSkills.length}
+                  </span>
+                )}
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              {/* Skill picker */}
+              <CustomSelect
+                value=""
+                onChange={v => { if (v) addSkillToForm(v); }}
+                placeholder="+ Thêm kỹ năng..."
+                options={allSkills
+                  .filter(s => !formData.requiredSkills.some(rs => rs.skill === s._id))
+                  .map(s => ({ value: s._id, label: `${s.icon || ''} ${s.name}` }))}
+              />
+
+              {/* Skill list */}
               <div className="space-y-2">
                 {formData.requiredSkills.map((rs, i) => (
-                  <div key={rs.skill} className="flex items-center gap-2 rounded-lg border p-2.5 bg-muted/5">
-                    <span className="flex-1 text-sm font-medium">
-                      {rs.skillName || allSkills.find((s) => s._id === rs.skill)?.name || 'N/A'}
+                  <div key={rs.skill} className="flex items-center gap-2.5 rounded-xl border p-3 bg-muted/10 hover:bg-muted/20 transition-colors">
+                    <span className="flex-1 text-sm font-semibold truncate">
+                      {rs.skillName || allSkills.find(s => s._id === rs.skill)?.name || 'N/A'}
                     </span>
-                    <Select className="w-28 text-xs" value={rs.level}
-                      onChange={(e) => {
-                        setFormData((f) => ({
-                          ...f,
-                          requiredSkills: f.requiredSkills.map((s, j) => j === i ? { ...s, level: e.target.value } : s),
-                        }));
-                      }}>
-                      {Object.entries(levelLabels).map(([k, v]) => (
-                        <option key={k} value={k}>{v}</option>
-                      ))}
-                    </Select>
+                    <CustomSelect
+                      className="w-36 shrink-0"
+                      value={rs.level}
+                      onChange={v => setFormData(f => ({
+                        ...f,
+                        requiredSkills: f.requiredSkills.map((s, j) => j === i ? { ...s, level: v } : s),
+                      }))}
+                      options={[
+                        { value: 'beginner',     label: 'Cơ bản',    color: 'bg-emerald-500' },
+                        { value: 'intermediate', label: 'Trung bình', color: 'bg-amber-400' },
+                        { value: 'advanced',     label: 'Nâng cao',  color: 'bg-red-500' },
+                      ]}
+                    />
                     <button type="button" onClick={() => removeSkillFromForm(i)}
-                      className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-600">
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors shrink-0">
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
+                {formData.requiredSkills.length === 0 && (
+                  <div className="text-center py-6 rounded-xl border border-dashed border-border/60">
+                    <Briefcase className="w-6 h-6 text-muted-foreground/20 mx-auto mb-1.5" />
+                    <p className="text-xs text-muted-foreground">Chọn kỹ năng từ dropdown phía trên</p>
+                  </div>
+                )}
               </div>
             </div>
+
           </DialogBody>
-          <DialogFooter>
+          <DialogFooter className="border-t bg-muted/20 rounded-b-xl px-6 py-4">
             <Button type="button" variant="outline" size="sm" onClick={() => setShowForm(false)}>Hủy</Button>
-            <Button type="submit" size="sm" disabled={saving}>
-              {saving ? 'Đang lưu...' : editingId ? 'Cập nhật' : 'Tạo mới'}
+            <Button type="submit" size="sm" disabled={saving} className="gap-2 min-w-24">
+              {saving ? (
+                <><span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Đang lưu...</>
+              ) : editingId ? 'Cập nhật' : 'Tạo mới'}
             </Button>
           </DialogFooter>
         </form>
