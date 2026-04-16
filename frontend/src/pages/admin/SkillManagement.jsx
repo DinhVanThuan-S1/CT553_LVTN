@@ -32,6 +32,9 @@ const categoryLabels = {
   software_engineering: 'Kỹ thuật phần mềm',
   soft_skills: 'Kỹ năng mềm',
   networking: 'Mạng & Bảo mật',
+  game_development: 'Phát triển Game',
+  testing: 'Testing & QA',
+  embedded: 'Hệ thống nhúng',
   other: 'Khác',
 };
 
@@ -46,6 +49,9 @@ const categoryColors = {
   software_engineering: { bg: 'bg-orange-500/10', text: 'text-orange-600', border: 'border-orange-400/20' },
   soft_skills: { bg: 'bg-teal-500/10', text: 'text-teal-600', border: 'border-teal-400/20' },
   networking: { bg: 'bg-rose-500/10', text: 'text-rose-600', border: 'border-rose-400/20' },
+  game_development: { bg: 'bg-purple-500/10', text: 'text-purple-600', border: 'border-purple-400/20' },
+  testing: { bg: 'bg-cyan-500/10', text: 'text-cyan-600', border: 'border-cyan-400/20' },
+  embedded: { bg: 'bg-lime-500/10', text: 'text-lime-600', border: 'border-lime-400/20' },
   other: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' },
 };
 
