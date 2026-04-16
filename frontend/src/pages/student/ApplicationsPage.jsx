@@ -20,7 +20,7 @@ const statusConfig = {
   interview_scheduled: { label: 'Hẹn phỏng vấn', icon: Calendar, color: 'primary', bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary/30' },
   accepted: { label: 'Được nhận', icon: CheckCircle2, color: 'emerald', bg: 'bg-emerald-500/10', text: 'text-emerald-600', border: 'border-emerald-300/40' },
   rejected: { label: 'Từ chối', icon: XCircle, color: 'red', bg: 'bg-red-500/10', text: 'text-red-500', border: 'border-red-300/40' },
-  withdrawn: { label: 'Đã rút', icon: AlertTriangle, color: 'gray', bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-transparent' },
+  withdrawn: { label: 'Đã rút', icon: AlertTriangle, color: 'slate', bg: 'bg-slate-500/10', text: 'text-slate-500', border: 'border-slate-300/50' },
 };
 
 export default function ApplicationsPage() {
@@ -193,13 +193,13 @@ export default function ApplicationsPage() {
             const isInterview = app.status === 'interview_scheduled';
             return (
               <div key={app._id}
-                className={`group rounded-xl border bg-card transition-all duration-200 hover:shadow-md overflow-hidden border-l-4 ${isInterview ? 'border-primary/30' : 'hover:border-primary/20'} ${
-                  app.status === 'accepted' ? 'border-l-emerald-400'
-                  : app.status === 'rejected' ? 'border-l-red-400'
-                  : app.status === 'interview_scheduled' ? 'border-l-primary'
-                  : app.status === 'reviewed' ? 'border-l-blue-400'
-                  : 'border-l-amber-400/70'
-                }`}>
+                className={`group rounded-xl border bg-card transition-all duration-200 hover:shadow-md overflow-hidden border-l-4 ${isInterview ? 'border-primary/30' : 'hover:border-primary/20'} ${app.status === 'accepted' ? 'border-l-emerald-400'
+                    : app.status === 'rejected' ? 'border-l-red-400'
+                      : app.status === 'interview_scheduled' ? 'border-l-primary'
+                        : app.status === 'reviewed' ? 'border-l-blue-400'
+                          : app.status === 'withdrawn' ? 'border-l-slate-400'
+                            : 'border-l-amber-400/70'
+                  }`}>
 
                 <div className="p-4">
                   <div className="flex items-center gap-3">

@@ -210,8 +210,6 @@ export default function RoadmapDetailPage() {
           className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-          <Compass className="w-4 h-4" />
-          Quay lại gợi ý lộ trình
         </button>
       )}
       <div className="rounded-xl border bg-card overflow-hidden">
@@ -423,8 +421,8 @@ export default function RoadmapDetailPage() {
                 onClick={() => setReviewRating(star)}
                 className="p-0.5 transition-transform hover:scale-110">
                 <Star className={`w-6 h-6 ${(hoverStar || reviewRating) >= star
-                    ? 'text-amber-500 fill-amber-500'
-                    : 'text-muted-foreground/30'
+                  ? 'text-amber-500 fill-amber-500'
+                  : 'text-muted-foreground/30'
                   }`} />
               </button>
             ))}
@@ -544,10 +542,10 @@ export default function RoadmapDetailPage() {
                                 onClick={() => toggleSlot(day, time)}
                                 disabled={occupied}
                                 className={`w-full py-1.5 rounded text-[10px] font-medium transition-all ${occupied
-                                    ? 'bg-amber-500/15 text-amber-600 cursor-not-allowed border border-amber-500/20'
-                                    : selected
-                                      ? 'bg-primary text-white shadow-sm'
-                                      : 'bg-muted/30 text-muted-foreground hover:bg-primary/10'
+                                  ? 'bg-amber-500/15 text-amber-600 cursor-not-allowed border border-amber-500/20'
+                                  : selected
+                                    ? 'bg-primary text-white shadow-sm'
+                                    : 'bg-muted/30 text-muted-foreground hover:bg-primary/10'
                                   }`}
                               >
                                 {occupied ? '🔒' : selected ? '✓' : '—'}
