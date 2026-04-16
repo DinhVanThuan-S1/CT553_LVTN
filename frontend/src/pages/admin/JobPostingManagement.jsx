@@ -9,12 +9,13 @@ import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Select';
 import { Textarea } from '../../components/ui/Textarea';
-import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
+import { Dialog, DialogBody, DialogHeader, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
 import {
   Search, Eye, CheckCircle2, XCircle, ClipboardList,
   ChevronLeft, ChevronRight, Building2, MapPin, Clock, Banknote,
   Briefcase, AlertTriangle, SlidersHorizontal, ChevronDown,
+  X, User, Calendar, FileText, Star,
 } from 'lucide-react';
 
 const statusLabels = { pending: 'Chờ duyệt', approved: 'Đã duyệt', rejected: 'Từ chối', draft: 'Nháp' };
@@ -336,55 +337,109 @@ export default function JobPostingManagement() {
 
       {/* Detail Dialog */}
       <Dialog open={showDetail} onClose={() => setShowDetail(false)} className="max-w-2xl">
-        <DialogHeader onClose={() => setShowDetail(false)}>Chi tiết Tin tuyển dụng</DialogHeader>
+        {/* Gradient header — status-aware color */}
         {detailJob && (
-          <DialogBody className="space-y-4">
-            {/* Hero card */}
-            <div className="flex items-start gap-4 p-4 rounded-xl bg-muted/20">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${detailJob.status === 'pending' ? 'bg-amber-500/10' : 'bg-primary/10'
-                }`}>
-                <Briefcase className={`w-6 h-6 ${detailJob.status === 'pending' ? 'text-amber-600' : 'text-primary'}`} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-lg leading-snug">{detailJob.title}</h3>
-                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                  <StatusBadge status={detailJob.status} />
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Building2 className="w-3.5 h-3.5" /> {detailJob.company?.name}
-                  </span>
-                  {detailJob.location && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" /> {detailJob.location}
+          <div className={`relative overflow-hidden rounded-t-xl border-b px-6 py-5 ${detailJob.status === 'pending'
+              ? 'bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent'
+              : detailJob.status === 'approved'
+                ? 'bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent'
+                : detailJob.status === 'rejected'
+                  ? 'bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent'
+                  : 'bg-gradient-to-br from-primary/10 via-primary/5 to-transparent'
+            }`}>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${detailJob.status === 'pending' ? 'bg-amber-500/15 border-amber-400/20 text-amber-600' :
+                    detailJob.status === 'approved' ? 'bg-emerald-500/15 border-emerald-400/20 text-emerald-600' :
+                      detailJob.status === 'rejected' ? 'bg-red-500/15 border-red-400/20 text-red-600' :
+                        'bg-primary/15 border-primary/10 text-primary'
+                  }`}>
+                  <Briefcase className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-foreground leading-tight">{detailJob.title}</h2>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <StatusBadge status={detailJob.status} />
+                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <Building2 className="w-3 h-3" /> {detailJob.company?.name}
                     </span>
-                  )}
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Banknote className="w-3.5 h-3.5" />
-                    {detailJob.salaryRange?.min && detailJob.salaryRange?.max
-                      ? `${detailJob.salaryRange.min}-${detailJob.salaryRange.max}M VNĐ`
-                      : 'Thương lượng'}
-                  </span>
+                    {detailJob.location && (
+                      <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                        <MapPin className="w-3 h-3" /> {detailJob.location}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
+              <button onClick={() => setShowDetail(false)}
+                className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors self-start">
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            <div>
-              <h4 className="font-semibold text-sm mb-1.5">Mô tả công việc</h4>
-              <p className="text-sm text-muted-foreground whitespace-pre-line">{detailJob.description || 'Chưa có mô tả'}</p>
+            {/* Meta bar in header */}
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/40">
+              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Banknote className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="font-semibold text-emerald-700">
+                  {detailJob.salaryRange?.min && detailJob.salaryRange?.max
+                    ? `${detailJob.salaryRange.min}–${detailJob.salaryRange.max}M VNĐ`
+                    : 'Thương lượng'}
+                </span>
+              </span>
+              {detailJob.jobType && (
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3" /> {detailJob.jobType}
+                </span>
+              )}
+              <span className="text-[11px] text-muted-foreground flex items-center gap-1 ml-auto">
+                <Calendar className="w-3 h-3" />
+                {new Date(detailJob.createdAt).toLocaleDateString('vi-VN')}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {detailJob && (
+          <DialogBody className="max-h-[62vh] overflow-y-auto px-6 py-5 space-y-5">
+
+            {/* Mô tả công việc */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <FileText className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[11px] font-bold text-primary uppercase tracking-widest">Mô tả công việc</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+              <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed pl-1">
+                {detailJob.description || 'Chưa có mô tả'}
+              </p>
             </div>
 
+            {/* Yêu cầu */}
             {detailJob.requirements && (
-              <div>
-                <h4 className="font-semibold text-sm mb-1.5">Yêu cầu</h4>
-                <p className="text-sm text-muted-foreground whitespace-pre-line">{detailJob.requirements}</p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="text-[11px] font-bold text-amber-600 uppercase tracking-widest">Yêu cầu</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+                <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed pl-1">{detailJob.requirements}</p>
               </div>
             )}
 
+            {/* Kỹ năng */}
             {detailJob.requiredSkills?.length > 0 && (
-              <div>
-                <h4 className="font-semibold text-sm mb-1.5">Kỹ năng yêu cầu</h4>
-                <div className="flex flex-wrap gap-1.5">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Star className="w-3.5 h-3.5 text-indigo-500" />
+                  <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-widest">Kỹ năng yêu cầu</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{detailJob.requiredSkills.length}</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+                <div className="flex flex-wrap gap-1.5 pl-1">
                   {detailJob.requiredSkills.map((rs, i) => (
-                    <span key={i} className="text-[10px] font-medium bg-primary/8 text-primary px-2.5 py-1 rounded-full border border-primary/15">
+                    <span key={i} className="text-[10px] font-semibold bg-primary/8 text-primary px-2.5 py-1 rounded-full border border-primary/15">
                       {rs.skill?.name || 'N/A'}
                     </span>
                   ))}
@@ -392,29 +447,48 @@ export default function JobPostingManagement() {
               </div>
             )}
 
-            <div className="text-xs text-muted-foreground pt-3 border-t space-y-0.5">
-              <p>Đăng bởi: <span className="font-medium">{detailJob.employer?.fullName}</span> ({detailJob.employer?.email})</p>
-              <p>Ngày tạo: {new Date(detailJob.createdAt).toLocaleString('vi-VN')}</p>
-              {detailJob.rejectionReason && (
-                <p className="text-red-500 mt-1">Lý do từ chối: {detailJob.rejectionReason}</p>
-              )}
+            {/* Lý do từ chối */}
+            {detailJob.rejectionReason && (
+              <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-red-500/5 border border-red-400/20">
+                <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-[11px] font-bold text-red-600 uppercase tracking-widest mb-1">Lý do từ chối</p>
+                  <p className="text-sm text-red-700">{detailJob.rejectionReason}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Meta footer: Đăng bởi */}
+            <div className="flex items-center gap-2.5 pt-3 border-t">
+              <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0">
+                <User className="w-3.5 h-3.5 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Đăng bởi: <span className="font-semibold text-foreground">{detailJob.employer?.fullName}</span>
+                  <span className="text-muted-foreground"> ({detailJob.employer?.email})</span>
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {new Date(detailJob.createdAt).toLocaleString('vi-VN')}
+                </p>
+              </div>
             </div>
+
           </DialogBody>
         )}
-        <DialogFooter>
+
+        <DialogFooter className="border-t bg-muted/20 rounded-b-xl px-6 py-4">
+          <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Đóng</Button>
           {detailJob?.status === 'pending' && (
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50"
+              <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50 gap-1.5"
                 onClick={() => { setShowDetail(false); openRejectDialog(detailJob._id); }}>
-                <XCircle className="w-4 h-4 mr-1" /> Từ chối
+                <XCircle className="w-3.5 h-3.5" /> Từ chối
               </Button>
-              <Button size="sm" onClick={() => handleApprove(detailJob._id)} disabled={processing}>
-                <CheckCircle2 className="w-4 h-4 mr-1" /> Duyệt tin
+              <Button size="sm" className="gap-1.5" onClick={() => handleApprove(detailJob._id)} disabled={processing}>
+                <CheckCircle2 className="w-3.5 h-3.5" /> Duyệt tin
               </Button>
             </div>
-          )}
-          {detailJob?.status !== 'pending' && (
-            <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Đóng</Button>
           )}
         </DialogFooter>
       </Dialog>
