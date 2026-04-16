@@ -411,6 +411,8 @@ export default function WelcomePage() {
               <Link
                 key={job._id}
                 to="/jobs"
+                state={{ openJobId: job._id }}
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 className="group relative rounded-xl border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden border-l-4 border-l-primary/50 block"
               >
                 <div className="p-5">

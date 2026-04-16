@@ -99,6 +99,20 @@ export default function JobListPage() {
 
   useEffect(() => { loadJobs(); }, [loadJobs]);
 
+  // Auto-open job detail khi navigate từ WelcomePage
+  useEffect(() => {
+    if (!location.state?.openJobId) return;
+    const jobId = location.state.openJobId;
+    // Xóa state khỏi history để reload không mở lại
+    window.history.replaceState({}, '');
+    api.get(`/jobs/${jobId}`)
+      .then(({ data }) => {
+        setSelectedJob(data.data);
+        setShowDetail(true);
+      })
+      .catch(() => { /* fail silently */ });
+  }, [location.state?.openJobId]);
+
   useEffect(() => {
     if (!isAuthenticated) return;
     api.get('/student/favorites', { params: { type: 'job' } })
