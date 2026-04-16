@@ -7,14 +7,14 @@ import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
-import { Select } from '../../components/ui/Select';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Textarea } from '../../components/ui/Textarea';
-import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
+import { Dialog, DialogBody, DialogHeader, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
 import {
   Search, Plus, Pencil, Trash2, Eye, BookOpen,
-  ChevronLeft, ChevronRight, AlertCircle, Info,
-  SlidersHorizontal, ChevronDown,
+  ChevronLeft, ChevronRight, AlertCircle, Info, X,
+  SlidersHorizontal, ChevronDown, GraduationCap, Hash, Link2,
 } from 'lucide-react';
 
 // === Labels & Badge maps ===
@@ -213,10 +213,9 @@ export default function CourseManagement() {
           <button
             type="button"
             onClick={() => { setShowTypeMenu(v => !v); setShowCatMenu(false); }}
-            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all min-w-[140px] ${
-              showTypeMenu ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all min-w-[140px] ${showTypeMenu ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
                 : 'border-input bg-background text-foreground hover:border-primary/60'
-            }`}
+              }`}
           >
             <span className="flex-1 text-left truncate">
               {filterType === '' ? 'Tất cả Loại' : courseTypeLabels[filterType]}
@@ -229,9 +228,8 @@ export default function CourseManagement() {
                 {[{ value: '', label: 'Tất cả Loại' }, ...Object.entries(courseTypeLabels).map(([k, v]) => ({ value: k, label: v }))].map(({ value, label }) => (
                   <button key={value} type="button"
                     onClick={() => { setFilterType(value); setPagination((p) => ({ ...p, page: 1 })); setShowTypeMenu(false); }}
-                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
-                      filterType === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
-                    }`}>
+                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${filterType === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
+                      }`}>
                     {filterType === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
                     <span className={filterType === value ? '' : 'ml-3.5'}>{label}</span>
                   </button>
@@ -246,10 +244,9 @@ export default function CourseManagement() {
           <button
             type="button"
             onClick={() => { setShowCatMenu(v => !v); setShowTypeMenu(false); }}
-            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all min-w-[160px] ${
-              showCatMenu ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all min-w-[160px] ${showCatMenu ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
                 : 'border-input bg-background text-foreground hover:border-primary/60'
-            }`}
+              }`}
           >
             <span className="flex-1 text-left truncate">
               {filterCategory === '' ? 'Tất cả Phân Loại' : courseCategoryLabels[filterCategory]}
@@ -262,9 +259,8 @@ export default function CourseManagement() {
                 {[{ value: '', label: 'Tất cả Phân Loại' }, ...Object.entries(courseCategoryLabels).map(([k, v]) => ({ value: k, label: v }))].map(({ value, label }) => (
                   <button key={value} type="button"
                     onClick={() => { setFilterCategory(value); setPagination((p) => ({ ...p, page: 1 })); setShowCatMenu(false); }}
-                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
-                      filterCategory === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
-                    }`}>
+                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${filterCategory === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
+                      }`}>
                     {filterCategory === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
                     <span className={filterCategory === value ? '' : 'ml-3.5'}>{label}</span>
                   </button>
@@ -408,53 +404,88 @@ export default function CourseManagement() {
 
       {/* ===== Detail Dialog ===== */}
       <Dialog open={showDetail} onClose={() => setShowDetail(false)} className="max-w-2xl">
-        <DialogHeader onClose={() => setShowDetail(false)}>
-          Chi tiết Học phần
-        </DialogHeader>
+        {/* Gradient header */}
         {detailCourse && (
-          <DialogBody className="space-y-5">
-            {/* Header info */}
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold">{detailCourse.name}</h3>
-                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                  <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{detailCourse.code}</span>
-                  <Badge variant="secondary">{detailCourse.credits} tín chỉ</Badge>
-                  <Badge variant={courseTypeBadge[detailCourse.courseType]}>
-                    {courseTypeLabels[detailCourse.courseType]}
-                  </Badge>
-                  <Badge variant={courseCategoryBadge[detailCourse.courseCategory]}>
-                    {courseCategoryLabels[detailCourse.courseCategory] || '—'}
-                  </Badge>
+          <div className="relative overflow-hidden rounded-t-xl border-b bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-5">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0 border border-primary/10">
+                  <BookOpen className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-foreground leading-tight">{detailCourse.name}</h2>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span className="font-mono text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                      {detailCourse.code}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground font-medium">
+                      {detailCourse.credits} tín chỉ
+                    </span>
+                    {/* Course type badge */}
+                    <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full border ${detailCourse.courseType === 'required'
+                        ? 'bg-primary/10 text-primary border-primary/20'
+                        : 'bg-amber-500/10 text-amber-600 border-amber-400/20'
+                      }`}>
+                      {courseTypeLabels[detailCourse.courseType]}
+                    </span>
+                    {/* Category badge */}
+                    <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full border ${detailCourse.courseCategory === 'general' ? 'bg-muted text-muted-foreground border-border' :
+                        detailCourse.courseCategory === 'foundation' ? 'bg-blue-500/10 text-blue-600 border-blue-400/20' :
+                          'bg-emerald-500/10 text-emerald-600 border-emerald-400/20'
+                      }`}>
+                      {courseCategoryLabels[detailCourse.courseCategory] || '—'}
+                    </span>
+                  </div>
                 </div>
               </div>
+              <button onClick={() => setShowDetail(false)}
+                className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
             </div>
+          </div>
+        )}
 
-            {/* Grid info */}
+        {detailCourse && (
+          <DialogBody className="max-h-[62vh] overflow-y-auto px-6 py-5 space-y-5">
+
+            {/* Tiên quyết / Song hành */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg border p-3">
-                <p className="text-xs text-muted-foreground mb-1">Tiên quyết</p>
+              <div className="rounded-xl border bg-card p-3.5">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <Link2 className="w-3.5 h-3.5 text-primary" />
+                  <p className="text-[11px] font-bold text-primary uppercase tracking-widest">Tiên quyết</p>
+                </div>
                 <p className="text-sm font-medium">
-                  {detailCourse.prerequisites?.length > 0 ? detailCourse.prerequisites.join(', ') : 'Không có'}
+                  {detailCourse.prerequisites?.length > 0
+                    ? detailCourse.prerequisites.map(c => (
+                      <span key={c} className="inline-block font-mono text-[11px] bg-primary/8 text-primary px-1.5 py-0.5 rounded mr-1 mb-1">{c}</span>
+                    ))
+                    : <span className="text-muted-foreground text-sm">Không có</span>}
                 </p>
               </div>
-              <div className="rounded-lg border p-3">
-                <p className="text-xs text-muted-foreground mb-1">Song hành</p>
+              <div className="rounded-xl border bg-card p-3.5">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <Link2 className="w-3.5 h-3.5 text-amber-500" />
+                  <p className="text-[11px] font-bold text-amber-600 uppercase tracking-widest">Song hành</p>
+                </div>
                 <p className="text-sm font-medium">
-                  {detailCourse.corequisites?.length > 0 ? detailCourse.corequisites.join(', ') : 'Không có'}
+                  {detailCourse.corequisites?.length > 0
+                    ? detailCourse.corequisites.map(c => (
+                      <span key={c} className="inline-block font-mono text-[11px] bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded mr-1 mb-1">{c}</span>
+                    ))
+                    : <span className="text-muted-foreground text-sm">Không có</span>}
                 </p>
               </div>
             </div>
 
-            {/* Condition */}
+            {/* Điều kiện đăng ký */}
             {detailCourse.condition && (
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+              <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20">
                 <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-xs font-medium text-amber-600 mb-0.5">Điều kiện đăng ký</p>
+                  <p className="text-[11px] font-bold text-amber-600 uppercase tracking-widest mb-1">Điều kiện đăng ký</p>
                   <p className="text-sm">{detailCourse.condition}</p>
                 </div>
               </div>
@@ -462,207 +493,309 @@ export default function CourseManagement() {
 
             {/* GPA flags */}
             {(detailCourse.excludeFromCumulativeGPA || detailCourse.excludeFromSemesterGPA) && (
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+              <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-blue-500/5 border border-blue-500/20">
                 <Info className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
-                <div className="text-sm space-y-0.5">
+                <div className="text-sm space-y-1">
+                  <p className="text-[11px] font-bold text-blue-600 uppercase tracking-widest mb-1">Tùy chọn GPA</p>
                   {detailCourse.excludeFromCumulativeGPA && (
-                    <p>• Không tính vào GPA tích lũy</p>
+                    <p className="text-muted-foreground">• Không tính vào GPA tích lũy</p>
                   )}
                   {detailCourse.excludeFromSemesterGPA && (
-                    <p>• Không tính vào GPA học kỳ</p>
+                    <p className="text-muted-foreground">• Không tính vào GPA học kỳ</p>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Description */}
+            {/* Mô tả */}
             {detailCourse.description && (
-              <div>
-                <h4 className="text-sm font-medium mb-1.5">Mô tả</h4>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{detailCourse.description}</p>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Mô tả</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed pl-1">{detailCourse.description}</p>
               </div>
             )}
 
-            {/* Knowledge */}
-            <div className="grid grid-cols-2 gap-4">
-              {detailCourse.theoryKnowledge && (
-                <div>
-                  <h4 className="text-sm font-medium mb-1.5">Kiến thức lý thuyết</h4>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{detailCourse.theoryKnowledge}</p>
-                </div>
-              )}
-              {detailCourse.practiceKnowledge && (
-                <div>
-                  <h4 className="text-sm font-medium mb-1.5">Kiến thức thực hành</h4>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{detailCourse.practiceKnowledge}</p>
-                </div>
-              )}
-            </div>
+            {/* Kiến thức */}
+            {(detailCourse.theoryKnowledge || detailCourse.practiceKnowledge) && (
+              <div className="grid grid-cols-2 gap-4">
+                {detailCourse.theoryKnowledge && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <GraduationCap className="w-3 h-3 text-indigo-500" />
+                      <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-widest">Lý thuyết</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{detailCourse.theoryKnowledge}</p>
+                  </div>
+                )}
+                {detailCourse.practiceKnowledge && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Hash className="w-3 h-3 text-emerald-500" />
+                      <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">Thực hành</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{detailCourse.practiceKnowledge}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </DialogBody>
         )}
-        <DialogFooter>
+
+        <DialogFooter className="border-t bg-muted/20 rounded-b-xl px-6 py-4">
           <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Đóng</Button>
-          <Button size="sm" onClick={() => { setShowDetail(false); openEdit(detailCourse); }}>
-            <Pencil className="w-3.5 h-3.5 mr-1.5" /> Chỉnh sửa
-          </Button>
+          {detailCourse && (
+            <Button size="sm" className="gap-2" onClick={() => { setShowDetail(false); openEdit(detailCourse); }}>
+              <Pencil className="w-3.5 h-3.5" /> Chỉnh sửa
+            </Button>
+          )}
         </DialogFooter>
       </Dialog>
 
       {/* ===== Form Dialog ===== */}
       <Dialog open={showForm} onClose={() => setShowForm(false)} className="max-w-2xl">
-        <DialogHeader onClose={() => setShowForm(false)}>
-          {editingId ? 'Chỉnh sửa học phần' : 'Thêm học phần mới'}
-        </DialogHeader>
+        {/* Gradient header */}
+        <div className="relative overflow-hidden rounded-t-xl border-b bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-5">
+          <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${editingId ? 'bg-amber-500/15 text-amber-600' : 'bg-primary/15 text-primary'
+                }`}>
+                {editingId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-foreground leading-tight">
+                  {editingId ? 'Chỉnh sửa học phần' : 'Thêm học phần mới'}
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {editingId ? 'Cập nhật thông tin học phần trong chương trình' : 'Tạo học phần mới cho chương trình đào tạo'}
+                </p>
+              </div>
+            </div>
+            <button onClick={() => setShowForm(false)}
+              className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
         <form onSubmit={handleSave}>
-          <DialogBody className="space-y-4">
-            {/* Row 1: Code + Credits */}
-            <div className="grid grid-cols-2 gap-4">
+          <DialogBody className="space-y-5 max-h-[68vh] overflow-y-auto px-6 py-5">
+
+            {/* Section: Thông tin cơ bản */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[11px] font-bold text-primary uppercase tracking-widest">Thông tin cơ bản</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              {/* Mã HP + Tín chỉ */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                    Mã học phần <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={formData.code}
+                    onChange={(e) => setFormData((f) => ({ ...f, code: e.target.value }))}
+                    placeholder="VD: CT101"
+                    required
+                    className="h-9 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                    Tín chỉ <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="number" min={1} max={30}
+                    value={formData.credits}
+                    onChange={(e) => setFormData((f) => ({ ...f, credits: e.target.value }))}
+                    required
+                    className="h-9"
+                  />
+                </div>
+              </div>
+
+              {/* Tên học phần */}
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Mã học phần *</label>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                  Tên học phần <span className="text-red-500">*</span>
+                </label>
                 <Input
-                  value={formData.code}
-                  onChange={(e) => setFormData((f) => ({ ...f, code: e.target.value }))}
-                  placeholder="VD: CT101"
+                  value={formData.name}
+                  onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="VD: Nhập môn lập trình"
                   required
+                  className="h-9"
                 />
               </div>
+
+              {/* Loại + Phân loại */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Loại học phần</label>
+                  <CustomSelect
+                    value={formData.courseType}
+                    onChange={v => setFormData(f => ({ ...f, courseType: v }))}
+                    options={[
+                      { value: 'required', label: 'Bắt buộc', color: 'bg-primary' },
+                      { value: 'elective', label: 'Tự chọn', color: 'bg-amber-400' },
+                    ]}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Phân loại</label>
+                  <CustomSelect
+                    value={formData.courseCategory}
+                    onChange={v => setFormData(f => ({ ...f, courseCategory: v }))}
+                    options={[
+                      { value: 'general', label: 'Đại cương', color: 'bg-muted-foreground' },
+                      { value: 'foundation', label: 'Cơ sở ngành', color: 'bg-blue-500' },
+                      { value: 'specialized', label: 'Chuyên ngành', color: 'bg-emerald-500' },
+                    ]}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section: Điều kiện */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Link2 className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-[11px] font-bold text-amber-600 uppercase tracking-widest">Điều kiện & Liên kết</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              {/* Tiên quyết + Song hành */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Tiên quyết</label>
+                  <Input
+                    value={formData.prerequisites}
+                    onChange={(e) => setFormData((f) => ({ ...f, prerequisites: e.target.value }))}
+                    placeholder="CT101, CT177"
+                    className="h-9 font-mono text-xs"
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">Phân cách bằng dấu phẩy</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Song hành</label>
+                  <Input
+                    value={formData.corequisites}
+                    onChange={(e) => setFormData((f) => ({ ...f, corequisites: e.target.value }))}
+                    className="h-9 font-mono text-xs"
+                    placeholder="VD: CT202"
+                  />
+                </div>
+              </div>
+
+              {/* Điều kiện đăng ký */}
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Số tín chỉ *</label>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Điều kiện đăng ký</label>
                 <Input
-                  type="number" min={1} max={30}
-                  value={formData.credits}
-                  onChange={(e) => setFormData((f) => ({ ...f, credits: e.target.value }))}
-                  required
+                  value={formData.condition}
+                  onChange={(e) => setFormData((f) => ({ ...f, condition: e.target.value }))}
+                  placeholder="VD: Tích lũy >= 125 TC"
+                  className="h-9"
                 />
+                <p className="text-[11px] text-muted-foreground mt-1">VD: CT553E cần tích lũy &ge; 125 tín chỉ</p>
               </div>
             </div>
 
-            {/* Row 2: Name */}
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Tên học phần *</label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
-                placeholder="VD: Nhập môn lập trình"
-                required
-              />
-            </div>
-
-            {/* Row 3: courseType + courseCategory */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Loại học phần</label>
-                <Select
-                  value={formData.courseType}
-                  onChange={(e) => setFormData((f) => ({ ...f, courseType: e.target.value }))}
-                >
-                  {Object.entries(courseTypeLabels).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
-                  ))}
-                </Select>
+            {/* Section: Tùy chọn GPA */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-3.5 h-3.5 text-blue-500" />
+                <span className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">Tùy chọn GPA</span>
+                <div className="flex-1 h-px bg-border" />
               </div>
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Phân loại</label>
-                <Select
-                  value={formData.courseCategory}
-                  onChange={(e) => setFormData((f) => ({ ...f, courseCategory: e.target.value }))}
-                >
-                  {Object.entries(courseCategoryLabels).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
-            {/* Row 4: Prerequisites + Corequisites */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Tiên quyết</label>
-                <Input
-                  value={formData.prerequisites}
-                  onChange={(e) => setFormData((f) => ({ ...f, prerequisites: e.target.value }))}
-                  placeholder="CT101, CT177"
-                />
-                <p className="text-xs text-muted-foreground mt-1">Phân cách bằng dấu phẩy</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Song hành</label>
-                <Input
-                  value={formData.corequisites}
-                  onChange={(e) => setFormData((f) => ({ ...f, corequisites: e.target.value }))}
-                />
+              <div className="rounded-xl border bg-card/50 p-4 space-y-3">
+                {/* Toggle: GPA tích lũy */}
+                <label className="flex items-center justify-between cursor-pointer group">
+                  <div>
+                    <p className="text-sm font-medium group-hover:text-foreground transition-colors">Không tính vào GPA tích lũy</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Không ảnh hưởng điểm trung bình toàn khóa</p>
+                  </div>
+                  <div
+                    onClick={() => setFormData(f => ({ ...f, excludeFromCumulativeGPA: !f.excludeFromCumulativeGPA }))}
+                    className={`relative w-10 h-5.5 rounded-full transition-colors cursor-pointer shrink-0 ${formData.excludeFromCumulativeGPA ? 'bg-primary' : 'bg-muted-foreground/30'
+                      }`}
+                    style={{ height: '22px', width: '40px' }}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${formData.excludeFromCumulativeGPA ? 'translate-x-[18px]' : 'translate-x-0'
+                      }`} />
+                  </div>
+                </label>
+                <div className="h-px bg-border" />
+                {/* Toggle: GPA học kỳ */}
+                <label className="flex items-center justify-between cursor-pointer group">
+                  <div>
+                    <p className="text-sm font-medium group-hover:text-foreground transition-colors">Không tính vào GPA học kỳ</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Không ảnh hưởng điểm trung bình học kỳ đó</p>
+                  </div>
+                  <div
+                    onClick={() => setFormData(f => ({ ...f, excludeFromSemesterGPA: !f.excludeFromSemesterGPA }))}
+                    className={`relative rounded-full transition-colors cursor-pointer shrink-0 ${formData.excludeFromSemesterGPA ? 'bg-primary' : 'bg-muted-foreground/30'
+                      }`}
+                    style={{ height: '22px', width: '40px' }}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${formData.excludeFromSemesterGPA ? 'translate-x-[18px]' : 'translate-x-0'
+                      }`} />
+                  </div>
+                </label>
               </div>
             </div>
 
-            {/* Row 5: Condition */}
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Điều kiện đăng ký</label>
-              <Input
-                value={formData.condition}
-                onChange={(e) => setFormData((f) => ({ ...f, condition: e.target.value }))}
-                placeholder="VD: Tích lũy >= 125 TC"
-              />
-              <p className="text-xs text-muted-foreground mt-1">VD: CT553E cần tích lũy &ge; 125 tín chỉ</p>
-            </div>
-
-            {/* Row 6: GPA checkboxes */}
-            <div className="rounded-lg border p-4 space-y-3">
-              <p className="text-sm font-medium">Tùy chọn tính GPA</p>
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={formData.excludeFromCumulativeGPA}
-                  onChange={(e) => setFormData((f) => ({ ...f, excludeFromCumulativeGPA: e.target.checked }))}
-                  className="w-4 h-4 rounded border-border text-primary focus:ring-primary accent-[hsl(var(--primary))]"
-                />
-                <span className="text-sm group-hover:text-foreground text-muted-foreground">Không tính vào GPA tích lũy</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={formData.excludeFromSemesterGPA}
-                  onChange={(e) => setFormData((f) => ({ ...f, excludeFromSemesterGPA: e.target.checked }))}
-                  className="w-4 h-4 rounded border-border text-primary focus:ring-primary accent-[hsl(var(--primary))]"
-                />
-                <span className="text-sm group-hover:text-foreground text-muted-foreground">Không tính vào GPA học kỳ</span>
-              </label>
-            </div>
-
-            {/* Row 7: Description */}
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Mô tả</label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Mô tả học phần..."
-                rows={3}
-              />
-            </div>
-
-            {/* Row 8: Theory + Practice */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Section: Mô tả */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Mô tả & Kiến thức</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Kiến thức lý thuyết</label>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Mô tả học phần</label>
                 <Textarea
-                  value={formData.theoryKnowledge}
-                  onChange={(e) => setFormData((f) => ({ ...f, theoryKnowledge: e.target.value }))}
-                  rows={2}
+                  value={formData.description}
+                  onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Mô tả nội dung và mục tiêu học phần..."
+                  rows={3}
                 />
               </div>
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Kiến thức thực hành</label>
-                <Textarea
-                  value={formData.practiceKnowledge}
-                  onChange={(e) => setFormData((f) => ({ ...f, practiceKnowledge: e.target.value }))}
-                  rows={2}
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Kiến thức lý thuyết</label>
+                  <Textarea
+                    value={formData.theoryKnowledge}
+                    onChange={(e) => setFormData((f) => ({ ...f, theoryKnowledge: e.target.value }))}
+                    rows={2}
+                    placeholder="Nội dung lý thuyết chính..."
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Kiến thức thực hành</label>
+                  <Textarea
+                    value={formData.practiceKnowledge}
+                    onChange={(e) => setFormData((f) => ({ ...f, practiceKnowledge: e.target.value }))}
+                    rows={2}
+                    placeholder="Nội dung thực hành chính..."
+                  />
+                </div>
               </div>
             </div>
+
           </DialogBody>
-          <DialogFooter>
+          <DialogFooter className="border-t bg-muted/20 rounded-b-xl px-6 py-4">
             <Button type="button" variant="outline" size="sm" onClick={() => setShowForm(false)}>Hủy</Button>
-            <Button type="submit" size="sm" disabled={saving}>
-              {saving ? 'Đang lưu...' : editingId ? 'Cập nhật' : 'Tạo mới'}
+            <Button type="submit" size="sm" disabled={saving} className="gap-2 min-w-24">
+              {saving ? (
+                <><span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Đang lưu...</>
+              ) : editingId ? 'Cập nhật' : 'Tạo mới'}
             </Button>
           </DialogFooter>
         </form>
