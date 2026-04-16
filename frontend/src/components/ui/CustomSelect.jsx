@@ -2,17 +2,21 @@
  * CustomSelect - SkillMap-style dropdown
  * Dùng chung cho các trang employer
  * Dùng position:fixed để thoát khỏi overflow:hidden/auto
+ *
+ * Options shape: { value, label, icon?, color? }
+ *   icon  — ReactNode hiển thị trước label (trong trigger & panel)
+ *   color — className cho dot accent (vd: 'bg-emerald-500')
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 
 /**
- * @param {string}   value      - giá trị hiện tại
- * @param {Function} onChange   - (value: string) => void
- * @param {Array}    options    - [{ value, label }]
+ * @param {string}   value       - giá trị hiện tại
+ * @param {Function} onChange    - (value: string) => void
+ * @param {Array}    options     - [{ value, label, icon?, color? }]
  * @param {string}   placeholder - text khi chưa chọn
- * @param {string}   className  - override class ngoài wrapper
+ * @param {string}   className   - override class ngoài wrapper
  */
 export function CustomSelect({ value, onChange, options = [], placeholder, className = '' }) {
   const [open, setOpen] = useState(false);
@@ -58,6 +62,13 @@ export function CustomSelect({ value, onChange, options = [], placeholder, class
             : 'border-input bg-background text-foreground hover:border-primary/60'
         }`}
       >
+        {/* Icon or color dot from selected option */}
+        {selected?.color && (
+          <span className={`w-2 h-2 rounded-full shrink-0 ${selected.color}`} />
+        )}
+        {selected?.icon && !selected?.color && (
+          <span className="shrink-0 flex items-center">{selected.icon}</span>
+        )}
         <span className={`flex-1 text-left truncate ${!selected && placeholder ? 'text-muted-foreground font-normal' : ''}`}>
           {selected?.label ?? placeholder ?? value}
         </span>
@@ -79,21 +90,35 @@ export function CustomSelect({ value, onChange, options = [], placeholder, class
           className="bg-card border border-border/60 rounded-xl shadow-xl overflow-hidden animate-fade-in"
         >
           <div className="py-1.5 max-h-60 overflow-y-auto">
-            {options.map(({ value: v, label }) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => { onChange(v); setOpen(false); }}
-                className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
-                  value === v
-                    ? 'bg-primary/10 text-primary font-semibold'
-                    : 'text-foreground hover:bg-muted/50'
-                }`}
-              >
-                {value === v && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
-                <span className={value === v ? '' : 'ml-3.5'}>{label}</span>
-              </button>
-            ))}
+            {options.map(({ value: v, label, icon, color }) => {
+              const isSelected = value === v;
+              return (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => { onChange(v); setOpen(false); }}
+                  className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2.5 ${
+                    isSelected
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : 'text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  {/* Color dot */}
+                  {color && <span className={`w-2 h-2 rounded-full shrink-0 ${color}`} />}
+                  {/* Icon node */}
+                  {icon && !color && <span className="shrink-0 flex items-center w-4">{icon}</span>}
+                  {/* No icon/color: indent like before */}
+                  {!icon && !color && <span className="w-4 shrink-0 flex items-center justify-center">
+                    {isSelected && <Check className="w-3 h-3" />}
+                  </span>}
+                  <span className="flex-1">{label}</span>
+                  {/* Checkmark when has icon/color */}
+                  {(icon || color) && isSelected && (
+                    <Check className="w-3.5 h-3.5 shrink-0" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>,
         document.body
@@ -101,4 +126,3 @@ export function CustomSelect({ value, onChange, options = [], placeholder, class
     </div>
   );
 }
-

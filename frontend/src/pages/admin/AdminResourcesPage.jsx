@@ -9,9 +9,9 @@ import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
-import { Select } from '../../components/ui/Select';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Textarea } from '../../components/ui/Textarea';
-import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
+import { Dialog, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../components/ui/Toast';
 import {
@@ -363,150 +363,231 @@ export default function AdminResourcesPage() {
 
       {/* ─── Form Dialog ─── */}
       <Dialog open={showForm} onClose={() => setShowForm(false)} className="max-w-2xl">
-        <DialogHeader onClose={() => setShowForm(false)}>
-          {editingId ? 'Chỉnh sửa tài nguyên' : 'Thêm tài nguyên mới'}
-        </DialogHeader>
-        <form onSubmit={handleSave}>
-          <DialogBody className="space-y-4 max-h-[72vh] overflow-y-auto">
-            {/* Tên + loại */}
-            <div>
-              <label className="text-sm font-medium block mb-1.5">Tên tài nguyên *</label>
-              <Input value={form.title} required
-                onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                placeholder="VD: Introduction to React Hooks" />
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="text-sm font-medium block mb-1.5">Loại *</label>
-                <Select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
-                  <option value="content">📄 Nội dung</option>
-                  <option value="exercise">💪 Bài tập</option>
-                  <option value="test">📝 Bài test</option>
-                </Select>
+        {/* Gradient dialog header */}
+        <div className="relative overflow-hidden rounded-t-xl border-b bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-5">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                editingId ? 'bg-amber-500/15 text-amber-600' : 'bg-primary/15 text-primary'
+              }`}>
+                {editingId ? <Edit3 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
               </div>
-              {form.type === 'content' && (
+              <div>
+                <h2 className="text-sm font-bold text-foreground leading-tight">
+                  {editingId ? 'Chỉnh sửa tài nguyên' : 'Thêm tài nguyên mới'}
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {editingId ? 'Cập nhật thông tin tài nguyên học tập' : 'Tạo tài nguyên học tập mới cho hệ thống'}
+                </p>
+              </div>
+            </div>
+            <button onClick={() => setShowForm(false)}
+              className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSave}>
+          <DialogBody className="space-y-5 max-h-[65vh] overflow-y-auto px-6 py-5">
+
+            {/* ── Section: Thông tin cơ bản ── */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[11px] font-bold text-primary uppercase tracking-widest">Thông tin cơ bản</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              {/* Tên tài nguyên */}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                  Tên tài nguyên <span className="text-red-500">*</span>
+                </label>
+                <Input value={form.title} required
+                  onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                  placeholder="VD: Introduction to React Hooks"
+                  className="h-9" />
+              </div>
+
+              {/* Loại + Độ khó + Thời lượng */}
+              <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-sm font-medium block mb-1.5">Định dạng</label>
-                  <Select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-                    {Object.entries(CATEGORY_CONFIG).map(([k, v]) => (
-                      <option key={k} value={k}>{v.label}</option>
-                    ))}
-                  </Select>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                    Loại <span className="text-red-500">*</span>
+                  </label>
+                  <CustomSelect
+                    value={form.type}
+                    onChange={v => setForm(f => ({ ...f, type: v }))}
+                    options={[
+                      { value: 'content',  label: 'Nội dung', icon: <FileText className="w-3.5 h-3.5 text-sky-500" /> },
+                      { value: 'exercise', label: 'Bài tập',  icon: <Dumbbell className="w-3.5 h-3.5 text-amber-500" /> },
+                      { value: 'test',     label: 'Bài test', icon: <HelpCircle className="w-3.5 h-3.5 text-red-500" /> },
+                    ]}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Độ khó</label>
+                  <CustomSelect
+                    value={form.difficulty}
+                    onChange={v => setForm(f => ({ ...f, difficulty: v }))}
+                    options={[
+                      { value: 'beginner',     label: 'Cơ bản',    color: 'bg-emerald-500' },
+                      { value: 'intermediate', label: 'Trung bình', color: 'bg-amber-400' },
+                      { value: 'advanced',     label: 'Nâng cao',  color: 'bg-red-500' },
+                    ]}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Thời lượng (phút)</label>
+                  <Input type="number" min={1} value={form.estimatedMinutes}
+                    onChange={e => setForm(f => ({ ...f, estimatedMinutes: e.target.value }))}
+                    className="h-9" />
+                </div>
+              </div>
+
+              {/* Định dạng — chỉ khi type=content */}
+              {form.type === 'content' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Định dạng</label>
+                    <CustomSelect
+                      value={form.category}
+                      onChange={v => setForm(f => ({ ...f, category: v }))}
+                      options={Object.entries(CATEGORY_CONFIG).map(([k, v]) => ({
+                        value: k,
+                        label: v.label,
+                        icon: <v.icon className="w-3.5 h-3.5 text-muted-foreground" />,
+                      }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground block mb-1.5">URL (nếu có)</label>
+                    <Input value={form.url}
+                      onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
+                      placeholder="https://..."
+                      className="h-9" />
+                  </div>
                 </div>
               )}
+
+              {/* URL cho exercise */}
+              {form.type === 'exercise' && (
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">URL bài tập (nếu có)</label>
+                  <Input value={form.url}
+                    onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
+                    placeholder="https://github.com/..."
+                    className="h-9" />
+                </div>
+              )}
+
+              {/* Mô tả */}
               <div>
-                <label className="text-sm font-medium block mb-1.5">Độ khó</label>
-                <Select value={form.difficulty} onChange={e => setForm(f => ({ ...f, difficulty: e.target.value }))}>
-                  <option value="beginner">Cơ bản</option>
-                  <option value="intermediate">Trung bình</option>
-                  <option value="advanced">Nâng cao</option>
-                </Select>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Mô tả</label>
+                <Textarea value={form.description} rows={2}
+                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  placeholder="Mô tả ngắn gọn về tài nguyên..." />
               </div>
+
+              {/* Tags */}
               <div>
-                <label className="text-sm font-medium block mb-1.5">Thời lượng (phút)</label>
-                <Input type="number" min={1} value={form.estimatedMinutes}
-                  onChange={e => setForm(f => ({ ...f, estimatedMinutes: e.target.value }))} />
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Tags</label>
+                <Input value={form.tags}
+                  onChange={e => setForm(f => ({ ...f, tags: e.target.value }))}
+                  placeholder="JavaScript, React, Hooks..."
+                  className="h-9" />
+                <p className="text-[11px] text-muted-foreground mt-1">Phân cách bằng dấu phẩy</p>
               </div>
             </div>
 
-            {/* URL nếu là content */}
-            {form.type === 'content' && (
-              <div>
-                <label className="text-sm font-medium block mb-1.5">URL (nếu có)</label>
-                <Input value={form.url}
-                  onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
-                  placeholder="https://..." />
-              </div>
-            )}
-
-            {/* Mô tả */}
-            <div>
-              <label className="text-sm font-medium block mb-1.5">Mô tả</label>
-              <Textarea value={form.description} rows={2}
-                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                placeholder="Mô tả ngắn gọn..." />
-            </div>
-
-            {/* Tags */}
-            <div>
-              <label className="text-sm font-medium block mb-1.5">Tags (phân cách bằng dấu phẩy)</label>
-              <Input value={form.tags}
-                onChange={e => setForm(f => ({ ...f, tags: e.target.value }))}
-                placeholder="JavaScript, React, Hooks..." />
-            </div>
-
-            {/* Nội dung chi tiết — cho exercise */}
+            {/* ── Section: Nội dung ── (exercise / content) */}
             {(form.type === 'exercise' || form.type === 'content') && (
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  {form.type === 'exercise' ? 'Hướng dẫn bài tập' : 'Nội dung (Markdown)'}
-                </label>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="text-[11px] font-bold text-amber-600 uppercase tracking-widest">
+                    {form.type === 'exercise' ? 'Hướng dẫn bài tập' : 'Nội dung chi tiết'}
+                  </span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
                 <Textarea value={form.content} rows={4}
                   onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
                   placeholder={form.type === 'exercise'
                     ? 'Mô tả yêu cầu bài tập, các bước thực hiện...'
-                    : 'Nội dung bài viết hoặc ghi chú...'} />
+                    : 'Nội dung bài viết hoặc ghi chú (Markdown)...'} />
               </div>
             )}
 
-            {/* URL cho exercise */}
-            {form.type === 'exercise' && (
-              <div>
-                <label className="text-sm font-medium block mb-1.5">URL bài tập (nếu có)</label>
-                <Input value={form.url}
-                  onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
-                  placeholder="https://github.com/..." />
-              </div>
-            )}
-
-            {/* Test Questions Builder */}
+            {/* ── Section: Câu hỏi Test ── */}
             {form.type === 'test' && (
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="text-sm font-medium">Câu hỏi test ({form.testQuestions.length})</label>
-                  <Button type="button" variant="outline" size="sm" className="gap-1 text-xs h-7"
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <HelpCircle className="w-3.5 h-3.5 text-red-500" />
+                  <span className="text-[11px] font-bold text-red-600 uppercase tracking-widest">
+                    Câu hỏi test
+                  </span>
+                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                    {form.testQuestions.length} câu
+                  </span>
+                  <div className="flex-1 h-px bg-border" />
+                  <Button type="button" variant="outline" size="sm" className="gap-1 text-xs h-7 shrink-0"
                     onClick={() => setForm(f => ({
                       ...f,
                       testQuestions: [...f.testQuestions, {
                         question: '', explanation: '', difficulty: 'medium',
-                        options: [{ text: '', isCorrect: true }, { text: '', isCorrect: false }, { text: '', isCorrect: false }, { text: '', isCorrect: false }],
+                        options: [
+                          { text: '', isCorrect: true },
+                          { text: '', isCorrect: false },
+                          { text: '', isCorrect: false },
+                          { text: '', isCorrect: false },
+                        ],
                       }],
                     }))}>
                     <Plus className="w-3 h-3" /> Thêm câu hỏi
                   </Button>
                 </div>
-                <div className="space-y-4 max-h-80 overflow-y-auto">
+                <div className="space-y-3 max-h-72 overflow-y-auto pr-0.5">
                   {form.testQuestions.map((q, qi) => (
-                    <div key={qi} className="rounded-lg border p-3 space-y-2 bg-muted/10">
+                    <div key={qi} className="rounded-xl border bg-muted/20 p-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-primary">Câu {qi + 1}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-primary/15 text-primary text-[11px] font-bold flex items-center justify-center">
+                            {qi + 1}
+                          </span>
+                          <span className="text-xs font-semibold text-foreground">Câu hỏi</span>
+                        </div>
                         <button type="button" onClick={() => setForm(f => ({
                           ...f, testQuestions: f.testQuestions.filter((_, i) => i !== qi),
-                        }))} className="text-xs text-red-500 hover:underline">Xóa</button>
+                        }))} className="text-[11px] text-red-500 hover:text-red-600 hover:underline font-medium">
+                          Xóa
+                        </button>
                       </div>
                       <Input value={q.question} placeholder="Nội dung câu hỏi..."
+                        className="h-9"
                         onChange={e => setForm(f => {
                           const qs = [...f.testQuestions];
                           qs[qi] = { ...qs[qi], question: e.target.value };
                           return { ...f, testQuestions: qs };
                         })} />
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
+                        <p className="text-[11px] font-semibold text-muted-foreground">Đáp án — nhấn ○ để chọn đúng</p>
                         {q.options.map((opt, oi) => (
                           <div key={oi} className="flex items-center gap-2">
                             <button type="button" onClick={() => setForm(f => {
                               const qs = [...f.testQuestions];
-                              qs[qi] = {
-                                ...qs[qi],
-                                options: qs[qi].options.map((o, j) => ({ ...o, isCorrect: j === oi })),
-                              };
+                              qs[qi] = { ...qs[qi], options: qs[qi].options.map((o, j) => ({ ...o, isCorrect: j === oi })) };
                               return { ...f, testQuestions: qs };
-                            })} className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center text-[10px] ${opt.isCorrect ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-border hover:border-primary'
-                              }`}>
+                            })} className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center text-[10px] transition-colors ${
+                              opt.isCorrect
+                                ? 'border-emerald-500 bg-emerald-500 text-white'
+                                : 'border-border hover:border-emerald-400'
+                            }`}>
                               {opt.isCorrect && '✓'}
                             </button>
                             <Input value={opt.text} placeholder={`Lựa chọn ${oi + 1}`}
-                              className="h-8 text-xs"
+                              className="h-8 text-xs flex-1"
                               onChange={e => setForm(f => {
                                 const qs = [...f.testQuestions];
                                 const opts = [...qs[qi].options];
@@ -515,7 +596,8 @@ export default function AdminResourcesPage() {
                                 return { ...f, testQuestions: qs };
                               })} />
                             {q.options.length > 2 && (
-                              <button type="button" className="text-muted-foreground hover:text-red-500 text-xs"
+                              <button type="button"
+                                className="w-5 h-5 rounded text-muted-foreground hover:text-red-500 hover:bg-red-500/10 flex items-center justify-center transition-colors text-sm"
                                 onClick={() => setForm(f => {
                                   const qs = [...f.testQuestions];
                                   qs[qi] = { ...qs[qi], options: qs[qi].options.filter((_, j) => j !== oi) };
@@ -525,7 +607,8 @@ export default function AdminResourcesPage() {
                           </div>
                         ))}
                         {q.options.length < 6 && (
-                          <button type="button" className="text-xs text-primary hover:underline ml-7"
+                          <button type="button"
+                            className="text-[11px] text-primary hover:underline font-medium ml-7"
                             onClick={() => setForm(f => {
                               const qs = [...f.testQuestions];
                               qs[qi] = { ...qs[qi], options: [...qs[qi].options, { text: '', isCorrect: false }] };
@@ -533,68 +616,114 @@ export default function AdminResourcesPage() {
                             })}>+ Thêm lựa chọn</button>
                         )}
                       </div>
-                      <Input value={q.explanation} placeholder="Giải thích đáp án (tùy chọn)"
-                        className="h-8 text-xs"
-                        onChange={e => setForm(f => {
-                          const qs = [...f.testQuestions];
-                          qs[qi] = { ...qs[qi], explanation: e.target.value };
-                          return { ...f, testQuestions: qs };
-                        })} />
+                      <div>
+                        <p className="text-[11px] font-semibold text-muted-foreground mb-1">Giải thích (tùy chọn)</p>
+                        <Input value={q.explanation} placeholder="Giải thích đáp án đúng..."
+                          className="h-8 text-xs"
+                          onChange={e => setForm(f => {
+                            const qs = [...f.testQuestions];
+                            qs[qi] = { ...qs[qi], explanation: e.target.value };
+                            return { ...f, testQuestions: qs };
+                          })} />
+                      </div>
                     </div>
                   ))}
                   {form.testQuestions.length === 0 && (
-                    <p className="text-xs text-muted-foreground text-center py-4">
-                      Chưa có câu hỏi. Nhấn "Thêm câu hỏi" để bắt đầu.
-                    </p>
+                    <div className="rounded-xl border border-dashed bg-muted/10 p-8 text-center">
+                      <HelpCircle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground">Chưa có câu hỏi nào</p>
+                      <p className="text-[11px] text-muted-foreground/70 mt-0.5">Nhấn "Thêm câu hỏi" để bắt đầu</p>
+                    </div>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Kỹ năng liên kết */}
-            <div className="border-t pt-4">
-              <label className="text-sm font-medium block mb-2">
-                Kỹ năng liên kết ({form.skills.length} đã chọn)
-              </label>
-              <div className="max-h-40 overflow-y-auto border rounded-lg p-2 space-y-1">
+            {/* ── Section: Kỹ năng liên kết ── */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Star className="w-3.5 h-3.5 text-indigo-500" />
+                <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-widest">Kỹ năng liên kết</span>
+                {form.skills.length > 0 && (
+                  <span className="text-[10px] text-white bg-primary px-1.5 py-0.5 rounded-full">
+                    {form.skills.length}
+                  </span>
+                )}
+                <div className="flex-1 h-px bg-border" />
+              </div>
+              <div className="max-h-36 overflow-y-auto border rounded-xl p-2 space-y-0.5 bg-muted/20">
                 {skills.map(skill => {
                   const selected = form.skills.includes(skill._id);
                   return (
-                    <button
-                      key={skill._id}
-                      type="button"
-                      onClick={() => toggleSkill(skill._id)}
-                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors text-left ${selected ? 'bg-primary/10 text-primary' : 'hover:bg-muted/60'
-                        }`}
-                    >
-                      <span className="w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 text-xs">
-                        {selected ? '✓' : ''}
+                    <button key={skill._id} type="button" onClick={() => toggleSkill(skill._id)}
+                      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors text-left ${
+                        selected
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'hover:bg-background text-foreground'
+                      }`}>
+                      <span className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 text-[9px] font-bold transition-colors ${
+                        selected ? 'border-primary bg-primary text-white' : 'border-border'
+                      }`}>
+                        {selected && '✓'}
                       </span>
-                      <span>{skill.icon} {skill.name}</span>
+                      <span className="text-base leading-none">{skill.icon}</span>
+                      <span className="text-xs">{skill.name}</span>
                     </button>
                   );
                 })}
                 {skills.length === 0 && (
-                  <p className="text-xs text-muted-foreground text-center py-2">Chưa có kỹ năng</p>
+                  <p className="text-xs text-muted-foreground text-center py-4">Chưa có kỹ năng nào trong hệ thống</p>
                 )}
               </div>
             </div>
 
-            {/* Nổi bật */}
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" checked={form.isFeatured}
-                onChange={e => setForm(f => ({ ...f, isFeatured: e.target.checked }))}
-                className="accent-primary w-4 h-4" />
-              <div>
-                <p className="text-sm font-medium">Đánh dấu nổi bật</p>
-                <p className="text-xs text-muted-foreground">Hiển thị ưu tiên trong danh sách</p>
+            {/* ── Nổi bật toggle ── */}
+            <button
+              type="button"
+              onClick={() => setForm(f => ({ ...f, isFeatured: !f.isFeatured }))}
+              className={`w-full flex items-center gap-3 rounded-xl border p-3.5 transition-all duration-200 text-left ${
+                form.isFeatured
+                  ? 'bg-amber-500/8 border-amber-400/40 shadow-sm shadow-amber-500/10'
+                  : 'bg-muted/20 border-border hover:bg-muted/40 hover:border-border/80'
+              }`}
+            >
+              {/* Custom toggle switch */}
+              <div className={`relative w-9 h-5 rounded-full transition-colors duration-200 shrink-0 ${
+                form.isFeatured ? 'bg-amber-500' : 'bg-muted-foreground/30'
+              }`}>
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-200 ${
+                  form.isFeatured ? 'left-[calc(100%-1.125rem)]' : 'left-0.5'
+                }`} />
               </div>
-            </label>
+              {/* Icon + text */}
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-semibold flex items-center gap-1.5 ${
+                  form.isFeatured ? 'text-amber-700' : 'text-foreground'
+                }`}>
+                  <Star className={`w-3.5 h-3.5 transition-all ${
+                    form.isFeatured ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground'
+                  }`} />
+                  Đánh dấu nổi bật
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Hiển thị ưu tiên trên đầu danh sách tài nguyên
+                </p>
+              </div>
+              {/* Badge trạng thái */}
+              {form.isFeatured && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 border border-amber-400/30 shrink-0">
+                  Đang bật
+                </span>
+              )}
+            </button>
+
           </DialogBody>
-          <DialogFooter>
+          <DialogFooter className="border-t bg-muted/20 rounded-b-xl px-6 py-4">
             <Button type="button" variant="outline" size="sm" onClick={() => setShowForm(false)}>Hủy</Button>
-            <Button type="submit" size="sm" disabled={saving}>
-              {saving ? 'Đang lưu...' : editingId ? 'Cập nhật' : 'Tạo mới'}
+            <Button type="submit" size="sm" disabled={saving} className="gap-2 min-w-24">
+              {saving ? (
+                <><span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Đang lưu...</>
+              ) : editingId ? 'Cập nhật' : 'Tạo mới'}
             </Button>
           </DialogFooter>
         </form>
