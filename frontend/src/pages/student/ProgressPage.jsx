@@ -171,14 +171,14 @@ export default function ProgressPage() {
     <div className="animate-fade-in space-y-6">
 
       {/* ── Hero Header ── */}
-      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6">
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 md:p-8">
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-teal-500/8 to-transparent rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-primary/8 to-transparent rounded-full translate-y-1/2 -translate-x-1/4 pointer-events-none" />
         <div className="relative">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-5 h-5 text-primary" />
             <span className="text-xs font-semibold text-primary uppercase tracking-widest">Tiến Độ Học tập</span>
           </div>
-          {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Tiến Độ Học Tập</h1> */}
           <p className="text-muted-foreground text-sm mt-1.5">Tổng quan quá trình học và rèn luyện kỹ năng</p>
         </div>
       </div>

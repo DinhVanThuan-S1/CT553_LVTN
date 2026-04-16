@@ -109,16 +109,12 @@ export default function StudentDashboard() {
       {/* Hero Header */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border p-6 md:p-8">
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-accent/10 to-transparent rounded-full translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-sky-500/8 to-transparent rounded-full translate-y-1/2 -translate-x-1/4 pointer-events-none" />
         <div className="relative">
-          <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1">
-            <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1">
-              <Shield className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Tổng Quan</span>
-            </p>
-            {/* <div className="text-base">{greeting.emoji}</div> {greeting.text}! */}
-          </p>
-          {/* <h1 className="text-1xl md:text-3xl font-bold tracking-tight">Tổng Quan</h1> */}
+          <div className="flex items-center gap-2 mb-1">
+            <Shield className="w-5 h-5 text-primary" />
+            <span className="text-xs font-semibold text-primary uppercase tracking-widest">Tổng Quan</span>
+          </div>
           <p className="text-muted-foreground text-sm mt-1.5 max-w-lg">
             Theo dõi tổng quan toàn bộ thông tin học tập và làm việc của bạn.
           </p>
