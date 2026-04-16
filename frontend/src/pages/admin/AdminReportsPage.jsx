@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 import {
   Users, Briefcase, GraduationCap, TrendingUp, FileText, Route as RouteIcon,
-  RefreshCcw, Award, MapPin, BarChart3, Calendar,
+  RefreshCcw, Award, MapPin, BarChart3, Calendar, X,
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import api from '../../lib/api';
@@ -156,6 +156,11 @@ const gridProps = { stroke: 'hsl(var(--border))', strokeDasharray: '3 3', opacit
 
 export default function AdminReportsPage() {
   const [months, setMonths] = useState(6);
+  // Custom date range
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [isCustomRange, setIsCustomRange] = useState(false);
+
   const [overview, setOverview] = useState(null);
   const [registrations, setRegistrations] = useState([]);
   const [careerPaths, setCareerPaths] = useState([]);
@@ -168,14 +173,22 @@ export default function AdminReportsPage() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const q = months > 0 ? `?months=${months}` : '';
+      const toQS = (p) => Object.keys(p).length ? '?' + new URLSearchParams(p).toString() : '';
+      const rangeParams = isCustomRange && startDate && endDate
+        ? { startDate, endDate }
+        : months > 0 ? { months } : {};
+      const appParams = isCustomRange && startDate && endDate
+        ? { startDate, endDate }
+        : { months: months > 0 ? months : 120 };
+      const q = toQS(rangeParams);
+      const appQ = toQS(appParams);
       const [ov, reg, cp, rc, ts, apps, jobs] = await Promise.all([
         api.get(`/admin/reports/overview${q}`),
         api.get(`/admin/reports/registrations${q}`),
         api.get('/admin/reports/career-paths'),
         api.get('/admin/reports/roadmap-completion'),
         api.get('/admin/reports/top-skills'),
-        api.get(`/admin/reports/applications${months > 0 ? `?months=${months}` : '?months=120'}`),
+        api.get(`/admin/reports/applications${appQ}`),
         api.get('/admin/reports/job-postings'),
       ]);
       setOverview(ov.data.data);
@@ -190,9 +203,35 @@ export default function AdminReportsPage() {
     } finally {
       setLoading(false);
     }
-  }, [months]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [months, isCustomRange, startDate, endDate]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  function selectQuickRange(m) {
+    setMonths(m);
+    setIsCustomRange(false);
+    setStartDate('');
+    setEndDate('');
+  }
+
+  function applyCustomRange() {
+    if (startDate && endDate && endDate >= startDate) setIsCustomRange(true);
+  }
+
+  function clearCustomRange() {
+    setIsCustomRange(false);
+    setStartDate('');
+    setEndDate('');
+  }
+
+  function handleRefresh() {
+    setIsCustomRange(false);
+    setStartDate('');
+    setEndDate('');
+    setMonths(6);
+    // fetchAll sẽ tự re-run qua useEffect khi state thay đổi
+  }
 
   if (loading) {
     return (
@@ -216,7 +255,9 @@ export default function AdminReportsPage() {
     );
   }
 
-  const rangeLabel = RANGES.find(r => r.months === months)?.label || '6 tháng';
+  const rangeLabel = isCustomRange && startDate && endDate
+    ? `${new Date(startDate + 'T00:00:00').toLocaleDateString('vi-VN')} – ${new Date(endDate + 'T00:00:00').toLocaleDateString('vi-VN')}`
+    : RANGES.find(r => r.months === months)?.label || '6 tháng';
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -225,34 +266,94 @@ export default function AdminReportsPage() {
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border p-6 md:p-8">
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-accent/10 to-transparent rounded-full translate-y-1/2 -translate-x-1/4 pointer-events-none" />
-        <div className="relative flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1">
-              <BarChart3 className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Thống Kê & Báo Cáo</span>
-            </p>
-            <p className="text-muted-foreground text-sm mt-1.5">
-              Dữ liệu trong <strong className="text-foreground">{rangeLabel}</strong> gần nhất
-            </p>
+        <div className="relative flex flex-col gap-4">
+          {/* Title + refresh */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1">
+                <BarChart3 className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-semibold text-primary uppercase tracking-widest">Thống Kê & Báo Cáo</span>
+              </p>
+              <p className="text-muted-foreground text-sm mt-1.5">
+                {isCustomRange
+                  ? <>Dữ liệu từ <strong className="text-foreground">{rangeLabel}</strong></>
+                  : <>Dữ liệu trong <strong className="text-foreground">{rangeLabel}</strong> gần nhất</>}
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-1.5 h-8 text-xs shrink-0">
+              <RefreshCcw className="w-3 h-3" /> Làm mới
+            </Button>
           </div>
-          {/* Controls */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Time range pills */}
-            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
+
+          {/* Filter controls */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Quick pills */}
+            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1 shrink-0">
               <Calendar className="w-3.5 h-3.5 text-muted-foreground ml-1.5 mr-0.5" />
               {RANGES.map(({ label, months: m }) => (
-                <button key={m} onClick={() => setMonths(m)}
-                  className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${months === m
-                    ? 'bg-card text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                    }`}>
+                <button key={m} onClick={() => selectQuickRange(m)}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                    !isCustomRange && months === m
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}>
                   {label}
                 </button>
               ))}
             </div>
-            <Button variant="outline" size="sm" onClick={fetchAll} className="gap-1.5 h-8 text-xs">
-              <RefreshCcw className="w-3 h-3" /> Làm mới
-            </Button>
+
+            {/* Divider */}
+            <div className="h-6 w-px bg-border/60 shrink-0 hidden sm:block" />
+
+            {/* Date range inputs */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
+                Tuỳ chỉnh:
+              </span>
+              <input
+                type="date"
+                value={startDate}
+                max={endDate || undefined}
+                onChange={e => { setStartDate(e.target.value); setIsCustomRange(false); }}
+                className="h-8 px-2.5 rounded-lg border border-input bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition cursor-pointer"
+              />
+              <span className="text-muted-foreground text-xs shrink-0">→</span>
+              <input
+                type="date"
+                value={endDate}
+                min={startDate || undefined}
+                onChange={e => { setEndDate(e.target.value); setIsCustomRange(false); }}
+                className="h-8 px-2.5 rounded-lg border border-input bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition cursor-pointer"
+              />
+
+              {/* Apply button */}
+              {startDate && endDate && !isCustomRange && endDate >= startDate && (
+                <button
+                  onClick={applyCustomRange}
+                  className="h-8 px-3.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition shrink-0"
+                >
+                  Áp dụng
+                </button>
+              )}
+
+              {/* Clear custom range */}
+              {isCustomRange && (
+                <button
+                  onClick={clearCustomRange}
+                  className="h-8 w-8 rounded-lg border border-border bg-background flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/60 transition shrink-0"
+                  title="Xóa bộ lọc tuỳ chỉnh"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+
+              {/* Active badge */}
+              {isCustomRange && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
+                  <Calendar className="w-2.5 h-2.5 shrink-0" /> Đang lọc theo ngày
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

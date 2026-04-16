@@ -11,15 +11,38 @@ const Skill = require('../models/Skill');
 const Roadmap = require('../models/Roadmap');
 
 /**
+ * Build a date filter from query params.
+ * Priority: startDate+endDate (custom range) > months > all time
+ * @returns {{ createdAt: Object } | {}}
+ */
+function buildDateFilter(query) {
+  const { startDate, endDate, months } = query;
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    if (!isNaN(start) && !isNaN(end) && end >= start) {
+      return { createdAt: { $gte: start, $lte: end } };
+    }
+  }
+  const m = parseInt(months) || 0;
+  if (m > 0) {
+    const since = new Date();
+    since.setMonth(since.getMonth() - m);
+    since.setHours(0, 0, 0, 0);
+    return { createdAt: { $gte: since } };
+  }
+  return {};
+}
+
+/**
  * GET /api/admin/reports/overview
  * Tổng quan hệ thống: tổng SV, NTD, tin tuyển dụng, đơn ứng tuyển
  */
 exports.getOverview = async (req, res) => {
   try {
-    const months = parseInt(req.query.months) || 0; // 0 = all time
-    const dateFilter = months > 0
-      ? { createdAt: { $gte: new Date(new Date().setMonth(new Date().getMonth() - months)) } }
-      : {};
+    const dateFilter = buildDateFilter(req.query);
 
     const [
       totalStudents, totalEmployers, totalJobPostings,
@@ -50,14 +73,26 @@ exports.getOverview = async (req, res) => {
  */
 exports.getRegistrations = async (req, res) => {
   try {
-    const months = parseInt(req.query.months) || 12;
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - months);
-    startDate.setDate(1);
-    startDate.setHours(0, 0, 0, 0);
+    // Determine effective start/end
+    let startDate, endDate, monthCount;
+    if (req.query.startDate && req.query.endDate) {
+      startDate = new Date(req.query.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(req.query.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      // months = diff in months (min 1)
+      monthCount = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24 * 30)));
+    } else {
+      monthCount = parseInt(req.query.months) || 12;
+      startDate = new Date();
+      startDate.setMonth(startDate.getMonth() - monthCount);
+      startDate.setDate(1);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date();
+    }
 
     const pipeline = [
-      { $match: { createdAt: { $gte: startDate }, role: { $in: ['student', 'employer'] } } },
+      { $match: { createdAt: { $gte: startDate, $lte: endDate }, role: { $in: ['student', 'employer'] } } },
       {
         $group: {
           _id: {
@@ -73,16 +108,17 @@ exports.getRegistrations = async (req, res) => {
 
     const results = await User.aggregate(pipeline);
 
-    // Chuyển đổi thành format dễ dùng cho chart
+    // Build month labels from startDate → endDate
     const monthLabels = [];
-    const now = new Date();
-    for (let i = months - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    const endMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+    while (cursor <= endMonth) {
       monthLabels.push({
-        year: d.getFullYear(),
-        month: d.getMonth() + 1,
-        label: `T${d.getMonth() + 1}/${d.getFullYear()}`,
+        year: cursor.getFullYear(),
+        month: cursor.getMonth() + 1,
+        label: `T${cursor.getMonth() + 1}/${cursor.getFullYear()}`,
       });
+      cursor.setMonth(cursor.getMonth() + 1);
     }
 
     const data = monthLabels.map(({ year, month, label }) => {
@@ -213,13 +249,10 @@ exports.getTopSkills = async (req, res) => {
  */
 exports.getApplicationStats = async (req, res) => {
   try {
-    const months = parseInt(req.query.months) || 6;
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - months);
-    const dateMatch = { createdAt: { $gte: startDate } };
+    const dateFilter = buildDateFilter(req.query);
 
     const results = await Application.aggregate([
-      { $match: dateMatch },
+      { $match: dateFilter },
       { $group: { _id: '$status', count: { $sum: 1 } } },
     ]);
 
@@ -231,9 +264,8 @@ exports.getApplicationStats = async (req, res) => {
 
     const data = results.map(r => ({ status: r._id, label: statusLabels[r._id] || r._id, count: r.count }));
 
-    // Monthly within range
     const monthlyStats = await Application.aggregate([
-      { $match: dateMatch },
+      { $match: dateFilter },
       { $group: { _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } }, count: { $sum: 1 } } },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
     ]);
