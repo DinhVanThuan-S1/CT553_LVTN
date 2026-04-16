@@ -15,7 +15,8 @@ import { useToast } from '../../components/ui/Toast';
 import {
   Search, Plus, Pencil, Trash2, Eye, BookOpen, Calendar,
   ChevronDown, ChevronRight, Settings, X, GripVertical,
-  GraduationCap, SlidersHorizontal,
+  GraduationCap, SlidersHorizontal, Building2, Hash, BookMarked,
+  Layers, FileText, CheckCircle2,
 } from 'lucide-react';
 
 /* ══════════════════════════════════════════
@@ -502,162 +503,292 @@ export default function CurriculumManagement() {
 
       {/* ═══════════════ View Detail Dialog ═══════════════ */}
       <Dialog open={showDetail} onClose={() => setShowDetail(false)} className="max-w-3xl">
-        <DialogHeader onClose={() => setShowDetail(false)}>
-          Chi tiết Chương trình Đào tạo
-        </DialogHeader>
-        <DialogBody>
+        {/* Gradient Header */}
+        {detail && (
+          <div className="relative overflow-hidden rounded-t-xl border-b px-6 py-5 bg-gradient-to-br from-indigo-500/10 via-indigo-500/5 to-transparent">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border bg-indigo-500/15 border-indigo-400/20 text-indigo-600">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-foreground leading-tight">{detail.name}</h2>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span className="font-mono text-[11px] font-bold text-indigo-600 bg-indigo-500/10 px-2 py-0.5 rounded">{detail.code}</span>
+                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <Hash className="w-3 h-3" /> {detail.totalCredits} tín chỉ
+                    </span>
+                    {detail.department && (
+                      <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                        <Building2 className="w-3 h-3" /> {detail.department}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button onClick={() => setShowDetail(false)}
+                className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors self-start">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {/* Meta bar */}
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/40">
+              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-indigo-500" />
+                <span className="font-semibold text-indigo-700">{detail.semesterDetails?.length || 0} học kỳ</span>
+              </span>
+              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="font-semibold text-emerald-700">
+                  {(detail.semesterDetails || []).reduce((s, sem) => s + (sem.courses?.length || 0), 0)} học phần
+                </span>
+              </span>
+              {detail.university && (
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1 ml-auto">
+                  <Building2 className="w-3 h-3" /> {detail.university}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        <DialogBody className="max-h-[62vh] overflow-y-auto px-6 py-5">
           {loadingDetail ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => <div key={i} className="h-12 skeleton rounded-lg" />)}
             </div>
           ) : detail ? (
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-lg">{detail.name}</h3>
-                <p className="text-sm text-muted-foreground">{detail.code} • {detail.totalCredits} tín chỉ</p>
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">
+            <div className="space-y-3">
+              {/* Section header */}
+              <div className="flex items-center gap-2">
+                <Layers className="w-3.5 h-3.5 text-indigo-500" />
+                <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-widest">
                   Danh sách học kỳ ({detail.semesterDetails?.length || 0})
-                </h4>
-                {(detail.semesterDetails || []).map(semester => (
-                  <div key={semester._id} className="rounded-lg border">
-                    <button
-                      onClick={() => setExpandedDetailSems(prev => ({ ...prev, [semester._id]: !prev[semester._id] }))}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        {expandedDetailSems[semester._id]
-                          ? <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                          : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
-                        <span className="font-medium text-sm">{semester.name}</span>
-                        <Badge variant="secondary">{semester.courses?.length || 0} HP</Badge>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {semester.requiredCredits || 0} TC bắt buộc
-                      </span>
-                    </button>
-                    {expandedDetailSems[semester._id] && (
-                      <div className="border-t px-4 py-2 space-y-1">
-                        {(semester.courses || []).map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between py-1.5 text-sm">
-                            <div className="flex items-center gap-2">
-                              <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
-                              <span className="font-mono text-xs text-primary">{item.course?.code}</span>
-                              <span>{item.course?.name}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground">{item.course?.credits} TC</span>
-                              {!item.isRequired && <Badge variant="warning">Tự chọn</Badge>}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                </span>
+                <div className="flex-1 h-px bg-border" />
               </div>
+
+              {(detail.semesterDetails || []).map(semester => (
+                <div key={semester._id} className="rounded-xl border bg-card overflow-hidden">
+                  <button
+                    onClick={() => setExpandedDetailSems(prev => ({ ...prev, [semester._id]: !prev[semester._id] }))}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-1 h-4 rounded-full transition-colors ${
+                        expandedDetailSems[semester._id] ? 'bg-indigo-500' : 'bg-border'
+                      }`} />
+                      {expandedDetailSems[semester._id]
+                        ? <ChevronDown className="w-3.5 h-3.5 text-indigo-500" />
+                        : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
+                      <span className="font-semibold text-sm">{semester.name}</span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 border border-indigo-400/20">
+                        {semester.courses?.length || 0} HP
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-medium text-muted-foreground">
+                      {semester.requiredCredits || 0} TC bắt buộc
+                    </span>
+                  </button>
+
+                  {expandedDetailSems[semester._id] && (
+                    <div className="border-t bg-muted/5">
+                      {(semester.courses || []).map((item, idx) => (
+                        <div key={idx}
+                          className="flex items-center justify-between px-5 py-2 text-sm border-b last:border-0 hover:bg-muted/20 transition-colors">
+                          <div className="flex items-center gap-2.5">
+                            <BookOpen className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                            <span className="font-mono text-[11px] font-bold text-indigo-600 bg-indigo-500/8 px-1.5 py-0.5 rounded shrink-0">
+                              {item.course?.code}
+                            </span>
+                            <span className="text-sm truncate max-w-[260px]">{item.course?.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs font-semibold text-muted-foreground">{item.course?.credits} TC</span>
+                            {!item.isRequired && (
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-400/20">
+                                Tự chọn
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           ) : null}
         </DialogBody>
-        <DialogFooter>
+
+        <DialogFooter className="border-t bg-muted/20 rounded-b-xl px-6 py-4">
           <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Đóng</Button>
+          {detail && (
+            <Button size="sm" className="gap-1.5" onClick={() => { setShowDetail(false); openEdit(detail); }}>
+              <Pencil className="w-3.5 h-3.5" /> Chỉnh sửa
+            </Button>
+          )}
         </DialogFooter>
       </Dialog>
 
       {/* ═══════════════ Create / Edit Dialog ═══════════════ */}
       <Dialog open={showForm} onClose={() => setShowForm(false)} className="max-w-4xl">
-        <DialogHeader onClose={() => setShowForm(false)}>
-          {editingId ? 'Chỉnh sửa CTĐT' : 'Thêm CTĐT mới'}
-        </DialogHeader>
+        {/* Gradient Header */}
+        <div className={`relative overflow-hidden rounded-t-xl border-b px-6 py-5 ${
+          editingId
+            ? 'bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent'
+            : 'bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent'
+        }`}>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${
+                editingId
+                  ? 'bg-amber-500/15 border-amber-400/20 text-amber-600'
+                  : 'bg-emerald-500/15 border-emerald-400/20 text-emerald-600'
+              }`}>
+                <GraduationCap className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-foreground">
+                  {editingId ? 'Chỉnh sửa CTDT' : 'Thêm CTDT mới'}
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {editingId
+                    ? `Đang sửa • ${formData.code || 'Chưa có mã'}`
+                    : 'Tạo chương trình đào tạo mới'}
+                </p>
+              </div>
+            </div>
+            <button onClick={() => setShowForm(false)}
+              className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors self-start">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
 
         <form onSubmit={handleSave}>
-          {/* Tabs */}
-          <div className="flex border-b px-6">
+          {/* Tab pill bar */}
+          <div className="flex items-center gap-1 px-6 py-3 border-b bg-muted/10">
             <button
               type="button"
               onClick={() => setEditTab('info')}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${editTab === 'info'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                editTab === 'info'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+              }`}
             >
+              <FileText className="w-3.5 h-3.5" />
               Thông tin cơ bản
             </button>
             <button
               type="button"
               onClick={() => setEditTab('semesters')}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${editTab === 'semesters'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                editTab === 'semesters'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+              }`}
             >
-              <Settings className="w-3.5 h-3.5" />
+              <Layers className="w-3.5 h-3.5" />
               Học kỳ & Học phần
               {activeSems.length > 0 && (
-                <span className="bg-muted text-muted-foreground text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-1">
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-0.5 ${
+                  editTab === 'semesters' ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
+                }`}>
                   {activeSems.length} HK · {totalCourses} HP
                 </span>
               )}
               {dirtyCount > 0 && (
                 <span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                  {dirtyCount} thay đổi
+                  {dirtyCount}
                 </span>
               )}
             </button>
           </div>
 
-          <DialogBody className={editTab === 'semesters' ? 'p-0' : ''}>
-
+          <DialogBody className={editTab === 'semesters' ? 'p-0' : 'px-6 py-5'}>
             {/* ── Tab: Thông tin cơ bản ── */}
             {editTab === 'info' && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium mb-1.5 block">Mã CTĐT *</label>
+              <div className="space-y-5">
+                {/* Section: Mã + Tín chỉ */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Hash className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-[11px] font-bold text-primary uppercase tracking-widest">Thông tin cơ bản</span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 pl-1">
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground mb-1.5 block uppercase tracking-wide">Mã CTĐT *</label>
+                      <Input
+                        value={formData.code} required
+                        onChange={e => setFormData(f => ({ ...f, code: e.target.value }))}
+                        placeholder="VD: KTPM-K50"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground mb-1.5 block uppercase tracking-wide">Tổng tín chỉ</label>
+                      <Input
+                        type="number" min={0}
+                        value={formData.totalCredits}
+                        onChange={e => setFormData(f => ({ ...f, totalCredits: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="pl-1">
+                    <label className="text-xs font-semibold text-muted-foreground mb-1.5 block uppercase tracking-wide">Tên CTĐT *</label>
                     <Input
-                      value={formData.code} required
-                      onChange={e => setFormData(f => ({ ...f, code: e.target.value }))}
-                      placeholder="VD: KTPM-K50"
+                      value={formData.name} required
+                      onChange={e => setFormData(f => ({ ...f, name: e.target.value }))}
+                      placeholder="VD: Kỹ thuật Phần mềm K50"
                     />
                   </div>
-                  <div>
-                    <label className="text-sm font-medium mb-1.5 block">Tổng tín chỉ</label>
-                    <Input
-                      type="number" min={0}
-                      value={formData.totalCredits}
-                      onChange={e => setFormData(f => ({ ...f, totalCredits: e.target.value }))}
-                    />
+                </div>
+
+                {/* Section: Đơn vị */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-3.5 h-3.5 text-indigo-500" />
+                    <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-widest">Đơn vị</span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 pl-1">
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground mb-1.5 block uppercase tracking-wide">Khoa</label>
+                      <Input
+                        value={formData.department}
+                        onChange={e => setFormData(f => ({ ...f, department: e.target.value }))}
+                        placeholder="VD: CNTT & Truyền thông"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground mb-1.5 block uppercase tracking-wide">Trường</label>
+                      <Input
+                        value={formData.university}
+                        onChange={e => setFormData(f => ({ ...f, university: e.target.value }))}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Tên CTĐT *</label>
-                  <Input
-                    value={formData.name} required
-                    onChange={e => setFormData(f => ({ ...f, name: e.target.value }))}
-                    placeholder="VD: Kỹ thuật Phần mềm K50"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Khoa</label>
-                  <Input
-                    value={formData.department}
-                    onChange={e => setFormData(f => ({ ...f, department: e.target.value }))}
-                    placeholder="VD: CNTT & Truyền thông"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Trường</label>
-                  <Input
-                    value={formData.university}
-                    onChange={e => setFormData(f => ({ ...f, university: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Mô tả</label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={e => setFormData(f => ({ ...f, description: e.target.value }))}
-                    rows={3}
-                  />
+
+                {/* Section: Mô tả */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="text-[11px] font-bold text-amber-600 uppercase tracking-widest">Mô tả</span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+                  <div className="pl-1">
+                    <Textarea
+                      value={formData.description}
+                      onChange={e => setFormData(f => ({ ...f, description: e.target.value }))}
+                      rows={3}
+                      placeholder="Mô tả ngắn về chương trình đào tạo..."
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -869,16 +1000,22 @@ export default function CurriculumManagement() {
             )}
           </DialogBody>
 
-          <DialogFooter>
+          <DialogFooter className="border-t bg-muted/20 rounded-b-xl px-6 py-4">
             {dirtyCount > 0 && (
-              <span className="text-xs text-amber-600 mr-auto flex items-center gap-1">
+              <span className="text-xs text-amber-600 mr-auto flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
                 {dirtyCount} thay đổi chờ lưu
               </span>
             )}
             <Button type="button" variant="outline" size="sm" onClick={() => setShowForm(false)}>Hủy</Button>
-            <Button type="submit" size="sm" disabled={saving}>
-              {saving ? 'Đang lưu...' : editingId ? 'Cập nhật' : 'Tạo mới'}
+            <Button type="submit" size="sm" disabled={saving} className="gap-1.5 min-w-[100px]">
+              {saving ? (
+                <><span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Đang lưu...</>
+              ) : editingId ? (
+                <><CheckCircle2 className="w-3.5 h-3.5" /> Cập nhật</>
+              ) : (
+                <><Plus className="w-3.5 h-3.5" /> Tạo mới</>
+              )}
             </Button>
           </DialogFooter>
         </form>
