@@ -300,8 +300,8 @@ export default function SkillMapPage() {
           <button
             onClick={() => setShowCategoryMenu(v => !v)}
             className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all min-w-[160px] ${showCategoryMenu
-                ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
-                : 'border-input bg-background text-foreground hover:border-primary/60'
+              ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
+              : 'border-input bg-background text-foreground hover:border-primary/60'
               }`}
           >
             <span className="flex-1 text-left truncate">
@@ -319,8 +319,8 @@ export default function SkillMapPage() {
                     key={value}
                     onClick={() => { setCategoryFilter(value); setShowCategoryMenu(false); }}
                     className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${categoryFilter === value
-                        ? 'bg-primary/10 text-primary font-semibold'
-                        : 'text-foreground hover:bg-muted/50'
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : 'text-foreground hover:bg-muted/50'
                       }`}
                   >
                     {categoryFilter === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
@@ -346,8 +346,8 @@ export default function SkillMapPage() {
               <LayoutGrid className="w-4 h-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm">Skill Detail</p>
-              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+              <p className="font-semibold text-sm">Chi Tiết Kỹ Năng</p>
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap mt-2">
                 <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/8 text-primary">
                   <Shield className="w-2.5 h-2.5" /> {mySkills.length} kỹ năng
                 </span>
