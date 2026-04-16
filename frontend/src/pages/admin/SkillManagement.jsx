@@ -7,15 +7,15 @@ import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
-import { Select } from '../../components/ui/Select';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Textarea } from '../../components/ui/Textarea';
-import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
+import { Dialog, DialogBody, DialogFooter } from '../../components/ui/Dialog';
 import { useToast } from '../../components/ui/Toast';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import {
   Search, Plus, Pencil, Trash2, Target, Eye,
   ChevronLeft, ChevronRight, BookOpen, Dumbbell, HelpCircle, Clock,
-  FileText, X, SlidersHorizontal, ChevronDown,
+  FileText, X, SlidersHorizontal, ChevronDown, Link, Check,
 } from 'lucide-react';
 
 const RESOURCE_TYPE_ICONS = { content: FileText, exercise: Dumbbell, test: HelpCircle };
@@ -434,103 +434,133 @@ export default function SkillManagement() {
 
       {/* Detail Dialog */}
       <Dialog open={showDetail} onClose={() => setShowDetail(false)} className="max-w-2xl">
-        <DialogHeader onClose={() => setShowDetail(false)}>Chi tiết Kỹ năng</DialogHeader>
+        {/* Gradient header */}
         {detailSkill && (
-          <DialogBody className="space-y-5">
-            <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/20">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl shrink-0">
-                {detailSkill.icon}
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">{detailSkill.name}</h3>
-                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                  <CategoryBadge category={detailSkill.category} />
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" /> {detailSkill.estimatedHours}h
-                  </span>
+          <div className="relative overflow-hidden rounded-t-xl border-b bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-5">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center text-2xl shrink-0 border border-primary/10">
+                  {detailSkill.icon}
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-foreground leading-tight">{detailSkill.name}</h2>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <CategoryBadge category={detailSkill.category} />
+                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {detailSkill.estimatedHours}h
+                    </span>
+                  </div>
                 </div>
               </div>
+              <button onClick={() => setShowDetail(false)}
+                className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
             </div>
-
             {detailSkill.description && (
-              <p className="text-sm text-muted-foreground">{detailSkill.description}</p>
+              <p className="text-xs text-muted-foreground mt-3 leading-relaxed">{detailSkill.description}</p>
             )}
-
-            {/* Linked Resources — grouped by type */}
+          </div>
+        )}
+        {detailSkill && (
+          <DialogBody className="space-y-4 max-h-[60vh] overflow-y-auto px-6 py-5">
             {(() => {
               const linked = detailSkill.linkedResources || [];
               const contents = linked.filter(r => r.type === 'content');
               const exercises = linked.filter(r => r.type === 'exercise');
               const tests = linked.filter(r => r.type === 'test');
 
+              const ResourceCard = ({ res, accent, badgeLabel }) => (
+                <div className={`rounded-xl border bg-card p-3.5 space-y-1.5 hover:shadow-sm transition-shadow border-l-4 ${accent}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-semibold text-sm leading-snug">{res.title}</span>
+                    {badgeLabel && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0 border">
+                        {badgeLabel}
+                      </span>
+                    )}
+                  </div>
+                  {res.description && (
+                    <p className="text-xs text-muted-foreground leading-relaxed">{res.description}</p>
+                  )}
+                  {res.url && (
+                    <a href={res.url} target="_blank" rel="noopener noreferrer"
+                      className="text-[11px] text-primary hover:underline flex items-center gap-1 mt-0.5">
+                      <Link className="w-3 h-3" />{res.url}
+                    </a>
+                  )}
+                </div>
+              );
+
+              const Section = ({ icon: Icon, label, count, children, accentClass }) => (
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <Icon className={`w-3.5 h-3.5 ${accentClass}`} />
+                    <span className={`text-[11px] font-bold uppercase tracking-widest ${accentClass}`}>{label}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{count}</span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+                  {children}
+                </div>
+              );
+
               return (
                 <>
-                  {/* Content Resources */}
-                  <div>
-                    <h4 className="font-medium text-sm flex items-center gap-2 mb-2">
-                      <BookOpen className="w-4 h-4" /> Nội dung ({contents.length})
-                    </h4>
+                  <Section icon={BookOpen} label="Nội dung" count={contents.length} accentClass="text-sky-600">
                     {contents.length > 0 ? (
                       <div className="space-y-2">
-                        {contents.map((res) => (
-                          <div key={res._id} className="rounded-lg border p-3 text-sm">
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium">{res.title}</span>
-                              <Badge variant="secondary">{res.category}</Badge>
-                            </div>
-                            {res.description && <p className="text-xs text-muted-foreground mt-1">{res.description}</p>}
-                            {res.url && (
-                              <a href={res.url} target="_blank" rel="noopener noreferrer"
-                                className="text-xs text-primary hover:underline mt-1 inline-block">🔗 {res.url}</a>
-                            )}
-                          </div>
+                        {contents.map(res => (
+                          <ResourceCard key={res._id} res={res}
+                            accent="border-l-sky-400"
+                            badgeLabel={res.category}
+                          />
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">Chưa có tài nguyên nội dung</p>
+                      <p className="text-xs text-muted-foreground py-2 pl-1">Chưa có tài nguyên nội dung</p>
                     )}
-                  </div>
+                  </Section>
 
-                  {/* Exercises */}
-                  <div>
-                    <h4 className="font-medium text-sm flex items-center gap-2 mb-2">
-                      <Dumbbell className="w-4 h-4" /> Bài Tập ({exercises.length})
-                    </h4>
+                  <Section icon={Dumbbell} label="Bài Tập" count={exercises.length} accentClass="text-amber-600">
                     {exercises.length > 0 ? (
                       <div className="space-y-2">
-                        {exercises.map((ex) => (
-                          <div key={ex._id} className="rounded-lg border p-3 text-sm">
-                            <span className="font-medium">{ex.title}</span>
-                            <Badge variant="secondary" className="ml-2">{ex.difficulty}</Badge>
-                            {ex.description && <p className="text-xs text-muted-foreground mt-1">{ex.description}</p>}
-                          </div>
+                        {exercises.map(ex => (
+                          <ResourceCard key={ex._id} res={ex}
+                            accent="border-l-amber-400"
+                            badgeLabel={ex.difficulty}
+                          />
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">Chưa có bài tập</p>
+                      <p className="text-xs text-muted-foreground py-2 pl-1">Chưa có bài tập</p>
                     )}
-                  </div>
+                  </Section>
 
-                  {/* Test Resources */}
-                  <div>
-                    <h4 className="font-medium text-sm flex items-center gap-2 mb-2">
-                      <HelpCircle className="w-4 h-4" /> Bài Test ({tests.length})
-                    </h4>
+                  <Section icon={HelpCircle} label="Bài Test" count={tests.length} accentClass="text-red-600">
                     {tests.length > 0 ? (
                       <div className="space-y-2">
-                        {tests.map((t) => (
-                          <div key={t._id} className="rounded-lg border p-3 text-sm">
-                            <span className="font-medium">{t.title}</span>
-                            <span className="text-xs text-muted-foreground ml-2">
-                              — {t.testQuestions?.length || 0} câu hỏi
-                            </span>
+                        {tests.map(t => (
+                          <div key={t._id} className="rounded-xl border border-l-4 border-l-red-400 bg-card p-3.5 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-sm">{t.title}</span>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 border border-red-400/20 font-semibold">
+                                {t.testQuestions?.length || 0} câu
+                              </span>
+                            </div>
+                            {t.description && <p className="text-xs text-muted-foreground">{t.description}</p>}
                             {(t.testQuestions || []).map((q, i) => (
-                              <div key={q._id || i} className="mt-2 ml-2 p-2 rounded bg-muted/20 text-xs">
-                                <p className="font-medium">Câu {i + 1}: {q.question}</p>
-                                <div className="mt-1 space-y-0.5">
+                              <div key={q._id || i} className="mt-1 p-2.5 rounded-lg bg-muted/30 text-xs space-y-1.5">
+                                <p className="font-semibold text-foreground">Câu {i + 1}: {q.question}</p>
+                                <div className="space-y-1">
                                   {q.options?.map((opt, j) => (
-                                    <p key={j} className={`${opt.isCorrect ? 'text-emerald-600 font-medium' : 'text-muted-foreground'}`}>
-                                      {opt.isCorrect ? '✓' : '○'} {opt.text}
+                                    <p key={j} className={`flex items-center gap-1.5 ${
+                                      opt.isCorrect ? 'text-emerald-600 font-medium' : 'text-muted-foreground'
+                                    }`}>
+                                      <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[9px] shrink-0 ${
+                                        opt.isCorrect ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-border'
+                                      }`}>{opt.isCorrect ? '✓' : ''}</span>
+                                      {opt.text}
                                     </p>
                                   ))}
                                 </div>
@@ -540,134 +570,209 @@ export default function SkillManagement() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">Chưa có bài test</p>
+                      <p className="text-xs text-muted-foreground py-2 pl-1">Chưa có bài test</p>
                     )}
-                  </div>
+                  </Section>
                 </>
               );
             })()}
           </DialogBody>
         )}
-        <DialogFooter>
+        <DialogFooter className="border-t bg-muted/20 rounded-b-xl px-6 py-4">
           <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Đóng</Button>
+          {detailSkill && (
+            <Button size="sm" className="gap-2" onClick={() => { setShowDetail(false); openEdit(detailSkill); }}>
+              <Pencil className="w-3.5 h-3.5" /> Chỉnh sửa
+            </Button>
+          )}
         </DialogFooter>
       </Dialog>
 
       {/* Form Dialog */}
       <Dialog open={showForm} onClose={() => setShowForm(false)}>
-        <DialogHeader onClose={() => setShowForm(false)}>
-          {editingId ? 'Chỉnh sửa kỹ năng' : 'Thêm kỹ năng mới'}
-        </DialogHeader>
+        {/* Gradient header */}
+        <div className="relative overflow-hidden rounded-t-xl border-b bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-5">
+          <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                editingId ? 'bg-amber-500/15 text-amber-600' : 'bg-primary/15 text-primary'
+              }`}>
+                {editingId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-foreground leading-tight">
+                  {editingId ? 'Chỉnh sửa kỹ năng' : 'Thêm kỹ năng mới'}
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {editingId ? 'Cập nhật thông tin kỹ năng trong hệ thống' : 'Tạo kỹ năng học tập mới'}
+                </p>
+              </div>
+            </div>
+            <button onClick={() => setShowForm(false)}
+              className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
         <form onSubmit={handleSave}>
-          <DialogBody className="space-y-4 max-h-[70vh] overflow-y-auto">
-            <div className="grid grid-cols-4 gap-4">
-              <div className="col-span-1">
-                <label className="text-sm font-medium mb-1.5 block">Icon</label>
-                <Input
-                  value={formData.icon}
-                  onChange={(e) => setFormData((f) => ({ ...f, icon: e.target.value }))}
-                  className="text-center text-lg"
-                />
+          <DialogBody className="space-y-5 max-h-[65vh] overflow-y-auto px-6 py-5">
+
+            {/* Section: Thông tin cơ bản */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Target className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[11px] font-bold text-primary uppercase tracking-widest">Thông tin cơ bản</span>
+                <div className="flex-1 h-px bg-border" />
               </div>
-              <div className="col-span-3">
-                <label className="text-sm font-medium mb-1.5 block">Tên kỹ năng *</label>
-                <Input
-                  value={formData.name} required
-                  onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="VD: React.js"
-                />
+
+              {/* Icon preview + Tên */}
+              <div className="grid grid-cols-4 gap-3">
+                <div className="col-span-1">
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Icon</label>
+                  <div className="relative">
+                    <Input
+                      value={formData.icon}
+                      onChange={(e) => setFormData((f) => ({ ...f, icon: e.target.value }))}
+                      className="text-center text-xl h-9 pr-1"
+                    />
+                    {/* Preview */}
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-lg border border-primary/10 shadow-sm">
+                      {formData.icon}
+                    </div>
+                  </div>
+                </div>
+                <div className="col-span-3">
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                    Tên kỹ năng <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={formData.name} required
+                    onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
+                    placeholder="VD: React.js"
+                    className="h-9"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+
+              {/* Nhóm + Giờ học */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                    Nhóm <span className="text-red-500">*</span>
+                  </label>
+                  <CustomSelect
+                    value={formData.category}
+                    onChange={v => setFormData(f => ({ ...f, category: v }))}
+                    options={Object.entries(categoryLabels).map(([k, v]) => ({ value: k, label: v }))}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Giờ học ước tính</label>
+                  <Input
+                    type="number" min={1}
+                    value={formData.estimatedHours}
+                    onChange={(e) => setFormData((f) => ({ ...f, estimatedHours: e.target.value }))}
+                    className="h-9"
+                  />
+                </div>
+              </div>
+
+              {/* Mô tả */}
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Nhóm *</label>
-                <Select
-                  value={formData.category}
-                  onChange={(e) => setFormData((f) => ({ ...f, category: e.target.value }))}
-                >
-                  {Object.entries(categoryLabels).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
-                  ))}
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Giờ học ước tính</label>
-                <Input
-                  type="number" min={1}
-                  value={formData.estimatedHours}
-                  onChange={(e) => setFormData((f) => ({ ...f, estimatedHours: e.target.value }))}
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Mô tả</label>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Mô tả ngắn gọn về kỹ năng..."
+                  rows={2}
                 />
               </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Mô tả</label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
-                rows={2}
-              />
             </div>
 
-            {/* Resource picker */}
-            <div className="border-t pt-4">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium">
-                  Tài nguyên liên kết ({formData.linkedResources.length} đã chọn)
-                </label>
+            {/* Section: Tài nguyên liên kết */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
+                <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-widest">Tài nguyên liên kết</span>
+                {formData.linkedResources.length > 0 && (
+                  <span className="text-[10px] text-white bg-primary px-1.5 py-0.5 rounded-full">
+                    {formData.linkedResources.length}
+                  </span>
+                )}
+                <div className="flex-1 h-px bg-border" />
                 <a href="/admin/resources" target="_blank"
-                  className="text-xs text-primary hover:underline">+ Thêm tài nguyên mới</a>
+                  className="text-[11px] text-primary hover:underline shrink-0 font-medium">+ Thêm tài nguyên mới</a>
               </div>
-              <div className="relative mb-2">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+
+              {/* Search resources */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
                 <Input
                   placeholder="Tìm tài nguyên..."
                   value={resourceSearch}
                   onChange={e => setResourceSearch(e.target.value)}
-                  className="pl-8 h-8 text-xs"
+                  className="pl-9 h-8 text-xs"
                 />
               </div>
-              <div className="max-h-44 overflow-y-auto border rounded-lg divide-y">
+
+              {/* Resource list */}
+              <div className="max-h-44 overflow-y-auto border rounded-xl bg-muted/20 divide-y divide-border/50">
                 {filteredResources.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4">
-                    {allResources.length === 0 ? 'Chưa có tài nguyên nào. Tạo từ trang Quản lý Tài nguyên.' : 'Không tìm thấy'}
-                  </p>
+                  <div className="text-center py-6">
+                    <BookOpen className="w-6 h-6 text-muted-foreground/30 mx-auto mb-1.5" />
+                    <p className="text-xs text-muted-foreground">
+                      {allResources.length === 0 ? 'Chưa có tài nguyên. Tạo từ trang Quản lý Tài nguyên.' : 'Không tìm thấy'}
+                    </p>
+                  </div>
                 ) : filteredResources.map(resource => {
                   const TypeIcon = RESOURCE_TYPE_ICONS[resource.type] || FileText;
                   const selected = formData.linkedResources.includes(resource._id);
+                  const typeColor = resource.type === 'exercise' ? 'text-amber-500'
+                    : resource.type === 'test' ? 'text-red-500' : 'text-sky-500';
                   return (
                     <button
                       key={resource._id}
                       type="button"
                       onClick={() => toggleResource(resource._id)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors ${selected ? 'bg-primary/8 text-primary' : 'hover:bg-muted/40'
-                        }`}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors ${
+                        selected ? 'bg-primary/8 text-primary' : 'hover:bg-background'
+                      }`}
                     >
-                      <div className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center text-[10px] ${selected ? 'bg-primary border-primary text-white' : 'border-border'
-                        }`}>
-                        {selected && '✓'}
-                      </div>
-                      <TypeIcon className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground" />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-sm truncate block">{resource.title}</span>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                      <span className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 text-[9px] font-bold transition-colors ${
+                        selected ? 'border-primary bg-primary text-white' : 'border-border'
+                      }`}>
+                        {selected && <Check className="w-2.5 h-2.5" />}
+                      </span>
+                      <TypeIcon className={`w-3.5 h-3.5 flex-shrink-0 ${typeColor}`} />
+                      <span className="text-xs flex-1 truncate">{resource.title}</span>
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ${
+                        resource.type === 'exercise' ? 'bg-amber-500/10 text-amber-600'
+                          : resource.type === 'test' ? 'bg-red-500/10 text-red-600'
+                          : 'bg-sky-500/10 text-sky-600'
+                      }`}>
                         {RESOURCE_TYPE_LABELS[resource.type]}
                       </span>
                     </button>
                   );
                 })}
               </div>
-              {/* Những resource đã chọn */}
+
+              {/* Selected tags */}
               {formData.linkedResources.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
+                <div className="flex flex-wrap gap-1.5">
                   {formData.linkedResources.map(rid => {
                     const r = allResources.find(x => x._id === rid);
                     if (!r) return null;
+                    const TypeIcon = RESOURCE_TYPE_ICONS[r.type] || FileText;
                     return (
-                      <span key={rid} className="flex items-center gap-1 text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                      <span key={rid} className="flex items-center gap-1.5 text-[11px] bg-primary/10 text-primary px-2.5 py-1 rounded-full border border-primary/20 font-medium">
+                        <TypeIcon className="w-3 h-3" />
                         {r.title}
-                        <button type="button" onClick={() => toggleResource(rid)} className="hover:text-red-500">
-                          <X className="w-2.5 h-2.5" />
+                        <button type="button" onClick={() => toggleResource(rid)}
+                          className="hover:text-red-500 transition-colors ml-0.5">
+                          <X className="w-3 h-3" />
                         </button>
                       </span>
                     );
@@ -675,11 +780,14 @@ export default function SkillManagement() {
                 </div>
               )}
             </div>
+
           </DialogBody>
-          <DialogFooter>
+          <DialogFooter className="border-t bg-muted/20 rounded-b-xl px-6 py-4">
             <Button type="button" variant="outline" size="sm" onClick={() => setShowForm(false)}>Hủy</Button>
-            <Button type="submit" size="sm" disabled={saving}>
-              {saving ? 'Đang lưu...' : editingId ? 'Cập nhật' : 'Tạo mới'}
+            <Button type="submit" size="sm" disabled={saving} className="gap-2 min-w-24">
+              {saving ? (
+                <><span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Đang lưu...</>
+              ) : editingId ? 'Cập nhật' : 'Tạo mới'}
             </Button>
           </DialogFooter>
         </form>
