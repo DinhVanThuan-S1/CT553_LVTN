@@ -14,7 +14,7 @@ import { useToast } from '../../components/ui/Toast';
 import {
   Search, Plus, Pencil, Trash2, Eye, BookOpen,
   ChevronLeft, ChevronRight, AlertCircle, Info, X,
-  SlidersHorizontal, ChevronDown, GraduationCap, Hash, Link2,
+  SlidersHorizontal, ChevronDown, GraduationCap, Hash, Link2, Cpu, Check,
 } from 'lucide-react';
 
 // === Labels & Badge maps ===
@@ -44,6 +44,7 @@ const initialForm = {
   prerequisites: '', corequisites: '', condition: '',
   description: '', theoryKnowledge: '', practiceKnowledge: '',
   excludeFromCumulativeGPA: false, excludeFromSemesterGPA: false,
+  relatedSkills: [],
 };
 
 export default function CourseManagement() {
@@ -66,6 +67,9 @@ export default function CourseManagement() {
   const [showCatMenu, setShowCatMenu] = useState(false);
   const typeMenuRef = useRef(null);
   const catMenuRef = useRef(null);
+  // Skills
+  const [allSkills, setAllSkills] = useState([]);
+  const [skillSearch, setSkillSearch] = useState('');
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -74,6 +78,13 @@ export default function CourseManagement() {
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Load all skills once
+  useEffect(() => {
+    api.get('/skills/all')
+      .then(({ data }) => setAllSkills(data.data || []))
+      .catch(() => {});
   }, []);
 
   const loadCourses = useCallback(async () => {
@@ -97,6 +108,7 @@ export default function CourseManagement() {
 
   function openCreate() {
     setFormData(initialForm);
+    setSkillSearch('');
     setEditingId(null);
     setShowForm(true);
   }
@@ -116,7 +128,9 @@ export default function CourseManagement() {
       practiceKnowledge: course.practiceKnowledge || '',
       excludeFromCumulativeGPA: course.excludeFromCumulativeGPA || false,
       excludeFromSemesterGPA: course.excludeFromSemesterGPA || false,
+      relatedSkills: (course.relatedSkills || []).map(s => s._id || s),
     });
+    setSkillSearch('');
     setEditingId(course._id);
     setShowForm(true);
   }
@@ -135,6 +149,7 @@ export default function CourseManagement() {
         credits: Number(formData.credits),
         prerequisites: formData.prerequisites ? formData.prerequisites.split(',').map((s) => s.trim()).filter(Boolean) : [],
         corequisites: formData.corequisites ? formData.corequisites.split(',').map((s) => s.trim()).filter(Boolean) : [],
+        relatedSkills: formData.relatedSkills,
       };
 
       if (editingId) {
@@ -507,6 +522,25 @@ export default function CourseManagement() {
               </div>
             )}
 
+
+            {/* Kỹ năng liên quan */}
+            {detailCourse.relatedSkills?.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">Kỹ năng liên quan</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {detailCourse.relatedSkills.map(sk => (
+                    <span key={sk._id} className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/20">
+                      {sk.icon} {sk.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Mô tả */}
             {detailCourse.description && (
               <div className="space-y-1.5">
@@ -786,6 +820,85 @@ export default function CourseManagement() {
                     placeholder="Nội dung thực hành chính..."
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Section: Kỹ năng liên quan */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Cpu className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">Kỹ năng liên quan</span>
+                <div className="flex-1 h-px bg-border" />
+                {formData.relatedSkills.length > 0 && (
+                  <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                    {formData.relatedSkills.length} đã chọn
+                  </span>
+                )}
+              </div>
+
+              {/* Search skills */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Tìm kỹ năng..."
+                  value={skillSearch}
+                  onChange={(e) => setSkillSearch(e.target.value)}
+                  className="w-full h-9 pl-9 pr-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
+                />
+              </div>
+
+              {/* Selected pills */}
+              {formData.relatedSkills.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {formData.relatedSkills.map(id => {
+                    const sk = allSkills.find(s => s._id === id);
+                    return sk ? (
+                      <span key={id} className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/20">
+                        {sk.icon} {sk.name}
+                        <button
+                          type="button"
+                          onClick={() => setFormData(f => ({ ...f, relatedSkills: f.relatedSkills.filter(i => i !== id) }))}
+                          className="ml-0.5 hover:text-red-500"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              )}
+
+              {/* Skill list */}
+              <div className="max-h-44 overflow-y-auto rounded-xl border bg-card/50 divide-y">
+                {allSkills
+                  .filter(sk => !skillSearch || sk.name.toLowerCase().includes(skillSearch.toLowerCase()))
+                  .map(sk => {
+                    const selected = formData.relatedSkills.includes(sk._id);
+                    return (
+                      <button
+                        key={sk._id}
+                        type="button"
+                        onClick={() => setFormData(f => ({
+                          ...f,
+                          relatedSkills: selected
+                            ? f.relatedSkills.filter(i => i !== sk._id)
+                            : [...f.relatedSkills, sk._id],
+                        }))}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/60 transition-colors ${selected ? 'bg-emerald-500/5' : ''}`}
+                      >
+                        <span className="text-base shrink-0">{sk.icon || '📘'}</span>
+                        <span className="flex-1 text-xs font-medium truncate">{sk.name}</span>
+                        {sk.category && (
+                          <span className="text-[10px] text-muted-foreground shrink-0">{sk.category}</span>
+                        )}
+                        {selected && <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                {allSkills.filter(sk => !skillSearch || sk.name.toLowerCase().includes(skillSearch.toLowerCase())).length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-4">Không tìm thấy kỹ năng</p>
+                )}
               </div>
             </div>
 
