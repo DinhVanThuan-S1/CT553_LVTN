@@ -339,24 +339,35 @@ class PersonalRoadmapService {
     const [studentSkills, academicProfile] = await Promise.all([
       StudentSkill.find({ student: studentId }).populate('skill', 'name'),
       AcademicProfile.findOne({ student: studentId })
-        .populate('courseGrades.course', 'name'),
+        .populate({ path: 'courseGrades.course', select: 'name relatedSkills' }),
     ]);
 
-    // Map skill → proficiency
+    // Map skill name → proficiency level
     const skillProficiency = {};
+    // Map skill name → skill _id (dùng để tra cứu)
+    const skillNameToId = {};
     (studentSkills || []).forEach(ss => {
       if (ss.skill?.name) {
-        skillProficiency[ss.skill.name.toLowerCase()] = ss.proficiencyLevel || 3;
+        const key = ss.skill.name.toLowerCase();
+        skillProficiency[key] = ss.proficiencyLevel || 3;
+        skillNameToId[key] = ss.skill._id.toString();
       }
     });
 
-    // Map course name → grade (chỉ tính HP đã có điểm thực sự > 0)
-    const courseGradeMap = {};
+    // Map skill ID → best grade (từ relatedSkills FK, chỉ tính HP có điểm > 0)
+    // Ưu tiên grade cao nhất nếu 1 skill có nhiều HP liên quan
+    const skillIdGradeMap = {};
     (academicProfile?.courseGrades || []).forEach(cg => {
       const grade = parseFloat(cg.numericGrade) || 0;
-      if (grade <= 0) return; // Bỏ qua HP chưa có điểm (0 = chưa học/chưa nhập)
-      const name = (cg.course?.name || '').toLowerCase();
-      if (name) courseGradeMap[name] = grade;
+      if (grade <= 0) return; // Bỏ qua HP chưa có điểm
+      const relatedSkills = cg.course?.relatedSkills || [];
+      relatedSkills.forEach(skillRef => {
+        const skillId = skillRef._id?.toString() || skillRef.toString();
+        // Giữ grade cao nhất nếu skill xuất hiện trong nhiều HP
+        if (!skillIdGradeMap[skillId] || grade > skillIdGradeMap[skillId]) {
+          skillIdGradeMap[skillId] = grade;
+        }
+      });
     });
 
     // Điều chỉnh giờ học cho từng skill
@@ -368,32 +379,38 @@ class PersonalRoadmapService {
       let reason = '';
 
       const proficiency = skillProficiency[skillName];
+      let reasonType = '';
       if (proficiency !== undefined) {
         if (proficiency >= 4) {
           adjustedHours = Math.max(4, Math.round(originalHours * 0.4));
           reason = `Đã thành thạo (level ${proficiency}/5) → giảm còn ${adjustedHours}h`;
+          reasonType = 'proficiency';
         } else if (proficiency >= 3) {
           adjustedHours = Math.max(8, Math.round(originalHours * 0.65));
           reason = `Đã có nền tảng → giảm còn ${adjustedHours}h`;
+          reasonType = 'proficiency';
         } else if (proficiency <= 2) {
           adjustedHours = Math.round(originalHours * 1.3);
           reason = `Cần củng cố (level ${proficiency}/5) → tăng lên ${adjustedHours}h`;
+          reasonType = 'proficiency';
         }
       }
 
-      // Kiểm tra điểm HP liên quan — CHỈ áp dụng nếu skill đã có trong Skill Map
-      // (tránh suy luận "đã biết skill" qua tên môn học khi skillmap không có skill đó)
+      // Kiểm tra điểm HP liên quan — dùng relatedSkills FK (chính xác), CHỈ áp dụng nếu skill đã có trong Skill Map
       if (proficiency !== undefined) {
-        for (const [courseName, grade] of Object.entries(courseGradeMap)) {
-          if (this._courseRelatesTo(courseName, skillName)) {
-            if (grade >= 8.0 && adjustedHours === originalHours) {
-              adjustedHours = Math.max(6, Math.round(originalHours * 0.6));
-              reason = `Điểm HP liên quan ${grade}/10 → giảm còn ${adjustedHours}h`;
-            } else if (grade < 5.0) {
-              adjustedHours = Math.round(Math.max(adjustedHours, originalHours) * 1.2);
-              reason = `Điểm HP liên quan thấp (${grade}/10) → tăng lên ${adjustedHours}h`;
-            }
-            break;
+        const skillId = rs.skill?._id?.toString();
+        const grade = skillId ? skillIdGradeMap[skillId] : undefined;
+        if (grade !== undefined) {
+          if (grade >= 8.0) {
+            // Ưu tiên hiển thị lý do điểm HP; lấy giờ thấp nhất giữa proficiency và grade-based
+            const gradeHours = Math.max(6, Math.round(originalHours * 0.6));
+            adjustedHours = Math.min(adjustedHours === originalHours ? gradeHours : adjustedHours, gradeHours);
+            reason = `Điểm HP liên quan ${grade}/10 → giảm còn ${adjustedHours}h`;
+            reasonType = 'grade';
+          } else if (grade < 5.0) {
+            adjustedHours = Math.round(Math.max(adjustedHours, originalHours) * 1.2);
+            reason = `Điểm HP liên quan thấp (${grade}/10) → tăng lên ${adjustedHours}h`;
+            reasonType = 'grade';
           }
         }
       }
@@ -404,6 +421,7 @@ class PersonalRoadmapService {
           originalHours,
           adjustedHours: Math.round(adjustedHours),
           reason,
+          reasonType,
         });
       }
     });

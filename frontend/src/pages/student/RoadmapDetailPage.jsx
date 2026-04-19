@@ -14,7 +14,7 @@ import { useToast } from '../../components/ui/Toast';
 import {
   ArrowLeft, Route, Clock, Users, Star, Target, CheckCircle2,
   BookOpen, Loader2, Calendar, MessageSquare, Send, Lock, Briefcase, Compass,
-  Sparkles, TrendingDown, TrendingUp,
+  Sparkles, TrendingDown, TrendingUp, GraduationCap,
 } from 'lucide-react';
 
 const difficultyLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
@@ -335,15 +335,24 @@ export default function RoadmapDetailPage() {
                       {(() => {
                         const key = (s.skill?.name || '').toLowerCase();
                         const adj = adjMap[key];
-                        if (adj?.reason) {
-                          return (
-                            <p className={`text-[10px] mt-1 flex items-center gap-1 ${adj.adjustedHours < adj.originalHours ? 'text-green-600' : 'text-amber-600'}`}>
-                              <Sparkles className="w-3 h-3" />
-                              {adj.reason}
-                            </p>
-                          );
-                        }
-                        return null;
+                        if (!adj?.reason) return null;
+
+                        const isReduced = adj.adjustedHours < adj.originalHours;
+                        const isGradeBased = adj.reasonType === 'grade';
+
+                        return (
+                          <p className={`text-[10px] mt-1 flex items-center gap-1 font-medium ${
+                            isGradeBased
+                              ? (isReduced ? 'text-blue-600 dark:text-blue-400' : 'text-orange-500')
+                              : (isReduced ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600')
+                          }`}>
+                            {isGradeBased
+                              ? <GraduationCap className="w-3 h-3 shrink-0" />
+                              : <Sparkles className="w-3 h-3 shrink-0" />
+                            }
+                            {adj.reason}
+                          </p>
+                        );
                       })()}
                     </div>
                   </div>
