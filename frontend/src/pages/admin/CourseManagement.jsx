@@ -70,6 +70,8 @@ export default function CourseManagement() {
   // Skills
   const [allSkills, setAllSkills] = useState([]);
   const [skillSearch, setSkillSearch] = useState('');
+  // Skills đã bị xóa khỏi hệ thống nhưng vẫn còn trong course
+  const [orphanSkillsMap, setOrphanSkillsMap] = useState({});
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -114,6 +116,8 @@ export default function CourseManagement() {
   }
 
   function openEdit(course) {
+    const relatedSkillObjs = course.relatedSkills || [];
+    const ids = relatedSkillObjs.map(s => s._id || s);
     setFormData({
       code: course.code,
       name: course.name,
@@ -128,8 +132,15 @@ export default function CourseManagement() {
       practiceKnowledge: course.practiceKnowledge || '',
       excludeFromCumulativeGPA: course.excludeFromCumulativeGPA || false,
       excludeFromSemesterGPA: course.excludeFromSemesterGPA || false,
-      relatedSkills: (course.relatedSkills || []).map(s => s._id || s),
+      relatedSkills: ids,
     });
+    // Build map of orphan skills (deleted from system but still linked to course)
+    const orphan = {};
+    relatedSkillObjs.forEach(s => {
+      const exists = allSkills.some(sk => sk._id === (s._id || s));
+      if (!exists && s._id) orphan[s._id] = { name: s.name || '?', icon: s.icon || '' };
+    });
+    setOrphanSkillsMap(orphan);
     setSkillSearch('');
     setEditingId(course._id);
     setShowForm(true);
@@ -853,18 +864,34 @@ export default function CourseManagement() {
                 <div className="flex flex-wrap gap-1.5">
                   {formData.relatedSkills.map(id => {
                     const sk = allSkills.find(s => s._id === id);
-                    return sk ? (
-                      <span key={id} className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/20">
-                        {sk.icon} {sk.name}
+                    if (sk) {
+                      return (
+                        <span key={id} className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/20">
+                          {sk.icon} {sk.name}
+                          <button
+                            type="button"
+                            onClick={() => setFormData(f => ({ ...f, relatedSkills: f.relatedSkills.filter(i => i !== id) }))}
+                            className="ml-0.5 hover:text-red-500"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      );
+                    }
+                    // Orphan skill — đã bị xóa khỏi hệ thống
+                    const orphan = orphanSkillsMap[id];
+                    return (
+                      <span key={id} title="Kỹ năng này đã bị xóa khỏi hệ thống" className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 border border-red-400/30 line-through opacity-70">
+                        {orphan?.name || id.slice(-6)}
                         <button
                           type="button"
                           onClick={() => setFormData(f => ({ ...f, relatedSkills: f.relatedSkills.filter(i => i !== id) }))}
-                          className="ml-0.5 hover:text-red-500"
+                          className="ml-0.5 hover:text-red-700 no-underline"
                         >
                           <X className="w-3 h-3" />
                         </button>
                       </span>
-                    ) : null;
+                    );
                   })}
                 </div>
               )}
