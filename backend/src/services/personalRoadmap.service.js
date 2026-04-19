@@ -350,11 +350,13 @@ class PersonalRoadmapService {
       }
     });
 
-    // Map course name → grade
+    // Map course name → grade (chỉ tính HP đã có điểm thực sự > 0)
     const courseGradeMap = {};
     (academicProfile?.courseGrades || []).forEach(cg => {
+      const grade = parseFloat(cg.numericGrade) || 0;
+      if (grade <= 0) return; // Bỏ qua HP chưa có điểm (0 = chưa học/chưa nhập)
       const name = (cg.course?.name || '').toLowerCase();
-      if (name) courseGradeMap[name] = parseFloat(cg.numericGrade) || 0;
+      if (name) courseGradeMap[name] = grade;
     });
 
     // Điều chỉnh giờ học cho từng skill
