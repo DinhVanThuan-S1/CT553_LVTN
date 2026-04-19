@@ -381,17 +381,20 @@ class PersonalRoadmapService {
         }
       }
 
-      // Kiểm tra điểm HP liên quan
-      for (const [courseName, grade] of Object.entries(courseGradeMap)) {
-        if (this._courseRelatesTo(courseName, skillName)) {
-          if (grade >= 8.0 && adjustedHours === originalHours) {
-            adjustedHours = Math.max(6, Math.round(originalHours * 0.6));
-            reason = `Điểm HP liên quan ${grade}/10 → giảm còn ${adjustedHours}h`;
-          } else if (grade < 5.0) {
-            adjustedHours = Math.round(Math.max(adjustedHours, originalHours) * 1.2);
-            reason = `Điểm HP liên quan thấp (${grade}/10) → tăng lên ${adjustedHours}h`;
+      // Kiểm tra điểm HP liên quan — CHỈ áp dụng nếu skill đã có trong Skill Map
+      // (tránh suy luận "đã biết skill" qua tên môn học khi skillmap không có skill đó)
+      if (proficiency !== undefined) {
+        for (const [courseName, grade] of Object.entries(courseGradeMap)) {
+          if (this._courseRelatesTo(courseName, skillName)) {
+            if (grade >= 8.0 && adjustedHours === originalHours) {
+              adjustedHours = Math.max(6, Math.round(originalHours * 0.6));
+              reason = `Điểm HP liên quan ${grade}/10 → giảm còn ${adjustedHours}h`;
+            } else if (grade < 5.0) {
+              adjustedHours = Math.round(Math.max(adjustedHours, originalHours) * 1.2);
+              reason = `Điểm HP liên quan thấp (${grade}/10) → tăng lên ${adjustedHours}h`;
+            }
+            break;
           }
-          break;
         }
       }
 
