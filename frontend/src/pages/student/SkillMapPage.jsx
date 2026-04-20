@@ -333,51 +333,57 @@ export default function SkillMapPage() {
         </div>
       </div>
 
-      {/* ── Chi tiết kỹ năng (collapsible) ── */}
-      {(mySkills.length > 0 || chartSkills.length > 0) && (
-        <div className="rounded-xl border bg-card overflow-hidden">
+      {/* ── Chi tiết kỹ năng (collapsible) — luôn hiển thị ── */}
+      <div className="rounded-xl border bg-card overflow-hidden">
 
-          {/* Toggle header */}
-          <button
-            onClick={() => setShowMyDetails(v => !v)}
-            className="w-full flex items-center gap-3 px-5 py-4 hover:bg-muted/20 transition-colors text-left group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
-              <LayoutGrid className="w-4 h-4 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm">Chi Tiết Kỹ Năng</p>
-              <div className="flex items-center gap-2 mt-0.5 flex-wrap mt-2">
-                <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/8 text-primary">
-                  <Shield className="w-2.5 h-2.5" /> {mySkills.length} kỹ năng
+        {/* Toggle header */}
+        <button
+          onClick={() => setShowMyDetails(v => !v)}
+          className="w-full flex items-center gap-3 px-5 py-4 hover:bg-muted/20 transition-colors text-left group"
+        >
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
+            <LayoutGrid className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm">Chi Tiết Kỹ Năng</p>
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap mt-2">
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/8 text-primary">
+                <Shield className="w-2.5 h-2.5" /> {mySkills.length} kỹ năng
+              </span>
+              {verifiedSkills.length > 0 && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">
+                  <CheckCircle2 className="w-2.5 h-2.5" /> {verifiedSkills.length} xác thực
                 </span>
-                {verifiedSkills.length > 0 && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">
-                    <CheckCircle2 className="w-2.5 h-2.5" /> {verifiedSkills.length} xác thực
-                  </span>
-                )}
-                {chartSkills.length > 0 && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
-                    <BarChart3 className="w-2.5 h-2.5" /> {chartSkills.length} đang học
-                  </span>
-                )}
-              </div>
+              )}
+              {chartSkills.length > 0 && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
+                  <BarChart3 className="w-2.5 h-2.5" /> {chartSkills.length} đang học
+                </span>
+              )}
             </div>
-            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-300 shrink-0 ${showMyDetails ? 'rotate-180' : ''}`} />
-          </button>
+          </div>
+          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-300 shrink-0 ${showMyDetails ? 'rotate-180' : ''}`} />
+        </button>
 
-          {showMyDetails && (
-            <div className="border-t divide-y divide-border/50">
+        {showMyDetails && (
+          <div className="border-t divide-y divide-border/50">
 
-              {/* ── Kỹ năng của tôi ── */}
-              {mySkills.length > 0 && (
-                <div className="p-5 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1 h-4 rounded-full bg-primary shrink-0" />
-                    <Shield className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-xs font-semibold uppercase tracking-widest text-foreground">Kỹ năng của tôi</span>
-                  </div>
+            {/* ── Kỹ năng của tôi ── */}
+            <div className="p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-4 rounded-full bg-primary shrink-0" />
+                <Shield className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-foreground">Kỹ năng của tôi</span>
+              </div>
 
+              {mySkills.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+                  <span className="text-3xl">🎯</span>
+                  <p className="text-sm font-medium text-muted-foreground">Sinh viên chưa có kỹ năng nào</p>
+                  <p className="text-[11px] text-muted-foreground/70">Đồng bộ từ hồ sơ học tập hoặc thêm thủ công bằng nút &quot;+ Thêm kỹ năng&quot;</p>
+                </div>
+              ) : (
+                <>
                   {/* Stats 3 cột */}
                   <div className="grid grid-cols-3 gap-3">
                     <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 p-4 text-center">
@@ -420,59 +426,59 @@ export default function SkillMapPage() {
                       );
                     })}
                   </div>
-                </div>
-              )}
-
-              {/* ── Tiến độ kỹ năng ── */}
-              {chartSkills.length > 0 && (
-                <div className="p-5 space-y-1">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-1 h-4 rounded-full bg-amber-500 shrink-0" />
-                    <BarChart3 className="w-3.5 h-3.5 text-amber-500" />
-                    <span className="text-xs font-semibold uppercase tracking-widest text-foreground">Tiến độ kỹ năng</span>
-                    <span className="ml-auto text-[10px] font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full">Top {chartSkills.length}</span>
-                  </div>
-                  {chartSkills.map((skill, idx) => {
-                    const prog = skillProgress[skill._id];
-                    const pct = skill.percent;
-                    const rankColor = idx === 0 ? 'bg-amber-400 text-white' : idx === 1 ? 'bg-slate-400 text-white' : idx === 2 ? 'bg-orange-400 text-white' : 'bg-muted text-muted-foreground';
-                    return (
-                      <button
-                        key={skill._id}
-                        onClick={() => openSkillDetail(skill)}
-                        className="w-full flex items-center gap-3 group hover:bg-muted/30 rounded-xl px-3 py-2.5 transition-colors text-left"
-                      >
-                        <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${rankColor}`}>
-                          {idx + 1}
-                        </span>
-                        <span className="text-base shrink-0">{skill.icon || '📘'}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className="text-xs font-medium truncate group-hover:text-primary transition-colors">
-                              {skill.name}
-                            </span>
-                            <span className={`text-[10px] font-bold shrink-0 ${pct === 100 ? 'text-emerald-500' : 'text-foreground'}`}>
-                              {pct}%
-                            </span>
-                          </div>
-                          <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-700 ${getProgressColor(pct)}`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <span className="text-[10px] text-muted-foreground">{prog.completed}/{prog.total} buổi</span>
-                        </div>
-                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary shrink-0 transition-colors" />
-                      </button>
-                    );
-                  })}
-                </div>
+                </>
               )}
             </div>
-          )}
-        </div>
-      )}
+
+            {/* ── Tiến độ kỹ năng ── */}
+            {chartSkills.length > 0 && (
+              <div className="p-5 space-y-1">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1 h-4 rounded-full bg-amber-500 shrink-0" />
+                  <BarChart3 className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-foreground">Tiến độ kỹ năng</span>
+                  <span className="ml-auto text-[10px] font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full">Top {chartSkills.length}</span>
+                </div>
+                {chartSkills.map((skill, idx) => {
+                  const prog = skillProgress[skill._id];
+                  const pct = skill.percent;
+                  const rankColor = idx === 0 ? 'bg-amber-400 text-white' : idx === 1 ? 'bg-slate-400 text-white' : idx === 2 ? 'bg-orange-400 text-white' : 'bg-muted text-muted-foreground';
+                  return (
+                    <button
+                      key={skill._id}
+                      onClick={() => openSkillDetail(skill)}
+                      className="w-full flex items-center gap-3 group hover:bg-muted/30 rounded-xl px-3 py-2.5 transition-colors text-left"
+                    >
+                      <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${rankColor}`}>
+                        {idx + 1}
+                      </span>
+                      <span className="text-base shrink-0">{skill.icon || '📘'}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="text-xs font-medium truncate group-hover:text-primary transition-colors">
+                            {skill.name}
+                          </span>
+                          <span className={`text-[10px] font-bold shrink-0 ${pct === 100 ? 'text-emerald-500' : 'text-foreground'}`}>
+                            {pct}%
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ${getProgressColor(pct)}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">{prog.completed}/{prog.total} buổi</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary shrink-0 transition-colors" />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* ── Skill Groups ── */}
       <div className="space-y-4">
