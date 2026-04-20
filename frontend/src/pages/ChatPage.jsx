@@ -11,8 +11,9 @@ import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/Toast';
 import {
   MessageSquare, Send, Search, Loader2, User as UserIcon,
-  ArrowLeft, Plus, Check, CheckCheck, X,
+  ArrowLeft, Plus, Check, CheckCheck, X, Trash2,
 } from 'lucide-react';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -29,6 +30,7 @@ export default function ChatPage() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [typingUsers, setTypingUsers] = useState({});
   const [mobileShowChat, setMobileShowChat] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null); // { convId, convName }
 
   const messagesEndRef = useRef(null);
   const typingTimerRef = useRef(null);
@@ -164,6 +166,21 @@ export default function ChatPage() {
     }
   }
 
+  async function handleDeleteConversation(convId) {
+    try {
+      await api.delete(`/chat/conversations/${convId}`);
+      setConversations(prev => prev.filter(c => c._id !== convId));
+      if (activeConv?._id === convId) {
+        setActiveConv(null);
+        setMessages([]);
+        setMobileShowChat(false);
+      }
+      toast.success('Đã xóa cuộc trò chuyện');
+    } catch {
+      toast.error('Không thể xóa cuộc trò chuyện');
+    }
+  }
+
   async function searchForUsers(query) {
     setSearchUsers(query);
     if (query.length < 2) { setFoundUsers([]); return; }
@@ -217,6 +234,7 @@ export default function ChatPage() {
   }
 
   return (
+    <>
     <div className="animate-fade-in h-[calc(100vh-7rem)] flex rounded-2xl border bg-card overflow-hidden shadow-sm">
 
       {/* ═══════════════════════════════════
@@ -317,55 +335,66 @@ export default function ChatPage() {
               const grad = getAvatarGradient(other?.fullName);
 
               return (
-                <button
-                  key={conv._id}
-                  onClick={() => openConversation(conv)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all relative overflow-hidden ${
-                    isActive
-                      ? 'bg-primary/8'
-                      : 'hover:bg-muted/30'
-                  }`}
-                >
-                  {/* Active left indicator */}
-                  {isActive && (
-                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary rounded-r-full" />
-                  )}
-
-                  {/* Avatar */}
-                  <div className="relative shrink-0">
-                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${grad} flex items-center justify-center shadow-sm`}>
-                      {other?.avatar
-                        ? <img src={other.avatar} className="w-10 h-10 rounded-full object-cover" alt="" />
-                        : <span className="text-sm font-bold text-white">{other?.fullName?.[0]?.toUpperCase() || '?'}</span>
-                      }
-                    </div>
-                    {unread > 0 && (
-                      <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary border-2 border-card" />
+                <div key={conv._id} className="relative group/conv">
+                  <button
+                    onClick={() => openConversation(conv)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all relative overflow-hidden pr-10 ${
+                      isActive ? 'bg-primary/8' : 'hover:bg-muted/30'
+                    }`}
+                  >
+                    {/* Active left indicator */}
+                    {isActive && (
+                      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary rounded-r-full" />
                     )}
-                  </div>
 
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline justify-between gap-1">
-                      <p className={`text-sm truncate ${unread > 0 ? 'font-semibold' : 'font-medium'}`}>
-                        {other?.fullName || 'Người dùng'}
-                      </p>
-                      <span className={`text-[10px] whitespace-nowrap shrink-0 ${unread > 0 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-                        {formatTime(conv.lastMessage?.timestamp || conv.updatedAt)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-2 mt-0.5">
-                      <p className={`text-xs truncate ${unread > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                        {conv.lastMessage?.content || 'Chưa có tin nhắn'}
-                      </p>
+                    {/* Avatar */}
+                    <div className="relative shrink-0">
+                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${grad} flex items-center justify-center shadow-sm`}>
+                        {other?.avatar
+                          ? <img src={other.avatar} className="w-10 h-10 rounded-full object-cover" alt="" />
+                          : <span className="text-sm font-bold text-white">{other?.fullName?.[0]?.toUpperCase() || '?'}</span>
+                        }
+                      </div>
                       {unread > 0 && (
-                        <span className="shrink-0 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[9px] flex items-center justify-center font-bold">
-                          {unread > 9 ? '9+' : unread}
-                        </span>
+                        <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary border-2 border-card" />
                       )}
                     </div>
-                  </div>
-                </button>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline justify-between gap-1">
+                        <p className={`text-sm truncate ${unread > 0 ? 'font-semibold' : 'font-medium'}`}>
+                          {other?.fullName || 'Người dùng'}
+                        </p>
+                        <span className={`text-[10px] whitespace-nowrap shrink-0 ${unread > 0 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                          {formatTime(conv.lastMessage?.timestamp || conv.updatedAt)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <p className={`text-xs truncate ${unread > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                          {conv.lastMessage?.content || 'Chưa có tin nhắn'}
+                        </p>
+                        {unread > 0 && (
+                          <span className="shrink-0 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[9px] flex items-center justify-center font-bold">
+                            {unread > 9 ? '9+' : unread}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Delete button — hiện khi hover */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmDelete({ convId: conv._id, convName: other?.fullName || 'Người dùng' });
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg opacity-0 group-hover/conv:opacity-100 transition-opacity text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                    title="Xóa cuộc trò chuyện"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               );
             })
           )}
@@ -554,5 +583,18 @@ export default function ChatPage() {
         )}
       </div>
     </div>
+
+    {/* Confirm xóa cuộc trò chuyện */}
+    <ConfirmDialog
+      state={confirmDelete ? {
+        title: 'Xóa cuộc trò chuyện',
+        message: `Xóa toàn bộ tin nhắn với "${confirmDelete?.convName}"? Không thể khôi phục.`,
+        confirmLabel: 'Xóa',
+        variant: 'danger',
+        onConfirm: () => handleDeleteConversation(confirmDelete.convId),
+      } : null}
+      onClose={() => setConfirmDelete(null)}
+    />
+  </>
   );
 }

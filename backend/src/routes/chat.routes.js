@@ -24,4 +24,7 @@ router.get('/unread-count', chatCtrl.getUnreadCount);
 // Tìm kiếm user để bắt đầu chat (student tìm employer và ngược lại)
 router.get('/users/search', chatCtrl.searchUsers);
 
+// Xóa cuộc trò chuyện
+router.delete('/conversations/:conversationId', chatCtrl.deleteConversation);
+
 module.exports = router;

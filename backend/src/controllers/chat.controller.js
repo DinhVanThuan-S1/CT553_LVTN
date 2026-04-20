@@ -250,3 +250,32 @@ exports.getUnreadCount = async (req, res) => {
     res.status(500).json({ success: false, message: 'Lỗi server' });
   }
 };
+
+/**
+ * DELETE /api/chat/conversations/:conversationId
+ * Xóa cuộc trò chuyện + toàn bộ tin nhắn
+ * Chỉ participant mới được xóa
+ */
+exports.deleteConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+
+    const conversation = await Conversation.findOne({
+      _id: conversationId,
+      participants: req.user._id,
+    });
+
+    if (!conversation) {
+      return res.status(404).json({ success: false, message: 'Cuộc trò chuyện không tồn tại' });
+    }
+
+    // Xóa tất cả tin nhắn trong conversation
+    await Message.deleteMany({ conversation: conversationId });
+    await conversation.deleteOne();
+
+    res.json({ success: true, message: 'Đã xóa cuộc trò chuyện' });
+  } catch (err) {
+    console.error('deleteConversation error:', err);
+    res.status(500).json({ success: false, message: 'Lỗi server' });
+  }
+};
