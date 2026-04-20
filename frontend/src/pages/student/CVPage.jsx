@@ -13,7 +13,7 @@ import { useToast } from '../../components/ui/Toast';
 import {
   FileText, Plus, Pencil, Trash2, Star, Loader2, Eye,
   Briefcase, GraduationCap, FolderOpen, X, CheckCircle2,
-  User, Shield, Sparkles, BookOpen,
+  User, Shield, Sparkles, BookOpen, Search,
 } from 'lucide-react';
 
 const emptyCV = {
@@ -38,18 +38,30 @@ export default function CVPage() {
   const [confirmState, setConfirmState] = useState(null);
   const [allSkills, setAllSkills] = useState([]);
   const [cvSkills, setCvSkills] = useState({ verified: [], unverified: [], roadmap: [], academic: [] });
+  const [academicInfo, setAcademicInfo] = useState({ major: '', gpa: 0 });
+  const [skillSearch, setSkillSearch] = useState('');
+  const [setAsDefault, setSetAsDefault] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [cvRes, skillRes, cvSkillsRes] = await Promise.all([
+      const [cvRes, skillRes, cvSkillsRes, academicRes] = await Promise.all([
         api.get('/student/cvs'),
         api.get('/skills/all'),
         api.get('/student/skills/for-cv'),
+        api.get('/student/academic-profile').catch(() => null),
       ]);
       setCvs(cvRes.data.data);
       setAllSkills(skillRes.data.data);
       setCvSkills(cvSkillsRes.data.data || { verified: [], unverified: [], roadmap: [], academic: [] });
+      // Lấy major & GPA từ hồ sơ học tập
+      if (academicRes?.data?.data) {
+        const profile = academicRes.data.data;
+        setAcademicInfo({
+          major: profile.major || profile.curriculumProgram?.name || profile.program?.name || '',
+          gpa: profile.gpa || 0,
+        });
+      }
     } catch {
       toast.error('Không thể tải dữ liệu');
     } finally {
@@ -59,10 +71,25 @@ export default function CVPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  function openCreate() { setEditId(null); setForm({ ...emptyCV }); setShowForm(true); }
+  function openCreate() {
+    setEditId(null);
+    setSkillSearch('');
+    setSetAsDefault(false);
+    setForm({
+      ...emptyCV,
+      education: {
+        ...emptyCV.education,
+        major: academicInfo.major,
+        gpa: academicInfo.gpa,
+      },
+    });
+    setShowForm(true);
+  }
 
   function openEdit(cv) {
     setEditId(cv._id);
+    setSkillSearch('');
+    setSetAsDefault(cv.isDefault || false);
     setForm({
       title: cv.title || '', headline: cv.headline || '', summary: cv.summary || '',
       skills: (cv.skills || []).map(s => s._id || s),
@@ -87,12 +114,18 @@ export default function CVPage() {
     if (!form.title.trim()) { toast.error('Tên CV không được trống'); return; }
     setSaving(true);
     try {
+      let savedId = editId;
       if (editId) {
         await api.put(`/student/cvs/${editId}`, form);
         toast.success('Cập nhật CV thành công');
       } else {
-        await api.post('/student/cvs', form);
+        const res = await api.post('/student/cvs', form);
+        savedId = res.data.data?._id;
         toast.success('Tạo CV thành công');
+      }
+      // Đặt làm mặc định nếu được chọn
+      if (setAsDefault && savedId) {
+        await api.patch(`/student/cvs/${savedId}/default`);
       }
       setShowForm(false);
       load();
@@ -274,12 +307,16 @@ export default function CVPage() {
                       className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
                       <Pencil className="w-3.5 h-3.5" /> Sửa
                     </button>
-                    {!cv.isDefault && (
+                    {!cv.isDefault ? (
                       <button onClick={() => handleSetDefault(cv._id)}
-                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-amber-500/10 hover:text-amber-600 transition-colors"
-                        title="Đặt mặc định">
-                        <Star className="w-3.5 h-3.5" /> Mặc định
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-amber-600 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/30 transition-colors"
+                        title="Đặt làm CV mặc định">
+                        <Star className="w-3.5 h-3.5" /> Đặt mặc định
                       </button>
+                    ) : (
+                      <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-emerald-600 bg-emerald-500/10 border border-emerald-400/30">
+                        <Star className="w-3.5 h-3.5 fill-current" /> Mặc định
+                      </span>
                     )}
                     <div className="flex-1" />
                     <button onClick={() => handleDelete(cv._id)}
@@ -414,6 +451,12 @@ export default function CVPage() {
         )}
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Đóng</Button>
+          {detailCV && !detailCV.isDefault && (
+            <Button variant="outline" size="sm" className="gap-1.5 border-amber-400/50 text-amber-600 hover:bg-amber-500/10"
+              onClick={() => { handleSetDefault(detailCV._id); setShowDetail(false); }}>
+              <Star className="w-4 h-4" /> Đặt làm mặc định
+            </Button>
+          )}
           <Button size="sm" className="gap-1.5" onClick={() => { setShowDetail(false); openEdit(detailCV); }}>
             <Pencil className="w-4 h-4" /> Chỉnh sửa
           </Button>
@@ -495,8 +538,29 @@ export default function CVPage() {
                   </Button>
                 )}
               </div>
+
+              {/* Search bar kỹ năng */}
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={skillSearch}
+                  onChange={e => setSkillSearch(e.target.value)}
+                  placeholder="Tìm kỹ năng..."
+                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border bg-background focus:outline-none focus:ring-1 focus:ring-primary/50"
+                />
+                {skillSearch && (
+                  <button type="button" onClick={() => setSkillSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+
               <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto p-3 rounded-xl border bg-muted/10">
-                {allSkills.map(skill => {
+                {allSkills.filter(skill =>
+                  !skillSearch || skill.name.toLowerCase().includes(skillSearch.toLowerCase())
+                ).map(skill => {
                   const isSelected = form.skills.includes(skill._id);
                   const isRoadmap = cvSkills.roadmap.some(v => (v.skill?._id || v.skill) === skill._id);
                   const isAcademic = cvSkills.academic.some(v => (v.skill?._id || v.skill) === skill._id);
@@ -511,6 +575,11 @@ export default function CVPage() {
                     </button>
                   );
                 })}
+                {allSkills.filter(skill =>
+                  !skillSearch || skill.name.toLowerCase().includes(skillSearch.toLowerCase())
+                ).length === 0 && (
+                  <p className="text-xs text-muted-foreground w-full text-center py-4">Không tìm thấy kỹ năng nào</p>
+                )}
               </div>
               <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
                 <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> Lộ trình (100%)</span>
@@ -585,6 +654,19 @@ export default function CVPage() {
 
           </DialogBody>
           <DialogFooter>
+            {/* Toggle pill: Đặt làm CV mặc định — bên trái */}
+            <button
+              type="button"
+              onClick={() => setSetAsDefault(v => !v)}
+              className={`mr-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                setAsDefault
+                  ? 'bg-amber-500 text-white border-amber-500 shadow-sm shadow-amber-200'
+                  : 'bg-transparent text-muted-foreground border-border hover:border-amber-400 hover:text-amber-600'
+              }`}
+            >
+              <Star className={`w-3.5 h-3.5 ${setAsDefault ? 'fill-white' : ''}`} />
+              {setAsDefault ? 'Sẽ đặt làm mặc định' : 'Đặt làm CV mặc định'}
+            </button>
             <Button type="button" variant="outline" size="sm" onClick={() => setShowForm(false)}>Hủy</Button>
             <Button type="submit" size="sm" disabled={saving} className="gap-1.5 min-w-[100px]">
               {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Đang lưu...</> : editId ? 'Cập nhật' : 'Tạo CV'}
