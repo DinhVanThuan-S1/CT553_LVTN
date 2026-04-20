@@ -329,7 +329,7 @@ export default function Header({ user, onLogout, sidebarCollapsed }) {
               >
                 <User className="w-4 h-4 text-muted-foreground" /> Thông tin cá nhân
               </button>
-              {!isAdmin && (
+              {user?.role === 'student' && (
                 <button
                   onClick={() => { navigate('/student/favorites'); setShowUserMenu(false); }}
                   className="flex items-center gap-2.5 w-full px-3 py-2 text-sm hover:bg-muted/60 transition-colors"
