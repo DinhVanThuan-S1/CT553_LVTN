@@ -58,7 +58,7 @@ exports.apply = async (req, res) => {
           type: 'application_received',
           title: 'Ứng viên mới',
           content: `${req.user.fullName} đã ứng tuyển vị trí "${job.title}"`,
-          link: `/employer/applicants`,
+          link: `/employer/applicants?tab=pending`,
           refModel: 'Application',
           refId: data._id,
         });

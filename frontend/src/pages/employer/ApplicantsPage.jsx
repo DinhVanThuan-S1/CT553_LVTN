@@ -3,6 +3,7 @@
  * Xem ứng viên theo tin, bộ lọc trạng thái, xem CV, cập nhật trạng thái
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -239,12 +240,22 @@ function CVItemWithDesc({ title, sub, period, desc }) {
 // ══════════════════════════════════════════════════
 export default function ApplicantsPage() {
   const toast = useToast();
+  const [searchParams] = useSearchParams();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedJobId, setSelectedJobId] = useState('');
   const [applicants, setApplicants] = useState([]);
   const [appLoading, setAppLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
+
+  // Đọc ?tab= từ URL để tự active đúng tab khi đến từ thông báo
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    const validTabs = FILTER_TABS.map(t => t.key);
+    if (tab && validTabs.includes(tab)) {
+      setFilterStatus(tab);
+    }
+  }, [searchParams]);
 
   // Action dialog
   const [showAction, setShowAction] = useState(false);
