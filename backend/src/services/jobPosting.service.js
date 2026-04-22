@@ -51,7 +51,7 @@ class JobPostingService {
   /**
    * Admin: lấy tất cả (pending/approved/rejected)
    */
-  async getAdminJobs({ page = 1, limit = 20, status, search }) {
+  async getAdminJobs({ page = 1, limit = 20, status, search, sort = '-createdAt' }) {
     const filter = {};
     if (status) filter.status = status;
     if (search) {
@@ -65,7 +65,7 @@ class JobPostingService {
     const jobs = await JobPosting.find(filter)
       .populate('company', 'name logo')
       .populate('employer', 'fullName email')
-      .sort('-createdAt')
+      .sort(sort)
       .skip((page - 1) * limit)
       .limit(Number(limit));
 

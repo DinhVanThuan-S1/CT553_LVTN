@@ -2,7 +2,7 @@
  * JobTemplateManagement - QL Công việc mẫu (Admin)
  * CRUD mẫu công việc (JobTemplate) phục vụ gợi ý & so khớp
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -14,7 +14,7 @@ import { useToast } from '../../components/ui/Toast';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import {
   Search, Plus, Pencil, Trash2, Eye, Briefcase,
-  ChevronLeft, ChevronRight, Banknote, X, SlidersHorizontal, Check,
+  ChevronLeft, ChevronRight, Banknote, X, SlidersHorizontal, Check, ChevronDown, ArrowUpDown,
 } from 'lucide-react';
 
 const levelLabels = { beginner: 'Cơ bản', intermediate: 'Trung bình', advanced: 'Nâng cao' };
@@ -54,12 +54,24 @@ export default function JobTemplateManagement() {
   const [detailTemplate, setDetailTemplate] = useState(null);
   const [allSkills, setAllSkills] = useState([]);
   const [confirmState, setConfirmState] = useState(null);
+  const [showSortMenu, setShowSortMenu] = useState(false);
+  const [sortOrder, setSortOrder] = useState('desc');
+  const sortMenuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (sortMenuRef.current && !sortMenuRef.current.contains(e.target)) setShowSortMenu(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     try {
       const params = { page: pagination.page, limit: pagination.limit };
       if (search) params.search = search;
+      params.sort = sortOrder === 'desc' ? '-createdAt' : 'createdAt';
       const { data } = await api.get('/admin/job-templates', { params });
       setTemplates(data.data);
       setPagination(data.pagination);
@@ -68,7 +80,7 @@ export default function JobTemplateManagement() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, search]);
+  }, [pagination.page, search, sortOrder]);
 
   useEffect(() => { loadTemplates(); }, [loadTemplates]);
 
@@ -210,6 +222,32 @@ export default function JobTemplateManagement() {
             onChange={(e) => { setSearch(e.target.value); setPagination((p) => ({ ...p, page: 1 })); }}
             className="pl-9"
           />
+        </div>
+
+        {/* Sort dropdown */}
+        <div className="relative shrink-0" ref={sortMenuRef}>
+          <button
+            type="button"
+            onClick={() => setShowSortMenu(v => !v)}
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all min-w-[148px] ${showSortMenu ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1' : 'border-input bg-background text-foreground hover:border-primary/60'}`}
+          >
+            <ArrowUpDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+            <span className="flex-1 text-left">{sortOrder === 'desc' ? 'Mới nhất' : 'Cũ nhất'}</span>
+            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${showSortMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'}`} />
+          </button>
+          {showSortMenu && (
+            <div className="absolute right-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-40 animate-fade-in">
+              <div className="py-1.5">
+                {[{ value: 'desc', label: 'Mới nhất' }, { value: 'asc', label: 'Cũ nhất' }].map(({ value, label }) => (
+                  <button key={value} type="button" onClick={() => { setSortOrder(value); setShowSortMenu(false); setPagination(p => ({ ...p, page: 1 })); }}
+                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${sortOrder === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'}`}>
+                    {sortOrder === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+                    <span className={sortOrder === value ? '' : 'ml-3.5'}>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

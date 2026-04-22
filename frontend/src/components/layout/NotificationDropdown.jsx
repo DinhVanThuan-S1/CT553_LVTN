@@ -21,6 +21,7 @@ import {
   MessageSquare,
   Award,
   AlertCircle,
+  ClipboardList,
   X,
 } from 'lucide-react';
 import api from '../../lib/api';
@@ -35,6 +36,7 @@ const typeIconMap = {
   application_rejected: { icon: X, color: 'text-red-500', bg: 'bg-red-500/10' },
   job_approved: { icon: Briefcase, color: 'text-green-500', bg: 'bg-green-500/10' },
   job_rejected: { icon: Briefcase, color: 'text-red-500', bg: 'bg-red-500/10' },
+  new_job_pending: { icon: ClipboardList, color: 'text-amber-500', bg: 'bg-amber-500/10' },
   new_message: { icon: MessageSquare, color: 'text-primary', bg: 'bg-primary/10' },
   roadmap_completed: { icon: Award, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
   skill_test_passed: { icon: Award, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },

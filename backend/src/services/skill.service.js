@@ -6,7 +6,7 @@ const Skill = require('../models/Skill');
 const Resource = require('../models/Resource');
 
 class SkillService {
-  async getSkills({ page = 1, limit = 20, search, category }) {
+  async getSkills({ page = 1, limit = 20, search, category, sort = 'name' }) {
     const filter = { isActive: { $ne: false } };
     if (search) filter.name = { $regex: search, $options: 'i' };
     if (category) filter.category = category;
@@ -14,7 +14,7 @@ class SkillService {
     const total = await Skill.countDocuments(filter);
     const skills = await Skill.find(filter)
       .populate('linkedResources', 'type') // chỉ lấy type để đếm theo loại
-      .sort('name')
+      .sort(sort)
       .skip((page - 1) * limit)
       .limit(Number(limit));
 

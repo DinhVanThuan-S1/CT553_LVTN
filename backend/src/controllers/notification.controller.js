@@ -154,3 +154,37 @@ exports.createAndEmitNotification = async ({ recipient, type, title, content, li
     return null;
   }
 };
+
+/**
+ * Helper: Gửi thông báo đến TẤT CẢ admin đang active
+ * Dùng khi có sự kiện cần admin xem xét (tin tuyển dụng mới, ...)
+ */
+exports.notifyAdmins = async ({ type, title, content, link = '', refModel, refId }) => {
+  try {
+    const User = require('../models/User');
+    const admins = await User.find({ role: 'admin', isActive: true }).select('_id').lean();
+    if (!admins.length) return;
+
+    const io = (() => { try { return getIO(); } catch { return null; } })();
+
+    await Promise.all(admins.map(async (admin) => {
+      try {
+        const notification = await Notification.create({
+          recipient: admin._id,
+          type,
+          title,
+          content,
+          link,
+          refModel,
+          refId,
+        });
+        if (io) io.to(`user:${admin._id}`).emit('new_notification', notification);
+      } catch (err) {
+        console.error(`notifyAdmins — failed for admin ${admin._id}:`, err.message);
+      }
+    }));
+  } catch (err) {
+    console.error('notifyAdmins error:', err);
+  }
+};
+

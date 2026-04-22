@@ -7,7 +7,7 @@ const Skill = require('../models/Skill');
 
 class ResourceService {
   // ─── Lấy danh sách (phân trang) ───
-  async getResources({ page = 1, limit = 20, search, type, skillId, featured }) {
+  async getResources({ page = 1, limit = 20, search, type, skillId, featured, sort }) {
     const filter = { isActive: { $ne: false } };
     if (search) {
       filter.$or = [
@@ -20,10 +20,13 @@ class ResourceService {
     if (skillId) filter.skills = skillId;
     if (featured === 'true') filter.isFeatured = true;
 
+    // Nếu có param sort từ client → dùng; ngược lại giữ default isFeatured + newest
+    const sortOption = sort ? sort : { isFeatured: -1, createdAt: -1 };
+
     const total = await Resource.countDocuments(filter);
     const resources = await Resource.find(filter)
       .populate('skills', 'name icon category')
-      .sort({ isFeatured: -1, createdAt: -1 })
+      .sort(sortOption)
       .skip((page - 1) * limit)
       .limit(Number(limit));
 

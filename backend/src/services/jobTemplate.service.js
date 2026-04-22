@@ -5,7 +5,7 @@
 const JobTemplate = require('../models/JobTemplate');
 
 class JobTemplateService {
-  async getTemplates({ page = 1, limit = 20, search }) {
+  async getTemplates({ page = 1, limit = 20, search, sort = '-createdAt' }) {
     const filter = { isActive: true };
     if (search) {
       filter.$or = [
@@ -17,7 +17,7 @@ class JobTemplateService {
     const total = await JobTemplate.countDocuments(filter);
     const data = await JobTemplate.find(filter)
       .populate('requiredSkills.skill', 'name icon category')
-      .sort('-createdAt')
+      .sort(sort)
       .skip((page - 1) * limit)
       .limit(Number(limit));
 

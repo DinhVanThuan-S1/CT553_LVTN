@@ -22,6 +22,7 @@ const notificationSchema = new mongoose.Schema({
       'application_rejected',     // SV: bị từ chối
       'job_approved',             // NTD: tin được duyệt
       'job_rejected',             // NTD: tin bị từ chối
+      'new_job_pending',          // Admin: có tin tuyển dụng mới chờ duyệt
       'new_message',              // Tin nhắn mới
       'roadmap_completed',        // SV: hoàn thành lộ trình
       'skill_test_passed',        // SV: đạt bài test

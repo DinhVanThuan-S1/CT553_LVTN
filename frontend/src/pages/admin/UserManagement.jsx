@@ -11,7 +11,7 @@ import { useToast } from '../../components/ui/Toast';
 import {
   Search, Users, Lock, Unlock, Eye, ChevronLeft, ChevronRight,
   Mail, Phone, Calendar, Shield, UserCheck, UserX, SlidersHorizontal, ChevronDown,
-  X, LogIn, Building2,
+  X, LogIn, Building2, ArrowUpDown,
 } from 'lucide-react';
 
 export default function UserManagement() {
@@ -20,6 +20,8 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   const [filters, setFilters] = useState({ search: '', role: '', isActive: '' });
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [stats, setStats] = useState(null);
@@ -27,11 +29,13 @@ export default function UserManagement() {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const roleMenuRef = useRef(null);
   const statusMenuRef = useRef(null);
+  const sortMenuRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(e) {
       if (roleMenuRef.current && !roleMenuRef.current.contains(e.target)) setShowRoleMenu(false);
       if (statusMenuRef.current && !statusMenuRef.current.contains(e.target)) setShowStatusMenu(false);
+      if (sortMenuRef.current && !sortMenuRef.current.contains(e.target)) setShowSortMenu(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -41,6 +45,7 @@ export default function UserManagement() {
     setLoading(true);
     try {
       const params = { page: pagination.page, limit: 15, ...filters };
+      params.sort = sortOrder === 'desc' ? '-createdAt' : 'createdAt';
       Object.keys(params).forEach((k) => !params[k] && delete params[k]);
       const { data } = await api.get('/admin/users', { params });
       setUsers(data.data);
@@ -50,7 +55,7 @@ export default function UserManagement() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, filters]);
+  }, [pagination.page, filters, sortOrder]);
 
   useEffect(() => {
     loadUsers();
@@ -253,6 +258,42 @@ export default function UserManagement() {
                   >
                     {filters.isActive === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
                     <span className={filters.isActive === value ? '' : 'ml-3.5'}>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Sort dropdown */}
+        <div className="relative shrink-0" ref={sortMenuRef}>
+          <button
+            type="button"
+            onClick={() => { setShowSortMenu(v => !v); setShowRoleMenu(false); setShowStatusMenu(false); }}
+            className={`h-9 flex items-center gap-2 pl-3 pr-2.5 rounded-lg border text-sm font-medium transition-all min-w-[148px] ${
+              showSortMenu
+                ? 'border-primary bg-background text-primary ring-2 ring-ring ring-offset-1'
+                : 'border-input bg-background text-foreground hover:border-primary/60'
+            }`}
+          >
+            <ArrowUpDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+            <span className="flex-1 text-left">{sortOrder === 'desc' ? 'Mới nhất' : 'Cũ nhất'}</span>
+            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${showSortMenu ? 'rotate-180 text-primary' : 'text-muted-foreground'}`} />
+          </button>
+          {showSortMenu && (
+            <div className="absolute right-0 top-full mt-1.5 z-30 bg-card border border-border/60 rounded-xl shadow-lg overflow-hidden w-40 animate-fade-in">
+              <div className="py-1.5">
+                {[{ value: 'desc', label: 'Mới nhất' }, { value: 'asc', label: 'Cũ nhất' }].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => { setSortOrder(value); setShowSortMenu(false); setPagination(p => ({ ...p, page: 1 })); }}
+                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center gap-2 ${
+                      sortOrder === value ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted/50'
+                    }`}
+                  >
+                    {sortOrder === value && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+                    <span className={sortOrder === value ? '' : 'ml-3.5'}>{label}</span>
                   </button>
                 ))}
               </div>
